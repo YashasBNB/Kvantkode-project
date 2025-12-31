@@ -5,7 +5,7 @@ type Props = {
 }
 
 const TOKEN_KEY = 'void_jwt'
-const DEFAULT_BACKEND = 'http://localhost:3000'
+const DEFAULT_BACKEND = 'https://kvantkode-backends.onrender.com'
 
 export const getBackendBase = (): string => {
 	try {

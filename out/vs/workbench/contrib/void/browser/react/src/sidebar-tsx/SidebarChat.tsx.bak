@@ -1216,7 +1216,7 @@ const BACKEND_URL =
 	(typeof process !== 'undefined' &&
 		(process as any).env &&
 		(process as any).env.VOID_BACKEND_URL) ||
-	'https://kvantkode-backends.onrender.com'
+	'http://localhost:3000'
 
 const DHAN_LOGIN_URL =
 	(typeof process !== 'undefined' &&

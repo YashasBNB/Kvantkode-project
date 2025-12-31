@@ -8,7 +8,7 @@ import { removeAnsiEscapeCodes } from '../../../../base/common/strings.js';
 export class UrlFinder extends Disposable {
     /**
      * Local server url pattern matching following urls:
-     * http://localhost:3000/ - commonly used across multiple frameworks
+     * https://kvantkode-backends.onrender.com/ - KvantKode backend
      * https://127.0.0.1:5001/ - ASP.NET
      * http://:8080 - Beego Golang
      * http://0.0.0.0:4000 - Elixir Phoenix
