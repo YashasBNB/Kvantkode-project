@@ -69,6 +69,13 @@ export const defaultProviderSettings = {
 		region: 'us-east-1', // add region setting
 		endpoint: '', // optionally allow overriding default
 	},
+	angelone: {
+		apiKey: '',
+		clientId: '',
+		token: '',
+		mpin: '',
+		endpoint: '', // optionally allow overriding default
+	},
 } as const
 
 export const defaultModelsOfProvider = {
