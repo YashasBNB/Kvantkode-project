@@ -1,0 +1,74 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { refineServiceDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+export const FOLDER_CONFIG_FOLDER_NAME = '.vscode';
+export const FOLDER_SETTINGS_NAME = 'settings';
+export const FOLDER_SETTINGS_PATH = `${FOLDER_CONFIG_FOLDER_NAME}/${FOLDER_SETTINGS_NAME}.json`;
+export const defaultSettingsSchemaId = 'vscode://schemas/settings/default';
+export const userSettingsSchemaId = 'vscode://schemas/settings/user';
+export const profileSettingsSchemaId = 'vscode://schemas/settings/profile';
+export const machineSettingsSchemaId = 'vscode://schemas/settings/machine';
+export const workspaceSettingsSchemaId = 'vscode://schemas/settings/workspace';
+export const folderSettingsSchemaId = 'vscode://schemas/settings/folder';
+export const launchSchemaId = 'vscode://schemas/launch';
+export const tasksSchemaId = 'vscode://schemas/tasks';
+export const mcpSchemaId = 'vscode://schemas/mcp';
+export const APPLICATION_SCOPES = [
+    1 /* ConfigurationScope.APPLICATION */,
+    3 /* ConfigurationScope.APPLICATION_MACHINE */,
+];
+export const PROFILE_SCOPES = [
+    2 /* ConfigurationScope.MACHINE */,
+    4 /* ConfigurationScope.WINDOW */,
+    5 /* ConfigurationScope.RESOURCE */,
+    6 /* ConfigurationScope.LANGUAGE_OVERRIDABLE */,
+    7 /* ConfigurationScope.MACHINE_OVERRIDABLE */,
+];
+export const LOCAL_MACHINE_PROFILE_SCOPES = [
+    4 /* ConfigurationScope.WINDOW */,
+    5 /* ConfigurationScope.RESOURCE */,
+    6 /* ConfigurationScope.LANGUAGE_OVERRIDABLE */,
+];
+export const LOCAL_MACHINE_SCOPES = [
+    1 /* ConfigurationScope.APPLICATION */,
+    ...LOCAL_MACHINE_PROFILE_SCOPES,
+];
+export const REMOTE_MACHINE_SCOPES = [
+    2 /* ConfigurationScope.MACHINE */,
+    3 /* ConfigurationScope.APPLICATION_MACHINE */,
+    4 /* ConfigurationScope.WINDOW */,
+    5 /* ConfigurationScope.RESOURCE */,
+    6 /* ConfigurationScope.LANGUAGE_OVERRIDABLE */,
+    7 /* ConfigurationScope.MACHINE_OVERRIDABLE */,
+];
+export const WORKSPACE_SCOPES = [
+    4 /* ConfigurationScope.WINDOW */,
+    5 /* ConfigurationScope.RESOURCE */,
+    6 /* ConfigurationScope.LANGUAGE_OVERRIDABLE */,
+    7 /* ConfigurationScope.MACHINE_OVERRIDABLE */,
+];
+export const FOLDER_SCOPES = [
+    5 /* ConfigurationScope.RESOURCE */,
+    6 /* ConfigurationScope.LANGUAGE_OVERRIDABLE */,
+    7 /* ConfigurationScope.MACHINE_OVERRIDABLE */,
+];
+export const TASKS_CONFIGURATION_KEY = 'tasks';
+export const LAUNCH_CONFIGURATION_KEY = 'launch';
+export const MCP_CONFIGURATION_KEY = 'mcp';
+export const WORKSPACE_STANDALONE_CONFIGURATIONS = Object.create(null);
+WORKSPACE_STANDALONE_CONFIGURATIONS[TASKS_CONFIGURATION_KEY] =
+    `${FOLDER_CONFIG_FOLDER_NAME}/${TASKS_CONFIGURATION_KEY}.json`;
+WORKSPACE_STANDALONE_CONFIGURATIONS[LAUNCH_CONFIGURATION_KEY] =
+    `${FOLDER_CONFIG_FOLDER_NAME}/${LAUNCH_CONFIGURATION_KEY}.json`;
+WORKSPACE_STANDALONE_CONFIGURATIONS[MCP_CONFIGURATION_KEY] =
+    `${FOLDER_CONFIG_FOLDER_NAME}/${MCP_CONFIGURATION_KEY}.json`;
+export const USER_STANDALONE_CONFIGURATIONS = Object.create(null);
+USER_STANDALONE_CONFIGURATIONS[TASKS_CONFIGURATION_KEY] = `${TASKS_CONFIGURATION_KEY}.json`;
+USER_STANDALONE_CONFIGURATIONS[MCP_CONFIGURATION_KEY] = `${MCP_CONFIGURATION_KEY}.json`;
+export const IWorkbenchConfigurationService = refineServiceDecorator(IConfigurationService);
+export const TASKS_DEFAULT = '{\n\t\"version\": \"2.0.0\",\n\t\"tasks\": []\n}';
+export const APPLY_ALL_PROFILES_SETTING = 'workbench.settings.applyToAllProfiles';
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29uZmlndXJhdGlvbi5qcyIsInNvdXJjZVJvb3QiOiJmaWxlOi8vL1VzZXJzL3lhc2hhc25haWR1L0t2YW50Y29kZS92b2lkL3NyYy8iLCJzb3VyY2VzIjpbInZzL3dvcmtiZW5jaC9zZXJ2aWNlcy9jb25maWd1cmF0aW9uL2NvbW1vbi9jb25maWd1cmF0aW9uLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7Z0dBR2dHO0FBSWhHLE9BQU8sRUFBRSxxQkFBcUIsRUFBRSxNQUFNLDREQUE0RCxDQUFBO0FBQ2xHLE9BQU8sRUFBRSxzQkFBc0IsRUFBRSxNQUFNLDREQUE0RCxDQUFBO0FBS25HLE1BQU0sQ0FBQyxNQUFNLHlCQUF5QixHQUFHLFNBQVMsQ0FBQTtBQUNsRCxNQUFNLENBQUMsTUFBTSxvQkFBb0IsR0FBRyxVQUFVLENBQUE7QUFDOUMsTUFBTSxDQUFDLE1BQU0sb0JBQW9CLEdBQUcsR0FBRyx5QkFBeUIsSUFBSSxvQkFBb0IsT0FBTyxDQUFBO0FBRS9GLE1BQU0sQ0FBQyxNQUFNLHVCQUF1QixHQUFHLG1DQUFtQyxDQUFBO0FBQzFFLE1BQU0sQ0FBQyxNQUFNLG9CQUFvQixHQUFHLGdDQUFnQyxDQUFBO0FBQ3BFLE1BQU0sQ0FBQyxNQUFNLHVCQUF1QixHQUFHLG1DQUFtQyxDQUFBO0FBQzFFLE1BQU0sQ0FBQyxNQUFNLHVCQUF1QixHQUFHLG1DQUFtQyxDQUFBO0FBQzFFLE1BQU0sQ0FBQyxNQUFNLHlCQUF5QixHQUFHLHFDQUFxQyxDQUFBO0FBQzlFLE1BQU0sQ0FBQyxNQUFNLHNCQUFzQixHQUFHLGtDQUFrQyxDQUFBO0FBQ3hFLE1BQU0sQ0FBQyxNQUFNLGNBQWMsR0FBRyx5QkFBeUIsQ0FBQTtBQUN2RCxNQUFNLENBQUMsTUFBTSxhQUFhLEdBQUcsd0JBQXdCLENBQUE7QUFDckQsTUFBTSxDQUFDLE1BQU0sV0FBVyxHQUFHLHNCQUFzQixDQUFBO0FBRWpELE1BQU0sQ0FBQyxNQUFNLGtCQUFrQixHQUFHOzs7Q0FHakMsQ0FBQTtBQUNELE1BQU0sQ0FBQyxNQUFNLGNBQWMsR0FBRzs7Ozs7O0NBTTdCLENBQUE7QUFDRCxNQUFNLENBQUMsTUFBTSw0QkFBNEIsR0FBRzs7OztDQUkzQyxDQUFBO0FBQ0QsTUFBTSxDQUFDLE1BQU0sb0JBQW9CLEdBQUc7O0lBRW5DLEdBQUcsNEJBQTRCO0NBQy9CLENBQUE7QUFDRCxNQUFNLENBQUMsTUFBTSxxQkFBcUIsR0FBRzs7Ozs7OztDQU9wQyxDQUFBO0FBQ0QsTUFBTSxDQUFDLE1BQU0sZ0JBQWdCLEdBQUc7Ozs7O0NBSy9CLENBQUE7QUFDRCxNQUFNLENBQUMsTUFBTSxhQUFhLEdBQUc7Ozs7Q0FJNUIsQ0FBQTtBQUVELE1BQU0sQ0FBQyxNQUFNLHVCQUF1QixHQUFHLE9BQU8sQ0FBQTtBQUM5QyxNQUFNLENBQUMsTUFBTSx3QkFBd0IsR0FBRyxRQUFRLENBQUE7QUFDaEQsTUFBTSxDQUFDLE1BQU0scUJBQXFCLEdBQUcsS0FBSyxDQUFBO0FBRTFDLE1BQU0sQ0FBQyxNQUFNLG1DQUFtQyxHQUFHLE1BQU0sQ0FBQyxNQUFNLENBQUMsSUFBSSxDQUFDLENBQUE7QUFDdEUsbUNBQW1DLENBQUMsdUJBQXVCLENBQUM7SUFDM0QsR0FBRyx5QkFBeUIsSUFBSSx1QkFBdUIsT0FBTyxDQUFBO0FBQy9ELG1DQUFtQyxDQUFDLHdCQUF3QixDQUFDO0lBQzVELEdBQUcseUJBQXlCLElBQUksd0JBQXdCLE9BQU8sQ0FBQTtBQUNoRSxtQ0FBbUMsQ0FBQyxxQkFBcUIsQ0FBQztJQUN6RCxHQUFHLHlCQUF5QixJQUFJLHFCQUFxQixPQUFPLENBQUE7QUFDN0QsTUFBTSxDQUFDLE1BQU0sOEJBQThCLEdBQUcsTUFBTSxDQUFDLE1BQU0sQ0FBQyxJQUFJLENBQUMsQ0FBQTtBQUNqRSw4QkFBOEIsQ0FBQyx1QkFBdUIsQ0FBQyxHQUFHLEdBQUcsdUJBQXVCLE9BQU8sQ0FBQTtBQUMzRiw4QkFBOEIsQ0FBQyxxQkFBcUIsQ0FBQyxHQUFHLEdBQUcscUJBQXFCLE9BQU8sQ0FBQTtBQW9CdkYsTUFBTSxDQUFDLE1BQU0sOEJBQThCLEdBQUcsc0JBQXNCLENBR2xFLHFCQUFxQixDQUFDLENBQUE7QUErQnhCLE1BQU0sQ0FBQyxNQUFNLGFBQWEsR0FBRyxrREFBa0QsQ0FBQTtBQUUvRSxNQUFNLENBQUMsTUFBTSwwQkFBMEIsR0FBRyx1Q0FBdUMsQ0FBQSJ9

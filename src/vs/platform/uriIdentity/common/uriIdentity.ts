@@ -3,21 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../base/common/uri.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { IExtUri } from '../../../base/common/resources.js';
+import { URI } from '../../../base/common/uri.js'
+import { createDecorator } from '../../instantiation/common/instantiation.js'
+import { IExtUri } from '../../../base/common/resources.js'
 
-
-export const IUriIdentityService = createDecorator<IUriIdentityService>('IUriIdentityService');
+export const IUriIdentityService = createDecorator<IUriIdentityService>('IUriIdentityService')
 
 export interface IUriIdentityService {
-
-	readonly _serviceBrand: undefined;
+	readonly _serviceBrand: undefined
 
 	/**
 	 * Uri extensions that are aware of casing.
 	 */
-	readonly extUri: IExtUri;
+	readonly extUri: IExtUri
 
 	/**
 	 * Returns a canonical uri for the given resource. Different uris can point to the same
@@ -42,5 +40,5 @@ export interface IUriIdentityService {
 	 * | `file:///foo/BAR` | `file:///foo/bar` | assume ignore case |
 	 * | `file:///foo/bar/../BAR?q=2` | `file:///foo/BAR?q=2` | query makes it a different document |
 	 */
-	asCanonicalUri(uri: URI): URI;
+	asCanonicalUri(uri: URI): URI
 }

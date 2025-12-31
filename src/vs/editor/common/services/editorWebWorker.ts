@@ -3,47 +3,62 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { stringDiff } from '../../../base/common/diff/diff.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { IWebWorkerServerRequestHandler } from '../../../base/common/worker/webWorker.js';
-import { Position } from '../core/position.js';
-import { IRange, Range } from '../core/range.js';
-import { EndOfLineSequence, ITextModel } from '../model.js';
-import { IMirrorTextModel, IModelChangedEvent } from '../model/mirrorTextModel.js';
-import { IColorInformation, IInplaceReplaceSupportResult, ILink, TextEdit } from '../languages.js';
-import { computeLinks } from '../languages/linkComputer.js';
-import { BasicInplaceReplace } from '../languages/supports/inplaceReplaceSupport.js';
-import { DiffAlgorithmName, IDiffComputationResult, ILineChange, IUnicodeHighlightsResult } from './editorWorker.js';
-import { createMonacoBaseAPI } from './editorBaseApi.js';
-import { StopWatch } from '../../../base/common/stopwatch.js';
-import { UnicodeTextModelHighlighter, UnicodeHighlighterOptions } from './unicodeTextModelHighlighter.js';
-import { DiffComputer, IChange } from '../diff/legacyLinesDiffComputer.js';
-import { ILinesDiffComputer, ILinesDiffComputerOptions } from '../diff/linesDiffComputer.js';
-import { DetailedLineRangeMapping } from '../diff/rangeMapping.js';
-import { linesDiffComputers } from '../diff/linesDiffComputers.js';
-import { IDocumentDiffProviderOptions } from '../diff/documentDiffProvider.js';
-import { BugIndicatingError } from '../../../base/common/errors.js';
-import { computeDefaultDocumentColors } from '../languages/defaultDocumentColorsComputer.js';
-import { FindSectionHeaderOptions, SectionHeader, findSectionHeaders } from './findSectionHeaders.js';
-import { IRawModelData, IWorkerTextModelSyncChannelServer } from './textModelSync/textModelSync.protocol.js';
-import { ICommonModel, WorkerTextModelSyncServer } from './textModelSync/textModelSync.impl.js';
+import { stringDiff } from '../../../base/common/diff/diff.js'
+import { IDisposable } from '../../../base/common/lifecycle.js'
+import { URI } from '../../../base/common/uri.js'
+import { IWebWorkerServerRequestHandler } from '../../../base/common/worker/webWorker.js'
+import { Position } from '../core/position.js'
+import { IRange, Range } from '../core/range.js'
+import { EndOfLineSequence, ITextModel } from '../model.js'
+import { IMirrorTextModel, IModelChangedEvent } from '../model/mirrorTextModel.js'
+import { IColorInformation, IInplaceReplaceSupportResult, ILink, TextEdit } from '../languages.js'
+import { computeLinks } from '../languages/linkComputer.js'
+import { BasicInplaceReplace } from '../languages/supports/inplaceReplaceSupport.js'
+import {
+	DiffAlgorithmName,
+	IDiffComputationResult,
+	ILineChange,
+	IUnicodeHighlightsResult,
+} from './editorWorker.js'
+import { createMonacoBaseAPI } from './editorBaseApi.js'
+import { StopWatch } from '../../../base/common/stopwatch.js'
+import {
+	UnicodeTextModelHighlighter,
+	UnicodeHighlighterOptions,
+} from './unicodeTextModelHighlighter.js'
+import { DiffComputer, IChange } from '../diff/legacyLinesDiffComputer.js'
+import { ILinesDiffComputer, ILinesDiffComputerOptions } from '../diff/linesDiffComputer.js'
+import { DetailedLineRangeMapping } from '../diff/rangeMapping.js'
+import { linesDiffComputers } from '../diff/linesDiffComputers.js'
+import { IDocumentDiffProviderOptions } from '../diff/documentDiffProvider.js'
+import { BugIndicatingError } from '../../../base/common/errors.js'
+import { computeDefaultDocumentColors } from '../languages/defaultDocumentColorsComputer.js'
+import {
+	FindSectionHeaderOptions,
+	SectionHeader,
+	findSectionHeaders,
+} from './findSectionHeaders.js'
+import {
+	IRawModelData,
+	IWorkerTextModelSyncChannelServer,
+} from './textModelSync/textModelSync.protocol.js'
+import { ICommonModel, WorkerTextModelSyncServer } from './textModelSync/textModelSync.impl.js'
 
 export interface IMirrorModel extends IMirrorTextModel {
-	readonly uri: URI;
-	readonly version: number;
-	getValue(): string;
+	readonly uri: URI
+	readonly version: number
+	getValue(): string
 }
 
 export interface IWorkerContext<H = undefined> {
 	/**
 	 * A proxy to the main thread host object.
 	 */
-	host: H;
+	host: H
 	/**
 	 * Get all available mirror models in this worker.
 	 */
-	getMirrorModels(): IMirrorModel[];
+	getMirrorModels(): IMirrorModel[]
 }
 
 /**
@@ -54,314 +69,379 @@ export interface IWordRange {
 	/**
 	 * The index where the word starts.
 	 */
-	readonly start: number;
+	readonly start: number
 	/**
 	 * The index where the word ends.
 	 */
-	readonly end: number;
+	readonly end: number
 }
 
 /**
  * @internal
  */
-export class EditorWorker implements IDisposable, IWorkerTextModelSyncChannelServer, IWebWorkerServerRequestHandler {
-	_requestHandlerBrand: any;
+export class EditorWorker
+	implements IDisposable, IWorkerTextModelSyncChannelServer, IWebWorkerServerRequestHandler
+{
+	_requestHandlerBrand: any
 
-	private readonly _workerTextModelSyncServer = new WorkerTextModelSyncServer();
+	private readonly _workerTextModelSyncServer = new WorkerTextModelSyncServer()
 
-	constructor(
-		private readonly _foreignModule: any | null = null
-	) { }
+	constructor(private readonly _foreignModule: any | null = null) {}
 
-	dispose(): void {
-	}
+	dispose(): void {}
 
 	public async $ping() {
-		return 'pong';
+		return 'pong'
 	}
 
 	protected _getModel(uri: string): ICommonModel | undefined {
-		return this._workerTextModelSyncServer.getModel(uri);
+		return this._workerTextModelSyncServer.getModel(uri)
 	}
 
 	public getModels(): ICommonModel[] {
-		return this._workerTextModelSyncServer.getModels();
+		return this._workerTextModelSyncServer.getModels()
 	}
 
 	public $acceptNewModel(data: IRawModelData): void {
-		this._workerTextModelSyncServer.$acceptNewModel(data);
+		this._workerTextModelSyncServer.$acceptNewModel(data)
 	}
 
 	public $acceptModelChanged(uri: string, e: IModelChangedEvent): void {
-		this._workerTextModelSyncServer.$acceptModelChanged(uri, e);
+		this._workerTextModelSyncServer.$acceptModelChanged(uri, e)
 	}
 
 	public $acceptRemovedModel(uri: string): void {
-		this._workerTextModelSyncServer.$acceptRemovedModel(uri);
+		this._workerTextModelSyncServer.$acceptRemovedModel(uri)
 	}
 
-	public async $computeUnicodeHighlights(url: string, options: UnicodeHighlighterOptions, range?: IRange): Promise<IUnicodeHighlightsResult> {
-		const model = this._getModel(url);
+	public async $computeUnicodeHighlights(
+		url: string,
+		options: UnicodeHighlighterOptions,
+		range?: IRange,
+	): Promise<IUnicodeHighlightsResult> {
+		const model = this._getModel(url)
 		if (!model) {
-			return { ranges: [], hasMore: false, ambiguousCharacterCount: 0, invisibleCharacterCount: 0, nonBasicAsciiCharacterCount: 0 };
+			return {
+				ranges: [],
+				hasMore: false,
+				ambiguousCharacterCount: 0,
+				invisibleCharacterCount: 0,
+				nonBasicAsciiCharacterCount: 0,
+			}
 		}
-		return UnicodeTextModelHighlighter.computeUnicodeHighlights(model, options, range);
+		return UnicodeTextModelHighlighter.computeUnicodeHighlights(model, options, range)
 	}
 
-	public async $findSectionHeaders(url: string, options: FindSectionHeaderOptions): Promise<SectionHeader[]> {
-		const model = this._getModel(url);
+	public async $findSectionHeaders(
+		url: string,
+		options: FindSectionHeaderOptions,
+	): Promise<SectionHeader[]> {
+		const model = this._getModel(url)
 		if (!model) {
-			return [];
+			return []
 		}
-		return findSectionHeaders(model, options);
+		return findSectionHeaders(model, options)
 	}
 
 	// ---- BEGIN diff --------------------------------------------------------------------------
 
-	public async $computeDiff(originalUrl: string, modifiedUrl: string, options: IDocumentDiffProviderOptions, algorithm: DiffAlgorithmName): Promise<IDiffComputationResult | null> {
-		const original = this._getModel(originalUrl);
-		const modified = this._getModel(modifiedUrl);
+	public async $computeDiff(
+		originalUrl: string,
+		modifiedUrl: string,
+		options: IDocumentDiffProviderOptions,
+		algorithm: DiffAlgorithmName,
+	): Promise<IDiffComputationResult | null> {
+		const original = this._getModel(originalUrl)
+		const modified = this._getModel(modifiedUrl)
 		if (!original || !modified) {
-			return null;
+			return null
 		}
 
-		const result = EditorWorker.computeDiff(original, modified, options, algorithm);
-		return result;
+		const result = EditorWorker.computeDiff(original, modified, options, algorithm)
+		return result
 	}
 
-	private static computeDiff(originalTextModel: ICommonModel | ITextModel, modifiedTextModel: ICommonModel | ITextModel, options: IDocumentDiffProviderOptions, algorithm: DiffAlgorithmName): IDiffComputationResult {
-		const diffAlgorithm: ILinesDiffComputer = algorithm === 'advanced' ? linesDiffComputers.getDefault() : linesDiffComputers.getLegacy();
+	private static computeDiff(
+		originalTextModel: ICommonModel | ITextModel,
+		modifiedTextModel: ICommonModel | ITextModel,
+		options: IDocumentDiffProviderOptions,
+		algorithm: DiffAlgorithmName,
+	): IDiffComputationResult {
+		const diffAlgorithm: ILinesDiffComputer =
+			algorithm === 'advanced' ? linesDiffComputers.getDefault() : linesDiffComputers.getLegacy()
 
-		const originalLines = originalTextModel.getLinesContent();
-		const modifiedLines = modifiedTextModel.getLinesContent();
+		const originalLines = originalTextModel.getLinesContent()
+		const modifiedLines = modifiedTextModel.getLinesContent()
 
-		const result = diffAlgorithm.computeDiff(originalLines, modifiedLines, options);
+		const result = diffAlgorithm.computeDiff(originalLines, modifiedLines, options)
 
-		const identical = (result.changes.length > 0 ? false : this._modelsAreIdentical(originalTextModel, modifiedTextModel));
+		const identical =
+			result.changes.length > 0
+				? false
+				: this._modelsAreIdentical(originalTextModel, modifiedTextModel)
 
 		function getLineChanges(changes: readonly DetailedLineRangeMapping[]): ILineChange[] {
-			return changes.map(m => ([m.original.startLineNumber, m.original.endLineNumberExclusive, m.modified.startLineNumber, m.modified.endLineNumberExclusive, m.innerChanges?.map(m => [
-				m.originalRange.startLineNumber,
-				m.originalRange.startColumn,
-				m.originalRange.endLineNumber,
-				m.originalRange.endColumn,
-				m.modifiedRange.startLineNumber,
-				m.modifiedRange.startColumn,
-				m.modifiedRange.endLineNumber,
-				m.modifiedRange.endColumn,
-			])]));
+			return changes.map((m) => [
+				m.original.startLineNumber,
+				m.original.endLineNumberExclusive,
+				m.modified.startLineNumber,
+				m.modified.endLineNumberExclusive,
+				m.innerChanges?.map((m) => [
+					m.originalRange.startLineNumber,
+					m.originalRange.startColumn,
+					m.originalRange.endLineNumber,
+					m.originalRange.endColumn,
+					m.modifiedRange.startLineNumber,
+					m.modifiedRange.startColumn,
+					m.modifiedRange.endLineNumber,
+					m.modifiedRange.endColumn,
+				]),
+			])
 		}
 
 		return {
 			identical,
 			quitEarly: result.hitTimeout,
 			changes: getLineChanges(result.changes),
-			moves: result.moves.map(m => ([
+			moves: result.moves.map((m) => [
 				m.lineRangeMapping.original.startLineNumber,
 				m.lineRangeMapping.original.endLineNumberExclusive,
 				m.lineRangeMapping.modified.startLineNumber,
 				m.lineRangeMapping.modified.endLineNumberExclusive,
-				getLineChanges(m.changes)
-			])),
-		};
+				getLineChanges(m.changes),
+			]),
+		}
 	}
 
-	private static _modelsAreIdentical(original: ICommonModel | ITextModel, modified: ICommonModel | ITextModel): boolean {
-		const originalLineCount = original.getLineCount();
-		const modifiedLineCount = modified.getLineCount();
+	private static _modelsAreIdentical(
+		original: ICommonModel | ITextModel,
+		modified: ICommonModel | ITextModel,
+	): boolean {
+		const originalLineCount = original.getLineCount()
+		const modifiedLineCount = modified.getLineCount()
 		if (originalLineCount !== modifiedLineCount) {
-			return false;
+			return false
 		}
 		for (let line = 1; line <= originalLineCount; line++) {
-			const originalLine = original.getLineContent(line);
-			const modifiedLine = modified.getLineContent(line);
+			const originalLine = original.getLineContent(line)
+			const modifiedLine = modified.getLineContent(line)
 			if (originalLine !== modifiedLine) {
-				return false;
+				return false
 			}
 		}
-		return true;
+		return true
 	}
 
-	public async $computeDirtyDiff(originalUrl: string, modifiedUrl: string, ignoreTrimWhitespace: boolean): Promise<IChange[] | null> {
-		const original = this._getModel(originalUrl);
-		const modified = this._getModel(modifiedUrl);
+	public async $computeDirtyDiff(
+		originalUrl: string,
+		modifiedUrl: string,
+		ignoreTrimWhitespace: boolean,
+	): Promise<IChange[] | null> {
+		const original = this._getModel(originalUrl)
+		const modified = this._getModel(modifiedUrl)
 		if (!original || !modified) {
-			return null;
+			return null
 		}
 
-		const originalLines = original.getLinesContent();
-		const modifiedLines = modified.getLinesContent();
+		const originalLines = original.getLinesContent()
+		const modifiedLines = modified.getLinesContent()
 		const diffComputer = new DiffComputer(originalLines, modifiedLines, {
 			shouldComputeCharChanges: false,
 			shouldPostProcessCharChanges: false,
 			shouldIgnoreTrimWhitespace: ignoreTrimWhitespace,
 			shouldMakePrettyDiff: true,
-			maxComputationTime: 1000
-		});
-		return diffComputer.computeDiff().changes;
+			maxComputationTime: 1000,
+		})
+		return diffComputer.computeDiff().changes
 	}
 
 	// ---- END diff --------------------------------------------------------------------------
 
-
 	// ---- BEGIN minimal edits ---------------------------------------------------------------
 
-	private static readonly _diffLimit = 100000;
+	private static readonly _diffLimit = 100000
 
-	public async $computeMoreMinimalEdits(modelUrl: string, edits: TextEdit[], pretty: boolean): Promise<TextEdit[]> {
-		const model = this._getModel(modelUrl);
+	public async $computeMoreMinimalEdits(
+		modelUrl: string,
+		edits: TextEdit[],
+		pretty: boolean,
+	): Promise<TextEdit[]> {
+		const model = this._getModel(modelUrl)
 		if (!model) {
-			return edits;
+			return edits
 		}
 
-		const result: TextEdit[] = [];
-		let lastEol: EndOfLineSequence | undefined = undefined;
+		const result: TextEdit[] = []
+		let lastEol: EndOfLineSequence | undefined = undefined
 
 		edits = edits.slice(0).sort((a, b) => {
 			if (a.range && b.range) {
-				return Range.compareRangesUsingStarts(a.range, b.range);
+				return Range.compareRangesUsingStarts(a.range, b.range)
 			}
 			// eol only changes should go to the end
-			const aRng = a.range ? 0 : 1;
-			const bRng = b.range ? 0 : 1;
-			return aRng - bRng;
-		});
+			const aRng = a.range ? 0 : 1
+			const bRng = b.range ? 0 : 1
+			return aRng - bRng
+		})
 
 		// merge adjacent edits
-		let writeIndex = 0;
+		let writeIndex = 0
 		for (let readIndex = 1; readIndex < edits.length; readIndex++) {
-			if (Range.getEndPosition(edits[writeIndex].range).equals(Range.getStartPosition(edits[readIndex].range))) {
-				edits[writeIndex].range = Range.fromPositions(Range.getStartPosition(edits[writeIndex].range), Range.getEndPosition(edits[readIndex].range));
-				edits[writeIndex].text += edits[readIndex].text;
+			if (
+				Range.getEndPosition(edits[writeIndex].range).equals(
+					Range.getStartPosition(edits[readIndex].range),
+				)
+			) {
+				edits[writeIndex].range = Range.fromPositions(
+					Range.getStartPosition(edits[writeIndex].range),
+					Range.getEndPosition(edits[readIndex].range),
+				)
+				edits[writeIndex].text += edits[readIndex].text
 			} else {
-				writeIndex++;
-				edits[writeIndex] = edits[readIndex];
+				writeIndex++
+				edits[writeIndex] = edits[readIndex]
 			}
 		}
-		edits.length = writeIndex + 1;
+		edits.length = writeIndex + 1
 
 		for (let { range, text, eol } of edits) {
-
 			if (typeof eol === 'number') {
-				lastEol = eol;
+				lastEol = eol
 			}
 
 			if (Range.isEmpty(range) && !text) {
 				// empty change
-				continue;
+				continue
 			}
 
-			const original = model.getValueInRange(range);
-			text = text.replace(/\r\n|\n|\r/g, model.eol);
+			const original = model.getValueInRange(range)
+			text = text.replace(/\r\n|\n|\r/g, model.eol)
 
 			if (original === text) {
 				// noop
-				continue;
+				continue
 			}
 
 			// make sure diff won't take too long
 			if (Math.max(text.length, original.length) > EditorWorker._diffLimit) {
-				result.push({ range, text });
-				continue;
+				result.push({ range, text })
+				continue
 			}
 
 			// compute diff between original and edit.text
-			const changes = stringDiff(original, text, pretty);
-			const editOffset = model.offsetAt(Range.lift(range).getStartPosition());
+			const changes = stringDiff(original, text, pretty)
+			const editOffset = model.offsetAt(Range.lift(range).getStartPosition())
 
 			for (const change of changes) {
-				const start = model.positionAt(editOffset + change.originalStart);
-				const end = model.positionAt(editOffset + change.originalStart + change.originalLength);
+				const start = model.positionAt(editOffset + change.originalStart)
+				const end = model.positionAt(editOffset + change.originalStart + change.originalLength)
 				const newEdit: TextEdit = {
 					text: text.substr(change.modifiedStart, change.modifiedLength),
-					range: { startLineNumber: start.lineNumber, startColumn: start.column, endLineNumber: end.lineNumber, endColumn: end.column }
-				};
+					range: {
+						startLineNumber: start.lineNumber,
+						startColumn: start.column,
+						endLineNumber: end.lineNumber,
+						endColumn: end.column,
+					},
+				}
 
 				if (model.getValueInRange(newEdit.range) !== newEdit.text) {
-					result.push(newEdit);
+					result.push(newEdit)
 				}
 			}
 		}
 
 		if (typeof lastEol === 'number') {
-			result.push({ eol: lastEol, text: '', range: { startLineNumber: 0, startColumn: 0, endLineNumber: 0, endColumn: 0 } });
+			result.push({
+				eol: lastEol,
+				text: '',
+				range: { startLineNumber: 0, startColumn: 0, endLineNumber: 0, endColumn: 0 },
+			})
 		}
 
-		return result;
+		return result
 	}
 
-	public $computeHumanReadableDiff(modelUrl: string, edits: TextEdit[], options: ILinesDiffComputerOptions): TextEdit[] {
-		const model = this._getModel(modelUrl);
+	public $computeHumanReadableDiff(
+		modelUrl: string,
+		edits: TextEdit[],
+		options: ILinesDiffComputerOptions,
+	): TextEdit[] {
+		const model = this._getModel(modelUrl)
 		if (!model) {
-			return edits;
+			return edits
 		}
 
-		const result: TextEdit[] = [];
-		let lastEol: EndOfLineSequence | undefined = undefined;
+		const result: TextEdit[] = []
+		let lastEol: EndOfLineSequence | undefined = undefined
 
 		edits = edits.slice(0).sort((a, b) => {
 			if (a.range && b.range) {
-				return Range.compareRangesUsingStarts(a.range, b.range);
+				return Range.compareRangesUsingStarts(a.range, b.range)
 			}
 			// eol only changes should go to the end
-			const aRng = a.range ? 0 : 1;
-			const bRng = b.range ? 0 : 1;
-			return aRng - bRng;
-		});
+			const aRng = a.range ? 0 : 1
+			const bRng = b.range ? 0 : 1
+			return aRng - bRng
+		})
 
 		for (let { range, text, eol } of edits) {
-
 			if (typeof eol === 'number') {
-				lastEol = eol;
+				lastEol = eol
 			}
 
 			if (Range.isEmpty(range) && !text) {
 				// empty change
-				continue;
+				continue
 			}
 
-			const original = model.getValueInRange(range);
-			text = text.replace(/\r\n|\n|\r/g, model.eol);
+			const original = model.getValueInRange(range)
+			text = text.replace(/\r\n|\n|\r/g, model.eol)
 
 			if (original === text) {
 				// noop
-				continue;
+				continue
 			}
 
 			// make sure diff won't take too long
 			if (Math.max(text.length, original.length) > EditorWorker._diffLimit) {
-				result.push({ range, text });
-				continue;
+				result.push({ range, text })
+				continue
 			}
 
 			// compute diff between original and edit.text
 
-			const originalLines = original.split(/\r\n|\n|\r/);
-			const modifiedLines = text.split(/\r\n|\n|\r/);
+			const originalLines = original.split(/\r\n|\n|\r/)
+			const modifiedLines = text.split(/\r\n|\n|\r/)
 
-			const diff = linesDiffComputers.getDefault().computeDiff(originalLines, modifiedLines, options);
+			const diff = linesDiffComputers
+				.getDefault()
+				.computeDiff(originalLines, modifiedLines, options)
 
-			const start = Range.lift(range).getStartPosition();
+			const start = Range.lift(range).getStartPosition()
 
 			function addPositions(pos1: Position, pos2: Position): Position {
-				return new Position(pos1.lineNumber + pos2.lineNumber - 1, pos2.lineNumber === 1 ? pos1.column + pos2.column - 1 : pos2.column);
+				return new Position(
+					pos1.lineNumber + pos2.lineNumber - 1,
+					pos2.lineNumber === 1 ? pos1.column + pos2.column - 1 : pos2.column,
+				)
 			}
 
 			function getText(lines: string[], range: Range): string[] {
-				const result: string[] = [];
+				const result: string[] = []
 				for (let i = range.startLineNumber; i <= range.endLineNumber; i++) {
-					const line = lines[i - 1];
+					const line = lines[i - 1]
 					if (i === range.startLineNumber && i === range.endLineNumber) {
-						result.push(line.substring(range.startColumn - 1, range.endColumn - 1));
+						result.push(line.substring(range.startColumn - 1, range.endColumn - 1))
 					} else if (i === range.startLineNumber) {
-						result.push(line.substring(range.startColumn - 1));
+						result.push(line.substring(range.startColumn - 1))
 					} else if (i === range.endLineNumber) {
-						result.push(line.substring(0, range.endColumn - 1));
+						result.push(line.substring(0, range.endColumn - 1))
 					} else {
-						result.push(line);
+						result.push(line)
 					}
 				}
-				return result;
+				return result
 			}
 
 			for (const c of diff.changes) {
@@ -370,137 +450,168 @@ export class EditorWorker implements IDisposable, IWorkerTextModelSyncChannelSer
 						result.push({
 							range: Range.fromPositions(
 								addPositions(start, x.originalRange.getStartPosition()),
-								addPositions(start, x.originalRange.getEndPosition())
+								addPositions(start, x.originalRange.getEndPosition()),
 							),
-							text: getText(modifiedLines, x.modifiedRange).join(model.eol)
-						});
+							text: getText(modifiedLines, x.modifiedRange).join(model.eol),
+						})
 					}
 				} else {
-					throw new BugIndicatingError('The experimental diff algorithm always produces inner changes');
+					throw new BugIndicatingError(
+						'The experimental diff algorithm always produces inner changes',
+					)
 				}
 			}
 		}
 
 		if (typeof lastEol === 'number') {
-			result.push({ eol: lastEol, text: '', range: { startLineNumber: 0, startColumn: 0, endLineNumber: 0, endColumn: 0 } });
+			result.push({
+				eol: lastEol,
+				text: '',
+				range: { startLineNumber: 0, startColumn: 0, endLineNumber: 0, endColumn: 0 },
+			})
 		}
 
-		return result;
+		return result
 	}
 
 	// ---- END minimal edits ---------------------------------------------------------------
 
 	public async $computeLinks(modelUrl: string): Promise<ILink[] | null> {
-		const model = this._getModel(modelUrl);
+		const model = this._getModel(modelUrl)
 		if (!model) {
-			return null;
+			return null
 		}
 
-		return computeLinks(model);
+		return computeLinks(model)
 	}
 
 	// --- BEGIN default document colors -----------------------------------------------------------
 
-	public async $computeDefaultDocumentColors(modelUrl: string): Promise<IColorInformation[] | null> {
-		const model = this._getModel(modelUrl);
+	public async $computeDefaultDocumentColors(
+		modelUrl: string,
+	): Promise<IColorInformation[] | null> {
+		const model = this._getModel(modelUrl)
 		if (!model) {
-			return null;
+			return null
 		}
-		return computeDefaultDocumentColors(model);
+		return computeDefaultDocumentColors(model)
 	}
 
 	// ---- BEGIN suggest --------------------------------------------------------------------------
 
-	private static readonly _suggestionsLimit = 10000;
+	private static readonly _suggestionsLimit = 10000
 
-	public async $textualSuggest(modelUrls: string[], leadingWord: string | undefined, wordDef: string, wordDefFlags: string): Promise<{ words: string[]; duration: number } | null> {
-
-		const sw = new StopWatch();
-		const wordDefRegExp = new RegExp(wordDef, wordDefFlags);
-		const seen = new Set<string>();
+	public async $textualSuggest(
+		modelUrls: string[],
+		leadingWord: string | undefined,
+		wordDef: string,
+		wordDefFlags: string,
+	): Promise<{ words: string[]; duration: number } | null> {
+		const sw = new StopWatch()
+		const wordDefRegExp = new RegExp(wordDef, wordDefFlags)
+		const seen = new Set<string>()
 
 		outer: for (const url of modelUrls) {
-			const model = this._getModel(url);
+			const model = this._getModel(url)
 			if (!model) {
-				continue;
+				continue
 			}
 
 			for (const word of model.words(wordDefRegExp)) {
 				if (word === leadingWord || !isNaN(Number(word))) {
-					continue;
+					continue
 				}
-				seen.add(word);
+				seen.add(word)
 				if (seen.size > EditorWorker._suggestionsLimit) {
-					break outer;
+					break outer
 				}
 			}
 		}
 
-		return { words: Array.from(seen), duration: sw.elapsed() };
+		return { words: Array.from(seen), duration: sw.elapsed() }
 	}
-
 
 	// ---- END suggest --------------------------------------------------------------------------
 
 	//#region -- word ranges --
 
-	public async $computeWordRanges(modelUrl: string, range: IRange, wordDef: string, wordDefFlags: string): Promise<{ [word: string]: IRange[] }> {
-		const model = this._getModel(modelUrl);
+	public async $computeWordRanges(
+		modelUrl: string,
+		range: IRange,
+		wordDef: string,
+		wordDefFlags: string,
+	): Promise<{ [word: string]: IRange[] }> {
+		const model = this._getModel(modelUrl)
 		if (!model) {
-			return Object.create(null);
+			return Object.create(null)
 		}
-		const wordDefRegExp = new RegExp(wordDef, wordDefFlags);
-		const result: { [word: string]: IRange[] } = Object.create(null);
+		const wordDefRegExp = new RegExp(wordDef, wordDefFlags)
+		const result: { [word: string]: IRange[] } = Object.create(null)
 		for (let line = range.startLineNumber; line < range.endLineNumber; line++) {
-			const words = model.getLineWords(line, wordDefRegExp);
+			const words = model.getLineWords(line, wordDefRegExp)
 			for (const word of words) {
 				if (!isNaN(Number(word.word))) {
-					continue;
+					continue
 				}
-				let array = result[word.word];
+				let array = result[word.word]
 				if (!array) {
-					array = [];
-					result[word.word] = array;
+					array = []
+					result[word.word] = array
 				}
 				array.push({
 					startLineNumber: line,
 					startColumn: word.startColumn,
 					endLineNumber: line,
-					endColumn: word.endColumn
-				});
+					endColumn: word.endColumn,
+				})
 			}
 		}
-		return result;
+		return result
 	}
 
 	//#endregion
 
-	public async $navigateValueSet(modelUrl: string, range: IRange, up: boolean, wordDef: string, wordDefFlags: string): Promise<IInplaceReplaceSupportResult | null> {
-		const model = this._getModel(modelUrl);
+	public async $navigateValueSet(
+		modelUrl: string,
+		range: IRange,
+		up: boolean,
+		wordDef: string,
+		wordDefFlags: string,
+	): Promise<IInplaceReplaceSupportResult | null> {
+		const model = this._getModel(modelUrl)
 		if (!model) {
-			return null;
+			return null
 		}
 
-		const wordDefRegExp = new RegExp(wordDef, wordDefFlags);
+		const wordDefRegExp = new RegExp(wordDef, wordDefFlags)
 
 		if (range.startColumn === range.endColumn) {
 			range = {
 				startLineNumber: range.startLineNumber,
 				startColumn: range.startColumn,
 				endLineNumber: range.endLineNumber,
-				endColumn: range.endColumn + 1
-			};
+				endColumn: range.endColumn + 1,
+			}
 		}
 
-		const selectionText = model.getValueInRange(range);
+		const selectionText = model.getValueInRange(range)
 
-		const wordRange = model.getWordAtPosition({ lineNumber: range.startLineNumber, column: range.startColumn }, wordDefRegExp);
+		const wordRange = model.getWordAtPosition(
+			{ lineNumber: range.startLineNumber, column: range.startColumn },
+			wordDefRegExp,
+		)
 		if (!wordRange) {
-			return null;
+			return null
 		}
-		const word = model.getValueInRange(wordRange);
-		const result = BasicInplaceReplace.INSTANCE.navigateValueSet(range, selectionText, wordRange, word, up);
-		return result;
+		const word = model.getValueInRange(wordRange)
+		const result = BasicInplaceReplace.INSTANCE.navigateValueSet(
+			range,
+			selectionText,
+			wordRange,
+			word,
+			up,
+		)
+		return result
 	}
 
 	// ---- BEGIN foreign module support --------------------------------------------------------------------------
@@ -508,13 +619,13 @@ export class EditorWorker implements IDisposable, IWorkerTextModelSyncChannelSer
 	// foreign method request
 	public $fmr(method: string, args: any[]): Promise<any> {
 		if (!this._foreignModule || typeof this._foreignModule[method] !== 'function') {
-			return Promise.reject(new Error('Missing requestHandler or method: ' + method));
+			return Promise.reject(new Error('Missing requestHandler or method: ' + method))
 		}
 
 		try {
-			return Promise.resolve(this._foreignModule[method].apply(this._foreignModule, args));
+			return Promise.resolve(this._foreignModule[method].apply(this._foreignModule, args))
 		} catch (e) {
-			return Promise.reject(e);
+			return Promise.reject(e)
 		}
 	}
 
@@ -522,9 +633,9 @@ export class EditorWorker implements IDisposable, IWorkerTextModelSyncChannelSer
 }
 
 // This is only available in a Web Worker
-declare function importScripts(...urls: string[]): void;
+declare function importScripts(...urls: string[]): void
 
 if (typeof importScripts === 'function') {
 	// Running in a web worker
-	globalThis.monaco = createMonacoBaseAPI();
+	globalThis.monaco = createMonacoBaseAPI()
 }

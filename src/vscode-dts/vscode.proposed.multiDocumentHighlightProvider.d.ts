@@ -4,32 +4,29 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	/**
 	 * Represents a collection of document highlights from multiple documents.
 	 */
 	export class MultiDocumentHighlight {
-
 		/**
 		 * The URI of the document containing the highlights.
 		 */
-		uri: Uri;
+		uri: Uri
 
 		/**
 		 * The highlights for the document.
 		 */
-		highlights: DocumentHighlight[];
+		highlights: DocumentHighlight[]
 
 		/**
 		 * Creates a new instance of MultiDocumentHighlight.
 		 * @param uri The URI of the document containing the highlights.
 		 * @param highlights The highlights for the document.
 		 */
-		constructor(uri: Uri, highlights: DocumentHighlight[]);
+		constructor(uri: Uri, highlights: DocumentHighlight[])
 	}
 
 	export interface MultiDocumentHighlightProvider {
-
 		/**
 		 * Provide a set of document highlights, like all occurrences of a variable or
 		 * all exit-points of a function.
@@ -41,11 +38,15 @@ declare module 'vscode' {
 		 * @returns A Map containing a mapping of the Uri of a document to the document highlights or a thenable that resolves to such. The lack of a result can be
 		 * signaled by returning `undefined`, `null`, or an empty map.
 		 */
-		provideMultiDocumentHighlights(document: TextDocument, position: Position, otherDocuments: TextDocument[], token: CancellationToken): ProviderResult<MultiDocumentHighlight[]>;
+		provideMultiDocumentHighlights(
+			document: TextDocument,
+			position: Position,
+			otherDocuments: TextDocument[],
+			token: CancellationToken,
+		): ProviderResult<MultiDocumentHighlight[]>
 	}
 
 	namespace languages {
-
 		/**
 		 * Register a multi document highlight provider.
 		 *
@@ -57,7 +58,9 @@ declare module 'vscode' {
 		 * @param provider A multi-document highlight provider.
 		 * @returns A {@link Disposable} that unregisters this provider when being disposed.
 		 */
-		export function registerMultiDocumentHighlightProvider(selector: DocumentSelector, provider: MultiDocumentHighlightProvider): Disposable;
+		export function registerMultiDocumentHighlightProvider(
+			selector: DocumentSelector,
+			provider: MultiDocumentHighlightProvider,
+		): Disposable
 	}
-
 }

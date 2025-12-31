@@ -1,0 +1,181 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { localize } from '../../../../nls.js';
+import { ContextKeyExpr, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
+import { IsWebContext } from '../../../../platform/contextkey/common/contextkeys.js';
+import { RemoteNameContext } from '../../../common/contextkeys.js';
+import { ChatAgentLocation, ChatConfiguration, ChatMode } from './constants.js';
+export var ChatContextKeys;
+(function (ChatContextKeys) {
+    ChatContextKeys.responseVote = new RawContextKey('chatSessionResponseVote', '', {
+        type: 'string',
+        description: localize('interactiveSessionResponseVote', "When the response has been voted up, is set to 'up'. When voted down, is set to 'down'. Otherwise an empty string."),
+    });
+    ChatContextKeys.responseDetectedAgentCommand = new RawContextKey('chatSessionResponseDetectedAgentOrCommand', false, {
+        type: 'boolean',
+        description: localize('chatSessionResponseDetectedAgentOrCommand', 'When the agent or command was automatically detected'),
+    });
+    ChatContextKeys.responseSupportsIssueReporting = new RawContextKey('chatResponseSupportsIssueReporting', false, {
+        type: 'boolean',
+        description: localize('chatResponseSupportsIssueReporting', 'True when the current chat response supports issue reporting.'),
+    });
+    ChatContextKeys.responseIsFiltered = new RawContextKey('chatSessionResponseFiltered', false, {
+        type: 'boolean',
+        description: localize('chatResponseFiltered', 'True when the chat response was filtered out by the server.'),
+    });
+    ChatContextKeys.responseHasError = new RawContextKey('chatSessionResponseError', false, {
+        type: 'boolean',
+        description: localize('chatResponseErrored', 'True when the chat response resulted in an error.'),
+    });
+    ChatContextKeys.requestInProgress = new RawContextKey('chatSessionRequestInProgress', false, {
+        type: 'boolean',
+        description: localize('interactiveSessionRequestInProgress', 'True when the current request is still in progress.'),
+    });
+    ChatContextKeys.isRequestPaused = new RawContextKey('chatRequestIsPaused', false, {
+        type: 'boolean',
+        description: localize('chatRequestIsPaused', 'True when the current request is paused.'),
+    });
+    ChatContextKeys.canRequestBePaused = new RawContextKey('chatCanRequestBePaused', false, {
+        type: 'boolean',
+        description: localize('chatCanRequestBePaused', 'True when the current request can be paused.'),
+    });
+    ChatContextKeys.isResponse = new RawContextKey('chatResponse', false, {
+        type: 'boolean',
+        description: localize('chatResponse', 'The chat item is a response.'),
+    });
+    ChatContextKeys.isRequest = new RawContextKey('chatRequest', false, {
+        type: 'boolean',
+        description: localize('chatRequest', 'The chat item is a request'),
+    });
+    ChatContextKeys.itemId = new RawContextKey('chatItemId', '', {
+        type: 'string',
+        description: localize('chatItemId', 'The id of the chat item.'),
+    });
+    ChatContextKeys.lastItemId = new RawContextKey('chatLastItemId', [], {
+        type: 'string',
+        description: localize('chatLastItemId', 'The id of the last chat item.'),
+    });
+    ChatContextKeys.editApplied = new RawContextKey('chatEditApplied', false, {
+        type: 'boolean',
+        description: localize('chatEditApplied', 'True when the chat text edits have been applied.'),
+    });
+    ChatContextKeys.inputHasText = new RawContextKey('chatInputHasText', false, {
+        type: 'boolean',
+        description: localize('interactiveInputHasText', 'True when the chat input has text.'),
+    });
+    ChatContextKeys.inputHasFocus = new RawContextKey('chatInputHasFocus', false, {
+        type: 'boolean',
+        description: localize('interactiveInputHasFocus', 'True when the chat input has focus.'),
+    });
+    ChatContextKeys.inChatInput = new RawContextKey('inChatInput', false, {
+        type: 'boolean',
+        description: localize('inInteractiveInput', 'True when focus is in the chat input, false otherwise.'),
+    });
+    ChatContextKeys.inChatSession = new RawContextKey('inChat', false, {
+        type: 'boolean',
+        description: localize('inChat', 'True when focus is in the chat widget, false otherwise.'),
+    });
+    ChatContextKeys.inUnifiedChat = new RawContextKey('inUnifiedChat', false, {
+        type: 'boolean',
+        description: localize('inUnifiedChat', 'True when focus is in the unified chat widget, false otherwise.'),
+    });
+    ChatContextKeys.instructionsAttached = new RawContextKey('chatInstructionsAttached', false, {
+        type: 'boolean',
+        description: localize('chatInstructionsAttachedContextDescription', 'True when the chat has a prompt instructions attached.'),
+    });
+    ChatContextKeys.chatMode = new RawContextKey('chatMode', ChatMode.Ask, {
+        type: 'string',
+        description: localize('chatMode', 'The current chat mode.'),
+    });
+    ChatContextKeys.supported = ContextKeyExpr.or(IsWebContext.toNegated(), RemoteNameContext.notEqualsTo('')); // supported on desktop and in web only with a remote connection
+    ChatContextKeys.enabled = new RawContextKey('chatIsEnabled', false, {
+        type: 'boolean',
+        description: localize('chatIsEnabled', 'True when chat is enabled because a default chat participant is activated with an implementation.'),
+    });
+    ChatContextKeys.panelParticipantRegistered = new RawContextKey('chatPanelParticipantRegistered', false, {
+        type: 'boolean',
+        description: localize('chatParticipantRegistered', 'True when a default chat participant is registered for the panel.'),
+    });
+    ChatContextKeys.editingParticipantRegistered = new RawContextKey('chatEditingParticipantRegistered', false, {
+        type: 'boolean',
+        description: localize('chatEditingParticipantRegistered', 'True when a default chat participant is registered for editing.'),
+    });
+    ChatContextKeys.chatEditingCanUndo = new RawContextKey('chatEditingCanUndo', false, {
+        type: 'boolean',
+        description: localize('chatEditingCanUndo', 'True when it is possible to undo an interaction in the editing panel.'),
+    });
+    ChatContextKeys.chatEditingCanRedo = new RawContextKey('chatEditingCanRedo', false, {
+        type: 'boolean',
+        description: localize('chatEditingCanRedo', 'True when it is possible to redo an interaction in the editing panel.'),
+    });
+    ChatContextKeys.extensionInvalid = new RawContextKey('chatExtensionInvalid', false, {
+        type: 'boolean',
+        description: localize('chatExtensionInvalid', 'True when the installed chat extension is invalid and needs to be updated.'),
+    });
+    ChatContextKeys.inputCursorAtTop = new RawContextKey('chatCursorAtTop', false);
+    ChatContextKeys.inputHasAgent = new RawContextKey('chatInputHasAgent', false);
+    ChatContextKeys.location = new RawContextKey('chatLocation', undefined);
+    ChatContextKeys.inQuickChat = new RawContextKey('quickChatHasFocus', false, {
+        type: 'boolean',
+        description: localize('inQuickChat', 'True when the quick chat UI has focus, false otherwise.'),
+    });
+    ChatContextKeys.hasFileAttachments = new RawContextKey('chatHasFileAttachments', false, {
+        type: 'boolean',
+        description: localize('chatHasFileAttachments', 'True when the chat has file attachments.'),
+    });
+    ChatContextKeys.languageModelsAreUserSelectable = new RawContextKey('chatModelsAreUserSelectable', false, {
+        type: 'boolean',
+        description: localize('chatModelsAreUserSelectable', 'True when the chat model can be selected manually by the user.'),
+    });
+    ChatContextKeys.Setup = {
+        hidden: new RawContextKey('chatSetupHidden', false, true), // True when chat setup is explicitly hidden.
+        installed: new RawContextKey('chatSetupInstalled', false, true), // True when the chat extension is installed.
+        fromDialog: ContextKeyExpr.has('config.chat.setupFromDialog'),
+    };
+    ChatContextKeys.Entitlement = {
+        signedOut: new RawContextKey('chatSetupSignedOut', false, true), // True when user is signed out.
+        canSignUp: new RawContextKey('chatPlanCanSignUp', false, true), // True when user can sign up to be a chat limited user.
+        limited: new RawContextKey('chatPlanLimited', false, true), // True when user is a chat limited user.
+        pro: new RawContextKey('chatPlanPro', false, true), // True when user is a chat pro user.
+    };
+    ChatContextKeys.SetupViewKeys = new Set([
+        ChatContextKeys.Setup.hidden.key,
+        ChatContextKeys.Setup.installed.key,
+        ChatContextKeys.Entitlement.signedOut.key,
+        ChatContextKeys.Entitlement.canSignUp.key,
+        ...ChatContextKeys.Setup.fromDialog.keys(),
+    ]);
+    ChatContextKeys.SetupViewCondition = ContextKeyExpr.and(ChatContextKeys.Setup.fromDialog.negate(), ContextKeyExpr.or(ContextKeyExpr.and(ChatContextKeys.Setup.hidden.negate(), ChatContextKeys.Setup.installed.negate()), ContextKeyExpr.and(ChatContextKeys.Entitlement.canSignUp, ChatContextKeys.Setup.installed), ContextKeyExpr.and(ChatContextKeys.Entitlement.signedOut, ChatContextKeys.Setup.installed)));
+    ChatContextKeys.chatQuotaExceeded = new RawContextKey('chatQuotaExceeded', false, true);
+    ChatContextKeys.completionsQuotaExceeded = new RawContextKey('completionsQuotaExceeded', false, true);
+    ChatContextKeys.Editing = {
+        hasToolsAgent: new RawContextKey('chatHasToolsAgent', false, {
+            type: 'boolean',
+            description: localize('chatEditingHasToolsAgent', 'True when a tools agent is registered.'),
+        }),
+        agentModeDisallowed: new RawContextKey('chatAgentModeDisallowed', undefined, {
+            type: 'boolean',
+            description: localize('chatAgentModeDisallowed', 'True when agent mode is not allowed.'),
+        }), // experiment-driven disablement
+        hasToolConfirmation: new RawContextKey('chatHasToolConfirmation', false, {
+            type: 'boolean',
+            description: localize('chatEditingHasToolConfirmation', 'True when a tool confirmation is present.'),
+        }),
+    };
+    ChatContextKeys.Tools = {
+        toolsCount: new RawContextKey('toolsCount', 0, {
+            type: 'number',
+            description: localize('toolsCount', 'The count of tools available in the chat.'),
+        }),
+    };
+})(ChatContextKeys || (ChatContextKeys = {}));
+export var ChatContextKeyExprs;
+(function (ChatContextKeyExprs) {
+    ChatContextKeyExprs.unifiedChatEnabled = ContextKeyExpr.has(`config.${ChatConfiguration.UnifiedChatView}`);
+    ChatContextKeyExprs.inEditsOrUnified = ContextKeyExpr.or(ChatContextKeys.location.isEqualTo(ChatAgentLocation.EditingSession), ChatContextKeys.inUnifiedChat);
+    ChatContextKeyExprs.inNonUnifiedPanel = ContextKeyExpr.and(ChatContextKeys.location.isEqualTo(ChatAgentLocation.Panel), ChatContextKeys.inUnifiedChat.negate());
+    ChatContextKeyExprs.inEditingMode = ContextKeyExpr.or(ChatContextKeys.chatMode.isEqualTo(ChatMode.Edit), ChatContextKeys.chatMode.isEqualTo(ChatMode.Agent));
+})(ChatContextKeyExprs || (ChatContextKeyExprs = {}));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY2hhdENvbnRleHRLZXlzLmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vVXNlcnMveWFzaGFzbmFpZHUvS3ZhbnRjb2RlL3ZvaWQvc3JjLyIsInNvdXJjZXMiOlsidnMvd29ya2JlbmNoL2NvbnRyaWIvY2hhdC9jb21tb24vY2hhdENvbnRleHRLZXlzLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7Z0dBR2dHO0FBRWhHLE9BQU8sRUFBRSxRQUFRLEVBQUUsTUFBTSxvQkFBb0IsQ0FBQTtBQUM3QyxPQUFPLEVBQUUsY0FBYyxFQUFFLGFBQWEsRUFBRSxNQUFNLHNEQUFzRCxDQUFBO0FBQ3BHLE9BQU8sRUFBRSxZQUFZLEVBQUUsTUFBTSx1REFBdUQsQ0FBQTtBQUNwRixPQUFPLEVBQUUsaUJBQWlCLEVBQUUsTUFBTSxnQ0FBZ0MsQ0FBQTtBQUNsRSxPQUFPLEVBQUUsaUJBQWlCLEVBQUUsaUJBQWlCLEVBQUUsUUFBUSxFQUFFLE1BQU0sZ0JBQWdCLENBQUE7QUFFL0UsTUFBTSxLQUFXLGVBQWUsQ0FrUi9CO0FBbFJELFdBQWlCLGVBQWU7SUFDbEIsNEJBQVksR0FBRyxJQUFJLGFBQWEsQ0FBUyx5QkFBeUIsRUFBRSxFQUFFLEVBQUU7UUFDcEYsSUFBSSxFQUFFLFFBQVE7UUFDZCxXQUFXLEVBQUUsUUFBUSxDQUNwQixnQ0FBZ0MsRUFDaEMsb0hBQW9ILENBQ3BIO0tBQ0QsQ0FBQyxDQUFBO0lBQ1csNENBQTRCLEdBQUcsSUFBSSxhQUFhLENBQzVELDJDQUEyQyxFQUMzQyxLQUFLLEVBQ0w7UUFDQyxJQUFJLEVBQUUsU0FBUztRQUNmLFdBQVcsRUFBRSxRQUFRLENBQ3BCLDJDQUEyQyxFQUMzQyxzREFBc0QsQ0FDdEQ7S0FDRCxDQUNELENBQUE7SUFDWSw4Q0FBOEIsR0FBRyxJQUFJLGFBQWEsQ0FDOUQsb0NBQW9DLEVBQ3BDLEtBQUssRUFDTDtRQUNDLElBQUksRUFBRSxTQUFTO1FBQ2YsV0FBVyxFQUFFLFFBQVEsQ0FDcEIsb0NBQW9DLEVBQ3BD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

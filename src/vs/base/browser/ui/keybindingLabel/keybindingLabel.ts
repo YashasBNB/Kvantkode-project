@@ -3,47 +3,47 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../dom.js';
-import type { IManagedHover } from '../hover/hover.js';
-import { getBaseLayerHoverDelegate } from '../hover/hoverDelegate2.js';
-import { getDefaultHoverDelegate } from '../hover/hoverDelegateFactory.js';
-import { UILabelProvider } from '../../../common/keybindingLabels.js';
-import { ResolvedKeybinding, ResolvedChord } from '../../../common/keybindings.js';
-import { Disposable } from '../../../common/lifecycle.js';
-import { equals } from '../../../common/objects.js';
-import { OperatingSystem } from '../../../common/platform.js';
-import './keybindingLabel.css';
-import { localize } from '../../../../nls.js';
+import * as dom from '../../dom.js'
+import type { IManagedHover } from '../hover/hover.js'
+import { getBaseLayerHoverDelegate } from '../hover/hoverDelegate2.js'
+import { getDefaultHoverDelegate } from '../hover/hoverDelegateFactory.js'
+import { UILabelProvider } from '../../../common/keybindingLabels.js'
+import { ResolvedKeybinding, ResolvedChord } from '../../../common/keybindings.js'
+import { Disposable } from '../../../common/lifecycle.js'
+import { equals } from '../../../common/objects.js'
+import { OperatingSystem } from '../../../common/platform.js'
+import './keybindingLabel.css'
+import { localize } from '../../../../nls.js'
 
-const $ = dom.$;
+const $ = dom.$
 
 export interface ChordMatches {
-	ctrlKey?: boolean;
-	shiftKey?: boolean;
-	altKey?: boolean;
-	metaKey?: boolean;
-	keyCode?: boolean;
+	ctrlKey?: boolean
+	shiftKey?: boolean
+	altKey?: boolean
+	metaKey?: boolean
+	keyCode?: boolean
 }
 
 export interface Matches {
-	firstPart: ChordMatches;
-	chordPart: ChordMatches;
+	firstPart: ChordMatches
+	chordPart: ChordMatches
 }
 
 export interface KeybindingLabelOptions extends IKeybindingLabelStyles {
-	renderUnboundKeybindings?: boolean;
+	renderUnboundKeybindings?: boolean
 	/**
 	 * Default false.
 	 */
-	disableTitle?: boolean;
+	disableTitle?: boolean
 }
 
 export interface IKeybindingLabelStyles {
-	keybindingLabelBackground: string | undefined;
-	keybindingLabelForeground: string | undefined;
-	keybindingLabelBorder: string | undefined;
-	keybindingLabelBottomBorder: string | undefined;
-	keybindingLabelShadow: string | undefined;
+	keybindingLabelBackground: string | undefined
+	keybindingLabelForeground: string | undefined
+	keybindingLabelBorder: string | undefined
+	keybindingLabelBottomBorder: string | undefined
+	keybindingLabelShadow: string | undefined
 }
 
 export const unthemedKeybindingLabelOptions: KeybindingLabelOptions = {
@@ -51,135 +51,176 @@ export const unthemedKeybindingLabelOptions: KeybindingLabelOptions = {
 	keybindingLabelForeground: undefined,
 	keybindingLabelBorder: undefined,
 	keybindingLabelBottomBorder: undefined,
-	keybindingLabelShadow: undefined
-};
+	keybindingLabelShadow: undefined,
+}
 
 export class KeybindingLabel extends Disposable {
+	private domNode: HTMLElement
+	private options: KeybindingLabelOptions
 
-	private domNode: HTMLElement;
-	private options: KeybindingLabelOptions;
+	private readonly keyElements = new Set<HTMLSpanElement>()
 
-	private readonly keyElements = new Set<HTMLSpanElement>();
+	private hover: IManagedHover
+	private keybinding: ResolvedKeybinding | undefined
+	private matches: Matches | undefined
+	private didEverRender: boolean
 
-	private hover: IManagedHover;
-	private keybinding: ResolvedKeybinding | undefined;
-	private matches: Matches | undefined;
-	private didEverRender: boolean;
+	constructor(
+		container: HTMLElement,
+		private os: OperatingSystem,
+		options?: KeybindingLabelOptions,
+	) {
+		super()
 
-	constructor(container: HTMLElement, private os: OperatingSystem, options?: KeybindingLabelOptions) {
-		super();
+		this.options = options || Object.create(null)
 
-		this.options = options || Object.create(null);
+		const labelForeground = this.options.keybindingLabelForeground
 
-		const labelForeground = this.options.keybindingLabelForeground;
-
-		this.domNode = dom.append(container, $('.monaco-keybinding'));
+		this.domNode = dom.append(container, $('.monaco-keybinding'))
 		if (labelForeground) {
-			this.domNode.style.color = labelForeground;
+			this.domNode.style.color = labelForeground
 		}
 
-		this.hover = this._register(getBaseLayerHoverDelegate().setupManagedHover(getDefaultHoverDelegate('mouse'), this.domNode, ''));
+		this.hover = this._register(
+			getBaseLayerHoverDelegate().setupManagedHover(
+				getDefaultHoverDelegate('mouse'),
+				this.domNode,
+				'',
+			),
+		)
 
-		this.didEverRender = false;
-		container.appendChild(this.domNode);
+		this.didEverRender = false
+		container.appendChild(this.domNode)
 	}
 
 	get element(): HTMLElement {
-		return this.domNode;
+		return this.domNode
 	}
 
 	set(keybinding: ResolvedKeybinding | undefined, matches?: Matches) {
-		if (this.didEverRender && this.keybinding === keybinding && KeybindingLabel.areSame(this.matches, matches)) {
-			return;
+		if (
+			this.didEverRender &&
+			this.keybinding === keybinding &&
+			KeybindingLabel.areSame(this.matches, matches)
+		) {
+			return
 		}
 
-		this.keybinding = keybinding;
-		this.matches = matches;
-		this.render();
+		this.keybinding = keybinding
+		this.matches = matches
+		this.render()
 	}
 
 	private render() {
-		this.clear();
+		this.clear()
 
 		if (this.keybinding) {
-			const chords = this.keybinding.getChords();
+			const chords = this.keybinding.getChords()
 			if (chords[0]) {
-				this.renderChord(this.domNode, chords[0], this.matches ? this.matches.firstPart : null);
+				this.renderChord(this.domNode, chords[0], this.matches ? this.matches.firstPart : null)
 			}
 			for (let i = 1; i < chords.length; i++) {
-				dom.append(this.domNode, $('span.monaco-keybinding-key-chord-separator', undefined, ' '));
-				this.renderChord(this.domNode, chords[i], this.matches ? this.matches.chordPart : null);
+				dom.append(this.domNode, $('span.monaco-keybinding-key-chord-separator', undefined, ' '))
+				this.renderChord(this.domNode, chords[i], this.matches ? this.matches.chordPart : null)
 			}
-			const title = (this.options.disableTitle ?? false) ? undefined : this.keybinding.getAriaLabel() || undefined;
-			this.hover.update(title);
-			this.domNode.setAttribute('aria-label', title || '');
+			const title =
+				(this.options.disableTitle ?? false)
+					? undefined
+					: this.keybinding.getAriaLabel() || undefined
+			this.hover.update(title)
+			this.domNode.setAttribute('aria-label', title || '')
 		} else if (this.options && this.options.renderUnboundKeybindings) {
-			this.renderUnbound(this.domNode);
+			this.renderUnbound(this.domNode)
 		}
 
-		this.didEverRender = true;
+		this.didEverRender = true
 	}
 
 	private clear(): void {
-		dom.clearNode(this.domNode);
-		this.keyElements.clear();
+		dom.clearNode(this.domNode)
+		this.keyElements.clear()
 	}
 
 	private renderChord(parent: HTMLElement, chord: ResolvedChord, match: ChordMatches | null) {
-		const modifierLabels = UILabelProvider.modifierLabels[this.os];
+		const modifierLabels = UILabelProvider.modifierLabels[this.os]
 		if (chord.ctrlKey) {
-			this.renderKey(parent, modifierLabels.ctrlKey, Boolean(match?.ctrlKey), modifierLabels.separator);
+			this.renderKey(
+				parent,
+				modifierLabels.ctrlKey,
+				Boolean(match?.ctrlKey),
+				modifierLabels.separator,
+			)
 		}
 		if (chord.shiftKey) {
-			this.renderKey(parent, modifierLabels.shiftKey, Boolean(match?.shiftKey), modifierLabels.separator);
+			this.renderKey(
+				parent,
+				modifierLabels.shiftKey,
+				Boolean(match?.shiftKey),
+				modifierLabels.separator,
+			)
 		}
 		if (chord.altKey) {
-			this.renderKey(parent, modifierLabels.altKey, Boolean(match?.altKey), modifierLabels.separator);
+			this.renderKey(
+				parent,
+				modifierLabels.altKey,
+				Boolean(match?.altKey),
+				modifierLabels.separator,
+			)
 		}
 		if (chord.metaKey) {
-			this.renderKey(parent, modifierLabels.metaKey, Boolean(match?.metaKey), modifierLabels.separator);
+			this.renderKey(
+				parent,
+				modifierLabels.metaKey,
+				Boolean(match?.metaKey),
+				modifierLabels.separator,
+			)
 		}
-		const keyLabel = chord.keyLabel;
+		const keyLabel = chord.keyLabel
 		if (keyLabel) {
-			this.renderKey(parent, keyLabel, Boolean(match?.keyCode), '');
+			this.renderKey(parent, keyLabel, Boolean(match?.keyCode), '')
 		}
 	}
 
-	private renderKey(parent: HTMLElement, label: string, highlight: boolean, separator: string): void {
-		dom.append(parent, this.createKeyElement(label, highlight ? '.highlight' : ''));
+	private renderKey(
+		parent: HTMLElement,
+		label: string,
+		highlight: boolean,
+		separator: string,
+	): void {
+		dom.append(parent, this.createKeyElement(label, highlight ? '.highlight' : ''))
 		if (separator) {
-			dom.append(parent, $('span.monaco-keybinding-key-separator', undefined, separator));
+			dom.append(parent, $('span.monaco-keybinding-key-separator', undefined, separator))
 		}
 	}
 
 	private renderUnbound(parent: HTMLElement): void {
-		dom.append(parent, this.createKeyElement(localize('unbound', "Unbound")));
+		dom.append(parent, this.createKeyElement(localize('unbound', 'Unbound')))
 	}
 
 	private createKeyElement(label: string, extraClass = ''): HTMLElement {
-		const keyElement = $('span.monaco-keybinding-key' + extraClass, undefined, label);
-		this.keyElements.add(keyElement);
+		const keyElement = $('span.monaco-keybinding-key' + extraClass, undefined, label)
+		this.keyElements.add(keyElement)
 
 		if (this.options.keybindingLabelBackground) {
-			keyElement.style.backgroundColor = this.options.keybindingLabelBackground;
+			keyElement.style.backgroundColor = this.options.keybindingLabelBackground
 		}
 		if (this.options.keybindingLabelBorder) {
-			keyElement.style.borderColor = this.options.keybindingLabelBorder;
+			keyElement.style.borderColor = this.options.keybindingLabelBorder
 		}
 		if (this.options.keybindingLabelBottomBorder) {
-			keyElement.style.borderBottomColor = this.options.keybindingLabelBottomBorder;
+			keyElement.style.borderBottomColor = this.options.keybindingLabelBottomBorder
 		}
 		if (this.options.keybindingLabelShadow) {
-			keyElement.style.boxShadow = `inset 0 -1px 0 ${this.options.keybindingLabelShadow}`;
+			keyElement.style.boxShadow = `inset 0 -1px 0 ${this.options.keybindingLabelShadow}`
 		}
 
-		return keyElement;
+		return keyElement
 	}
 
 	private static areSame(a: Matches | undefined, b: Matches | undefined): boolean {
 		if (a === b || (!a && !b)) {
-			return true;
+			return true
 		}
-		return !!a && !!b && equals(a.firstPart, b.firstPart) && equals(a.chordPart, b.chordPart);
+		return !!a && !!b && equals(a.firstPart, b.firstPart) && equals(a.chordPart, b.chordPart)
 	}
 }

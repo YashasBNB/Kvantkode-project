@@ -13,7 +13,6 @@
 // -fastapply changes simultaneously
 // -iterate on syntax errors (all files can be changed from a syntax error, not just the one with the error)
 
-
 // private async _searchUsingAI({ searchClause }: { searchClause: string }) {
 
 // 	// 		const relevantURIs: URI[] = []
@@ -23,7 +22,6 @@
 // 	// 		const filterPrompt = `\
 // 	// Is this file relevant?
 // 	// `
-
 
 // 	// 		// optimizations (DO THESE LATER!!!!!!)
 // 	// 		// if tool includes a uri in uriSet, skip it obviously
@@ -64,11 +62,6 @@
 // 	// 			applyWorkflow({ uri, applyStr: replaceClause })
 // 	// 		}
 
-
-
-
-
-
 // 	// while (true) {
 // 	// 	const result = new Promise((res, rej) => {
 // 	// 		sendLLMMessage({
@@ -84,9 +77,7 @@
 
 // 	// }
 
-
 // }
-
 
 // private async _replaceUsingAI({ searchClause, replaceClause, relevantURIs }: { searchClause: string, replaceClause: string, relevantURIs: URI[] }) {
 
@@ -96,13 +87,8 @@
 
 // 	}
 
-
-
 // 	// should I change this file?
 // 	// if so what changes to make?
 
-
-
 // 	// fast apply the changes
 // }
-

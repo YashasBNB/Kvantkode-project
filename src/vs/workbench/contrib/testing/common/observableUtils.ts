@@ -3,25 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { IObservableWithChange, IObserver } from '../../../../base/common/observable.js';
+import { IDisposable } from '../../../../base/common/lifecycle.js'
+import { IObservableWithChange, IObserver } from '../../../../base/common/observable.js'
 
-export function onObservableChange<T>(observable: IObservableWithChange<unknown, T>, callback: (value: T) => void): IDisposable {
+export function onObservableChange<T>(
+	observable: IObservableWithChange<unknown, T>,
+	callback: (value: T) => void,
+): IDisposable {
 	const o: IObserver = {
-		beginUpdate() { },
-		endUpdate() { },
+		beginUpdate() {},
+		endUpdate() {},
 		handlePossibleChange(observable) {
-			observable.reportChanges();
+			observable.reportChanges()
 		},
 		handleChange<T2, TChange>(_observable: IObservableWithChange<T2, TChange>, change: TChange) {
-			callback(change as any as T);
-		}
-	};
+			callback(change as any as T)
+		},
+	}
 
-	observable.addObserver(o);
+	observable.addObserver(o)
 	return {
 		dispose() {
-			observable.removeObserver(o);
-		}
-	};
+			observable.removeObserver(o)
+		},
+	}
 }

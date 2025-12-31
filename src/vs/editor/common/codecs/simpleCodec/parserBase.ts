@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BaseToken } from '../baseToken.js';
-import { assert } from '../../../../base/common/assert.js';
+import { BaseToken } from '../baseToken.js'
+import { assert } from '../../../../base/common/assert.js'
 
 /**
  * Common interface for a result of accepting a next token
@@ -14,34 +14,34 @@ export interface IAcceptTokenResult {
 	/**
 	 * The result type of accepting a next token in a sequence.
 	 */
-	result: 'success' | 'failure';
+	result: 'success' | 'failure'
 
 	/**
 	 * Whether the token to accept was consumed by the parser
 	 * during the accept operation.
 	 */
-	wasTokenConsumed: boolean;
+	wasTokenConsumed: boolean
 }
 
 /**
  * Successful result of accepting a next token in a sequence.
  */
 export interface IAcceptTokenSuccess<T> extends IAcceptTokenResult {
-	result: 'success';
-	nextParser: T;
+	result: 'success'
+	nextParser: T
 }
 
 /**
  * Failure result of accepting a next token in a sequence.
  */
 export interface IAcceptTokenFailure extends IAcceptTokenResult {
-	result: 'failure';
+	result: 'failure'
 }
 
 /**
  * The result of operation of accepting a next token in a sequence.
  */
-export type TAcceptTokenResult<T> = IAcceptTokenSuccess<T> | IAcceptTokenFailure;
+export type TAcceptTokenResult<T> = IAcceptTokenSuccess<T> | IAcceptTokenFailure
 
 /**
  * An abstract parser class that is able to parse a sequence of
@@ -51,12 +51,12 @@ export abstract class ParserBase<TToken extends BaseToken, TNextObject> {
 	/**
 	 * Whether the parser object was "consumed" and should not be used anymore.
 	 */
-	protected isConsumed: boolean = false;
+	protected isConsumed: boolean = false
 
 	/**
 	 * Number of tokens at the initialization of the current parser.
 	 */
-	protected readonly startTokensCount: number;
+	protected readonly startTokensCount: number
 
 	constructor(
 		/**
@@ -64,14 +64,14 @@ export abstract class ParserBase<TToken extends BaseToken, TNextObject> {
 		 */
 		protected readonly currentTokens: TToken[] = [],
 	) {
-		this.startTokensCount = this.currentTokens.length;
+		this.startTokensCount = this.currentTokens.length
 	}
 
 	/**
 	 * Get the tokens that were accumulated so far.
 	 */
 	public get tokens(): readonly TToken[] {
-		return this.currentTokens;
+		return this.currentTokens
 	}
 
 	/**
@@ -82,7 +82,7 @@ export abstract class ParserBase<TToken extends BaseToken, TNextObject> {
 	 * @param token The token to accept.
 	 * @returns The parsing result.
 	 */
-	public abstract accept(token: TToken): TAcceptTokenResult<TNextObject>;
+	public abstract accept(token: TToken): TAcceptTokenResult<TNextObject>
 
 	/**
 	 * A helper method that validates that the current parser object was not yet consumed,
@@ -94,7 +94,7 @@ export abstract class ParserBase<TToken extends BaseToken, TNextObject> {
 		assert(
 			this.isConsumed === false,
 			`The parser object is already consumed and should not be used anymore.`,
-		);
+		)
 	}
 }
 
@@ -110,7 +110,7 @@ export function assertNotConsumed<T extends ParserBase<any, any>>(
 	descriptor: PropertyDescriptor,
 ) {
 	// store the original method reference
-	const originalMethod = descriptor.value;
+	const originalMethod = descriptor.value
 
 	// validate that the current parser object was not yet consumed
 	// before invoking the original accept method
@@ -121,10 +121,10 @@ export function assertNotConsumed<T extends ParserBase<any, any>>(
 		assert(
 			this.isConsumed === false,
 			`The parser object is already consumed and should not be used anymore.`,
-		);
+		)
 
-		return originalMethod.apply(this, args);
-	};
+		return originalMethod.apply(this, args)
+	}
 
-	return descriptor;
+	return descriptor
 }

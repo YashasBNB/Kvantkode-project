@@ -3,242 +3,306 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { MarshalledId } from '../../../../base/common/marshallingIds.js';
-import { IProcessEnvironment, isLinux, OperatingSystem } from '../../../../base/common/platform.js';
-import Severity from '../../../../base/common/severity.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { URI } from '../../../../base/common/uri.js';
-import * as nls from '../../../../nls.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { ISerializedCommandDetectionCapability, ITerminalCapabilityStore } from '../../../../platform/terminal/common/capabilities/capabilities.js';
-import { IMergedEnvironmentVariableCollection } from '../../../../platform/terminal/common/environmentVariable.js';
-import { ICreateContributedTerminalProfileOptions, IExtensionTerminalProfile, IFixedTerminalDimensions, IProcessDataEvent, IProcessProperty, IProcessPropertyMap, IProcessReadyEvent, IProcessReadyWindowsPty, IShellLaunchConfig, ITerminalBackend, ITerminalContributions, ITerminalEnvironment, ITerminalLaunchError, ITerminalProfile, ITerminalProfileObject, ITerminalTabAction, ProcessPropertyType, TerminalIcon, TerminalLocationString, TitleEventSource } from '../../../../platform/terminal/common/terminal.js';
-import { AccessibilityCommandId } from '../../accessibility/common/accessibilityCommands.js';
-import { IEnvironmentVariableInfo } from './environmentVariable.js';
-import { IExtensionPointDescriptor } from '../../../services/extensions/common/extensionsRegistry.js';
-import { defaultTerminalContribCommandsToSkipShell } from '../terminalContribExports.js';
+import { Event } from '../../../../base/common/event.js'
+import { IDisposable } from '../../../../base/common/lifecycle.js'
+import { MarshalledId } from '../../../../base/common/marshallingIds.js'
+import { IProcessEnvironment, isLinux, OperatingSystem } from '../../../../base/common/platform.js'
+import Severity from '../../../../base/common/severity.js'
+import { ThemeIcon } from '../../../../base/common/themables.js'
+import { URI } from '../../../../base/common/uri.js'
+import * as nls from '../../../../nls.js'
+import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js'
+import {
+	ISerializedCommandDetectionCapability,
+	ITerminalCapabilityStore,
+} from '../../../../platform/terminal/common/capabilities/capabilities.js'
+import { IMergedEnvironmentVariableCollection } from '../../../../platform/terminal/common/environmentVariable.js'
+import {
+	ICreateContributedTerminalProfileOptions,
+	IExtensionTerminalProfile,
+	IFixedTerminalDimensions,
+	IProcessDataEvent,
+	IProcessProperty,
+	IProcessPropertyMap,
+	IProcessReadyEvent,
+	IProcessReadyWindowsPty,
+	IShellLaunchConfig,
+	ITerminalBackend,
+	ITerminalContributions,
+	ITerminalEnvironment,
+	ITerminalLaunchError,
+	ITerminalProfile,
+	ITerminalProfileObject,
+	ITerminalTabAction,
+	ProcessPropertyType,
+	TerminalIcon,
+	TerminalLocationString,
+	TitleEventSource,
+} from '../../../../platform/terminal/common/terminal.js'
+import { AccessibilityCommandId } from '../../accessibility/common/accessibilityCommands.js'
+import { IEnvironmentVariableInfo } from './environmentVariable.js'
+import { IExtensionPointDescriptor } from '../../../services/extensions/common/extensionsRegistry.js'
+import { defaultTerminalContribCommandsToSkipShell } from '../terminalContribExports.js'
 
-export const TERMINAL_VIEW_ID = 'terminal';
+export const TERMINAL_VIEW_ID = 'terminal'
 
-export const TERMINAL_CREATION_COMMANDS = ['workbench.action.terminal.toggleTerminal', 'workbench.action.terminal.new', 'workbench.action.togglePanel', 'workbench.action.terminal.focus'];
+export const TERMINAL_CREATION_COMMANDS = [
+	'workbench.action.terminal.toggleTerminal',
+	'workbench.action.terminal.new',
+	'workbench.action.togglePanel',
+	'workbench.action.terminal.focus',
+]
 
-export const TERMINAL_CONFIG_SECTION = 'terminal.integrated';
+export const TERMINAL_CONFIG_SECTION = 'terminal.integrated'
 
-export const DEFAULT_LETTER_SPACING = 0;
-export const MINIMUM_LETTER_SPACING = -5;
+export const DEFAULT_LETTER_SPACING = 0
+export const MINIMUM_LETTER_SPACING = -5
 // HACK: On Linux it's common for fonts to include an underline that is rendered lower than the
 // bottom of the cell which causes it to be cut off due to `overflow:hidden` in the DOM renderer.
 // See:
 // - https://github.com/microsoft/vscode/issues/211933
 // - https://github.com/xtermjs/xterm.js/issues/4067
-export const DEFAULT_LINE_HEIGHT = isLinux ? 1.1 : 1;
+export const DEFAULT_LINE_HEIGHT = isLinux ? 1.1 : 1
 
-export const MINIMUM_FONT_WEIGHT = 1;
-export const MAXIMUM_FONT_WEIGHT = 1000;
-export const DEFAULT_FONT_WEIGHT = 'normal';
-export const DEFAULT_BOLD_FONT_WEIGHT = 'bold';
-export const SUGGESTIONS_FONT_WEIGHT = ['normal', 'bold', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
+export const MINIMUM_FONT_WEIGHT = 1
+export const MAXIMUM_FONT_WEIGHT = 1000
+export const DEFAULT_FONT_WEIGHT = 'normal'
+export const DEFAULT_BOLD_FONT_WEIGHT = 'bold'
+export const SUGGESTIONS_FONT_WEIGHT = [
+	'normal',
+	'bold',
+	'100',
+	'200',
+	'300',
+	'400',
+	'500',
+	'600',
+	'700',
+	'800',
+	'900',
+]
 
-export const ITerminalProfileResolverService = createDecorator<ITerminalProfileResolverService>('terminalProfileResolverService');
+export const ITerminalProfileResolverService = createDecorator<ITerminalProfileResolverService>(
+	'terminalProfileResolverService',
+)
 export interface ITerminalProfileResolverService {
-	readonly _serviceBrand: undefined;
+	readonly _serviceBrand: undefined
 
-	readonly defaultProfileName: string | undefined;
+	readonly defaultProfileName: string | undefined
 
 	/**
 	 * Resolves the icon of a shell launch config if this will use the default profile
 	 */
-	resolveIcon(shellLaunchConfig: IShellLaunchConfig, os: OperatingSystem): void;
-	resolveShellLaunchConfig(shellLaunchConfig: IShellLaunchConfig, options: IShellLaunchConfigResolveOptions): Promise<void>;
-	getDefaultProfile(options: IShellLaunchConfigResolveOptions): Promise<ITerminalProfile>;
-	getDefaultShell(options: IShellLaunchConfigResolveOptions): Promise<string>;
-	getDefaultShellArgs(options: IShellLaunchConfigResolveOptions): Promise<string | string[]>;
-	getDefaultIcon(): TerminalIcon & ThemeIcon;
-	getEnvironment(remoteAuthority: string | undefined): Promise<IProcessEnvironment>;
+	resolveIcon(shellLaunchConfig: IShellLaunchConfig, os: OperatingSystem): void
+	resolveShellLaunchConfig(
+		shellLaunchConfig: IShellLaunchConfig,
+		options: IShellLaunchConfigResolveOptions,
+	): Promise<void>
+	getDefaultProfile(options: IShellLaunchConfigResolveOptions): Promise<ITerminalProfile>
+	getDefaultShell(options: IShellLaunchConfigResolveOptions): Promise<string>
+	getDefaultShellArgs(options: IShellLaunchConfigResolveOptions): Promise<string | string[]>
+	getDefaultIcon(): TerminalIcon & ThemeIcon
+	getEnvironment(remoteAuthority: string | undefined): Promise<IProcessEnvironment>
 }
 
 /*
  * When there were shell integration args injected
  * and createProcess returns an error, this exit code will be used.
  */
-export const ShellIntegrationExitCode = 633;
+export const ShellIntegrationExitCode = 633
 
 export interface IRegisterContributedProfileArgs {
-	extensionIdentifier: string; id: string; title: string; options: ICreateContributedTerminalProfileOptions;
+	extensionIdentifier: string
+	id: string
+	title: string
+	options: ICreateContributedTerminalProfileOptions
 }
 
-export const ITerminalProfileService = createDecorator<ITerminalProfileService>('terminalProfileService');
+export const ITerminalProfileService =
+	createDecorator<ITerminalProfileService>('terminalProfileService')
 export interface ITerminalProfileService {
-	readonly _serviceBrand: undefined;
-	readonly availableProfiles: ITerminalProfile[];
-	readonly contributedProfiles: IExtensionTerminalProfile[];
-	readonly profilesReady: Promise<void>;
-	getPlatformKey(): Promise<string>;
-	refreshAvailableProfiles(): void;
-	getDefaultProfileName(): string | undefined;
-	getDefaultProfile(os?: OperatingSystem): ITerminalProfile | undefined;
-	onDidChangeAvailableProfiles: Event<ITerminalProfile[]>;
-	getContributedDefaultProfile(shellLaunchConfig: IShellLaunchConfig): Promise<IExtensionTerminalProfile | undefined>;
-	registerContributedProfile(args: IRegisterContributedProfileArgs): Promise<void>;
-	getContributedProfileProvider(extensionIdentifier: string, id: string): ITerminalProfileProvider | undefined;
-	registerTerminalProfileProvider(extensionIdentifier: string, id: string, profileProvider: ITerminalProfileProvider): IDisposable;
+	readonly _serviceBrand: undefined
+	readonly availableProfiles: ITerminalProfile[]
+	readonly contributedProfiles: IExtensionTerminalProfile[]
+	readonly profilesReady: Promise<void>
+	getPlatformKey(): Promise<string>
+	refreshAvailableProfiles(): void
+	getDefaultProfileName(): string | undefined
+	getDefaultProfile(os?: OperatingSystem): ITerminalProfile | undefined
+	onDidChangeAvailableProfiles: Event<ITerminalProfile[]>
+	getContributedDefaultProfile(
+		shellLaunchConfig: IShellLaunchConfig,
+	): Promise<IExtensionTerminalProfile | undefined>
+	registerContributedProfile(args: IRegisterContributedProfileArgs): Promise<void>
+	getContributedProfileProvider(
+		extensionIdentifier: string,
+		id: string,
+	): ITerminalProfileProvider | undefined
+	registerTerminalProfileProvider(
+		extensionIdentifier: string,
+		id: string,
+		profileProvider: ITerminalProfileProvider,
+	): IDisposable
 }
 
 export interface ITerminalProfileProvider {
-	createContributedTerminalProfile(options: ICreateContributedTerminalProfileOptions): Promise<void>;
+	createContributedTerminalProfile(options: ICreateContributedTerminalProfileOptions): Promise<void>
 }
 
 export interface IShellLaunchConfigResolveOptions {
-	remoteAuthority: string | undefined;
-	os: OperatingSystem;
-	allowAutomationShell?: boolean;
+	remoteAuthority: string | undefined
+	os: OperatingSystem
+	allowAutomationShell?: boolean
 }
 
-export type FontWeight = 'normal' | 'bold' | number;
+export type FontWeight = 'normal' | 'bold' | number
 
 export interface ITerminalProfiles {
-	linux: { [key: string]: ITerminalProfileObject };
-	osx: { [key: string]: ITerminalProfileObject };
-	windows: { [key: string]: ITerminalProfileObject };
+	linux: { [key: string]: ITerminalProfileObject }
+	osx: { [key: string]: ITerminalProfileObject }
+	windows: { [key: string]: ITerminalProfileObject }
 }
 
-export type ConfirmOnKill = 'never' | 'always' | 'editor' | 'panel';
-export type ConfirmOnExit = 'never' | 'always' | 'hasChildProcesses';
+export type ConfirmOnKill = 'never' | 'always' | 'editor' | 'panel'
+export type ConfirmOnExit = 'never' | 'always' | 'hasChildProcesses'
 
 export interface ICompleteTerminalConfiguration {
-	'terminal.integrated.env.windows': ITerminalEnvironment;
-	'terminal.integrated.env.osx': ITerminalEnvironment;
-	'terminal.integrated.env.linux': ITerminalEnvironment;
-	'terminal.integrated.cwd': string;
-	'terminal.integrated.detectLocale': 'auto' | 'off' | 'on';
+	'terminal.integrated.env.windows': ITerminalEnvironment
+	'terminal.integrated.env.osx': ITerminalEnvironment
+	'terminal.integrated.env.linux': ITerminalEnvironment
+	'terminal.integrated.cwd': string
+	'terminal.integrated.detectLocale': 'auto' | 'off' | 'on'
 }
 
 export interface ITerminalConfiguration {
 	shell: {
-		linux: string | null;
-		osx: string | null;
-		windows: string | null;
-	};
+		linux: string | null
+		osx: string | null
+		windows: string | null
+	}
 	automationShell: {
-		linux: string | null;
-		osx: string | null;
-		windows: string | null;
-	};
+		linux: string | null
+		osx: string | null
+		windows: string | null
+	}
 	shellArgs: {
-		linux: string[];
-		osx: string[];
-		windows: string[];
-	};
-	profiles: ITerminalProfiles;
+		linux: string[]
+		osx: string[]
+		windows: string[]
+	}
+	profiles: ITerminalProfiles
 	defaultProfile: {
-		linux: string | null;
-		osx: string | null;
-		windows: string | null;
-	};
-	useWslProfiles: boolean;
-	altClickMovesCursor: boolean;
-	macOptionIsMeta: boolean;
-	macOptionClickForcesSelection: boolean;
-	gpuAcceleration: 'auto' | 'on' | 'off';
-	rightClickBehavior: 'default' | 'copyPaste' | 'paste' | 'selectWord' | 'nothing';
-	middleClickBehavior: 'default' | 'paste';
-	cursorBlinking: boolean;
-	cursorStyle: 'block' | 'underline' | 'line';
-	cursorStyleInactive: 'outline' | 'block' | 'underline' | 'line' | 'none';
-	cursorWidth: number;
-	drawBoldTextInBrightColors: boolean;
-	fastScrollSensitivity: number;
-	fontFamily: string;
-	fontWeight: FontWeight;
-	fontWeightBold: FontWeight;
-	minimumContrastRatio: number;
-	mouseWheelScrollSensitivity: number;
-	tabStopWidth: number;
-	sendKeybindingsToShell: boolean;
-	fontSize: number;
-	letterSpacing: number;
-	lineHeight: number;
-	detectLocale: 'auto' | 'off' | 'on';
-	scrollback: number;
-	commandsToSkipShell: string[];
-	allowChords: boolean;
-	allowMnemonics: boolean;
-	cwd: string;
-	confirmOnExit: ConfirmOnExit;
-	confirmOnKill: ConfirmOnKill;
-	enableBell: boolean;
+		linux: string | null
+		osx: string | null
+		windows: string | null
+	}
+	useWslProfiles: boolean
+	altClickMovesCursor: boolean
+	macOptionIsMeta: boolean
+	macOptionClickForcesSelection: boolean
+	gpuAcceleration: 'auto' | 'on' | 'off'
+	rightClickBehavior: 'default' | 'copyPaste' | 'paste' | 'selectWord' | 'nothing'
+	middleClickBehavior: 'default' | 'paste'
+	cursorBlinking: boolean
+	cursorStyle: 'block' | 'underline' | 'line'
+	cursorStyleInactive: 'outline' | 'block' | 'underline' | 'line' | 'none'
+	cursorWidth: number
+	drawBoldTextInBrightColors: boolean
+	fastScrollSensitivity: number
+	fontFamily: string
+	fontWeight: FontWeight
+	fontWeightBold: FontWeight
+	minimumContrastRatio: number
+	mouseWheelScrollSensitivity: number
+	tabStopWidth: number
+	sendKeybindingsToShell: boolean
+	fontSize: number
+	letterSpacing: number
+	lineHeight: number
+	detectLocale: 'auto' | 'off' | 'on'
+	scrollback: number
+	commandsToSkipShell: string[]
+	allowChords: boolean
+	allowMnemonics: boolean
+	cwd: string
+	confirmOnExit: ConfirmOnExit
+	confirmOnKill: ConfirmOnKill
+	enableBell: boolean
 	env: {
-		linux: { [key: string]: string };
-		osx: { [key: string]: string };
-		windows: { [key: string]: string };
-	};
-	environmentChangesIndicator: 'off' | 'on' | 'warnonly';
-	environmentChangesRelaunch: boolean;
-	showExitAlert: boolean;
-	splitCwd: 'workspaceRoot' | 'initial' | 'inherited';
-	windowsEnableConpty: boolean;
-	windowsUseConptyDll?: boolean;
-	wordSeparators: string;
-	enableFileLinks: 'off' | 'on' | 'notRemote';
-	allowedLinkSchemes: string[];
-	unicodeVersion: '6' | '11';
-	enablePersistentSessions: boolean;
+		linux: { [key: string]: string }
+		osx: { [key: string]: string }
+		windows: { [key: string]: string }
+	}
+	environmentChangesIndicator: 'off' | 'on' | 'warnonly'
+	environmentChangesRelaunch: boolean
+	showExitAlert: boolean
+	splitCwd: 'workspaceRoot' | 'initial' | 'inherited'
+	windowsEnableConpty: boolean
+	windowsUseConptyDll?: boolean
+	wordSeparators: string
+	enableFileLinks: 'off' | 'on' | 'notRemote'
+	allowedLinkSchemes: string[]
+	unicodeVersion: '6' | '11'
+	enablePersistentSessions: boolean
 	tabs: {
-		enabled: boolean;
-		hideCondition: 'never' | 'singleTerminal' | 'singleGroup';
-		showActiveTerminal: 'always' | 'singleTerminal' | 'singleTerminalOrNarrow' | 'singleGroup' | 'never';
-		location: 'left' | 'right';
-		focusMode: 'singleClick' | 'doubleClick';
-		title: string;
-		description: string;
-		separator: string;
-	};
-	bellDuration: number;
-	defaultLocation: TerminalLocationString;
-	customGlyphs: boolean;
-	persistentSessionReviveProcess: 'onExit' | 'onExitAndWindowClose' | 'never';
-	ignoreProcessNames: string[];
+		enabled: boolean
+		hideCondition: 'never' | 'singleTerminal' | 'singleGroup'
+		showActiveTerminal:
+			| 'always'
+			| 'singleTerminal'
+			| 'singleTerminalOrNarrow'
+			| 'singleGroup'
+			| 'never'
+		location: 'left' | 'right'
+		focusMode: 'singleClick' | 'doubleClick'
+		title: string
+		description: string
+		separator: string
+	}
+	bellDuration: number
+	defaultLocation: TerminalLocationString
+	customGlyphs: boolean
+	persistentSessionReviveProcess: 'onExit' | 'onExitAndWindowClose' | 'never'
+	ignoreProcessNames: string[]
 	shellIntegration?: {
-		enabled: boolean;
-		decorationsEnabled: 'both' | 'gutter' | 'overviewRuler' | 'never';
-	};
-	enableImages: boolean;
-	smoothScrolling: boolean;
-	ignoreBracketedPasteMode: boolean;
-	rescaleOverlappingGlyphs: boolean;
+		enabled: boolean
+		decorationsEnabled: 'both' | 'gutter' | 'overviewRuler' | 'never'
+	}
+	enableImages: boolean
+	smoothScrolling: boolean
+	ignoreBracketedPasteMode: boolean
+	rescaleOverlappingGlyphs: boolean
 	fontLigatures?: {
-		enabled: boolean;
-		featureSettings: string;
-		fallbackLigatures: string[];
-	};
-	hideOnLastClosed: boolean;
+		enabled: boolean
+		featureSettings: string
+		fallbackLigatures: string[]
+	}
+	hideOnLastClosed: boolean
 }
 
 export interface ITerminalFont {
-	fontFamily: string;
-	fontSize: number;
-	letterSpacing: number;
-	lineHeight: number;
-	charWidth?: number;
-	charHeight?: number;
+	fontFamily: string
+	fontSize: number
+	letterSpacing: number
+	lineHeight: number
+	charWidth?: number
+	charHeight?: number
 }
 
 export interface IRemoteTerminalAttachTarget {
-	id: number;
-	pid: number;
-	title: string;
-	titleSource: TitleEventSource;
-	cwd: string;
-	workspaceId: string;
-	workspaceName: string;
-	isOrphan: boolean;
-	icon: URI | { light: URI; dark: URI } | { id: string; color?: { id: string } } | undefined;
-	color: string | undefined;
-	fixedDimensions: IFixedTerminalDimensions | undefined;
-	shellIntegrationNonce: string;
-	tabActions?: ITerminalTabAction[];
+	id: number
+	pid: number
+	title: string
+	titleSource: TitleEventSource
+	cwd: string
+	workspaceId: string
+	workspaceName: string
+	isOrphan: boolean
+	icon: URI | { light: URI; dark: URI } | { id: string; color?: { id: string } } | undefined
+	color: string | undefined
+	fixedDimensions: IFixedTerminalDimensions | undefined
+	shellIntegrationNonce: string
+	tabActions?: ITerminalTabAction[]
 }
 
 export interface IBeforeProcessDataEvent {
@@ -246,68 +310,82 @@ export interface IBeforeProcessDataEvent {
 	 * The data of the event, this can be modified by the event listener to change what gets sent
 	 * to the terminal.
 	 */
-	data: string;
+	data: string
 }
 
 export interface IDefaultShellAndArgsRequest {
-	useAutomationShell: boolean;
-	callback: (shell: string, args: string[] | string | undefined) => void;
+	useAutomationShell: boolean
+	callback: (shell: string, args: string[] | string | undefined) => void
 }
 
 /** Read-only process information that can apply to detached terminals. */
 export interface ITerminalProcessInfo {
-	readonly processState: ProcessState;
-	readonly ptyProcessReady: Promise<void>;
-	readonly shellProcessId: number | undefined;
-	readonly remoteAuthority: string | undefined;
-	readonly os: OperatingSystem | undefined;
-	readonly userHome: string | undefined;
-	readonly initialCwd: string;
-	readonly environmentVariableInfo: IEnvironmentVariableInfo | undefined;
-	readonly persistentProcessId: number | undefined;
-	readonly shouldPersist: boolean;
-	readonly hasWrittenData: boolean;
-	readonly hasChildProcesses: boolean;
-	readonly backend: ITerminalBackend | undefined;
-	readonly capabilities: ITerminalCapabilityStore;
-	readonly shellIntegrationNonce: string;
-	readonly extEnvironmentVariableCollection: IMergedEnvironmentVariableCollection | undefined;
+	readonly processState: ProcessState
+	readonly ptyProcessReady: Promise<void>
+	readonly shellProcessId: number | undefined
+	readonly remoteAuthority: string | undefined
+	readonly os: OperatingSystem | undefined
+	readonly userHome: string | undefined
+	readonly initialCwd: string
+	readonly environmentVariableInfo: IEnvironmentVariableInfo | undefined
+	readonly persistentProcessId: number | undefined
+	readonly shouldPersist: boolean
+	readonly hasWrittenData: boolean
+	readonly hasChildProcesses: boolean
+	readonly backend: ITerminalBackend | undefined
+	readonly capabilities: ITerminalCapabilityStore
+	readonly shellIntegrationNonce: string
+	readonly extEnvironmentVariableCollection: IMergedEnvironmentVariableCollection | undefined
 }
 
-export const isTerminalProcessManager = (t: ITerminalProcessInfo | ITerminalProcessManager): t is ITerminalProcessManager => typeof (t as ITerminalProcessManager).write === 'function';
+export const isTerminalProcessManager = (
+	t: ITerminalProcessInfo | ITerminalProcessManager,
+): t is ITerminalProcessManager => typeof (t as ITerminalProcessManager).write === 'function'
 
 export interface ITerminalProcessManager extends IDisposable, ITerminalProcessInfo {
-	readonly processTraits: IProcessReadyEvent | undefined;
+	readonly processTraits: IProcessReadyEvent | undefined
 
-	readonly onPtyDisconnect: Event<void>;
-	readonly onPtyReconnect: Event<void>;
+	readonly onPtyDisconnect: Event<void>
+	readonly onPtyReconnect: Event<void>
 
-	readonly onProcessReady: Event<IProcessReadyEvent>;
-	readonly onBeforeProcessData: Event<IBeforeProcessDataEvent>;
-	readonly onProcessData: Event<IProcessDataEvent>;
-	readonly onProcessReplayComplete: Event<void>;
-	readonly onEnvironmentVariableInfoChanged: Event<IEnvironmentVariableInfo>;
-	readonly onDidChangeProperty: Event<IProcessProperty<any>>;
-	readonly onProcessExit: Event<number | undefined>;
-	readonly onRestoreCommands: Event<ISerializedCommandDetectionCapability>;
+	readonly onProcessReady: Event<IProcessReadyEvent>
+	readonly onBeforeProcessData: Event<IBeforeProcessDataEvent>
+	readonly onProcessData: Event<IProcessDataEvent>
+	readonly onProcessReplayComplete: Event<void>
+	readonly onEnvironmentVariableInfoChanged: Event<IEnvironmentVariableInfo>
+	readonly onDidChangeProperty: Event<IProcessProperty<any>>
+	readonly onProcessExit: Event<number | undefined>
+	readonly onRestoreCommands: Event<ISerializedCommandDetectionCapability>
 
-	dispose(immediate?: boolean): void;
-	detachFromProcess(forcePersist?: boolean): Promise<void>;
-	createProcess(shellLaunchConfig: IShellLaunchConfig, cols: number, rows: number): Promise<ITerminalLaunchError | { injectedArgs: string[] } | undefined>;
-	relaunch(shellLaunchConfig: IShellLaunchConfig, cols: number, rows: number, reset: boolean): Promise<ITerminalLaunchError | { injectedArgs: string[] } | undefined>;
-	write(data: string): Promise<void>;
-	setDimensions(cols: number, rows: number): Promise<void>;
-	setDimensions(cols: number, rows: number, sync: false): Promise<void>;
-	setDimensions(cols: number, rows: number, sync: true): void;
-	clearBuffer(): Promise<void>;
-	setUnicodeVersion(version: '6' | '11'): Promise<void>;
-	acknowledgeDataEvent(charCount: number): void;
-	processBinary(data: string): void;
+	dispose(immediate?: boolean): void
+	detachFromProcess(forcePersist?: boolean): Promise<void>
+	createProcess(
+		shellLaunchConfig: IShellLaunchConfig,
+		cols: number,
+		rows: number,
+	): Promise<ITerminalLaunchError | { injectedArgs: string[] } | undefined>
+	relaunch(
+		shellLaunchConfig: IShellLaunchConfig,
+		cols: number,
+		rows: number,
+		reset: boolean,
+	): Promise<ITerminalLaunchError | { injectedArgs: string[] } | undefined>
+	write(data: string): Promise<void>
+	setDimensions(cols: number, rows: number): Promise<void>
+	setDimensions(cols: number, rows: number, sync: false): Promise<void>
+	setDimensions(cols: number, rows: number, sync: true): void
+	clearBuffer(): Promise<void>
+	setUnicodeVersion(version: '6' | '11'): Promise<void>
+	acknowledgeDataEvent(charCount: number): void
+	processBinary(data: string): void
 
-	refreshProperty<T extends ProcessPropertyType>(type: T): Promise<IProcessPropertyMap[T]>;
-	updateProperty<T extends ProcessPropertyType>(property: T, value: IProcessPropertyMap[T]): Promise<void>;
-	getBackendOS(): Promise<OperatingSystem>;
-	freePortKillProcess(port: string): Promise<void>;
+	refreshProperty<T extends ProcessPropertyType>(type: T): Promise<IProcessPropertyMap[T]>
+	updateProperty<T extends ProcessPropertyType>(
+		property: T,
+		value: IProcessPropertyMap[T],
+	): Promise<void>
+	getBackendOS(): Promise<OperatingSystem>
+	freePortKillProcess(port: string): Promise<void>
 }
 
 export const enum ProcessState {
@@ -326,75 +404,75 @@ export const enum ProcessState {
 	KilledByUser = 5,
 	// The process was killed by itself, for example the shell crashed or `exit`
 	// was run.
-	KilledByProcess = 6
+	KilledByProcess = 6,
 }
 
 export interface ITerminalProcessExtHostProxy extends IDisposable {
-	readonly instanceId: number;
+	readonly instanceId: number
 
-	emitData(data: string): void;
-	emitProcessProperty(property: IProcessProperty<any>): void;
-	emitReady(pid: number, cwd: string, windowsPty: IProcessReadyWindowsPty | undefined): void;
-	emitExit(exitCode: number | undefined): void;
+	emitData(data: string): void
+	emitProcessProperty(property: IProcessProperty<any>): void
+	emitReady(pid: number, cwd: string, windowsPty: IProcessReadyWindowsPty | undefined): void
+	emitExit(exitCode: number | undefined): void
 
-	onInput: Event<string>;
-	onBinary: Event<string>;
-	onResize: Event<{ cols: number; rows: number }>;
-	onAcknowledgeDataEvent: Event<number>;
-	onShutdown: Event<boolean>;
-	onRequestInitialCwd: Event<void>;
-	onRequestCwd: Event<void>;
+	onInput: Event<string>
+	onBinary: Event<string>
+	onResize: Event<{ cols: number; rows: number }>
+	onAcknowledgeDataEvent: Event<number>
+	onShutdown: Event<boolean>
+	onRequestInitialCwd: Event<void>
+	onRequestCwd: Event<void>
 }
 
 export interface IStartExtensionTerminalRequest {
-	proxy: ITerminalProcessExtHostProxy;
-	cols: number;
-	rows: number;
-	callback: (error: ITerminalLaunchError | undefined) => void;
+	proxy: ITerminalProcessExtHostProxy
+	cols: number
+	rows: number
+	callback: (error: ITerminalLaunchError | undefined) => void
 }
 
 export interface ITerminalStatus {
 	/** An internal string ID used to identify the status. */
-	id: string;
+	id: string
 	/**
 	 * The severity of the status, this defines both the color and how likely the status is to be
 	 * the "primary status".
 	 */
-	severity: Severity;
+	severity: Severity
 	/**
 	 * An icon representing the status, if this is not specified it will not show up on the terminal
 	 * tab and will use the generic `info` icon when hovering.
 	 */
-	icon?: ThemeIcon;
+	icon?: ThemeIcon
 	/**
 	 * What to show for this status in the terminal's hover.
 	 */
-	tooltip?: string | undefined;
+	tooltip?: string | undefined
 	/**
 	 * What to show for this status in the terminal's hover when details are toggled.
 	 */
-	detailedTooltip?: string | undefined;
+	detailedTooltip?: string | undefined
 	/**
 	 * Actions to expose on hover.
 	 */
-	hoverActions?: ITerminalStatusHoverAction[];
+	hoverActions?: ITerminalStatusHoverAction[]
 }
 
 export interface ITerminalStatusHoverAction {
-	label: string;
-	commandId: string;
-	run: () => void;
+	label: string
+	commandId: string
+	run: () => void
 }
 
 /**
  * Context for actions taken on terminal instances.
  */
 export interface ISerializedTerminalInstanceContext {
-	$mid: MarshalledId.TerminalContext;
-	instanceId: number;
+	$mid: MarshalledId.TerminalContext
+	instanceId: number
 }
 
-export const QUICK_LAUNCH_PROFILE_CHOICE = 'workbench.action.terminal.profile.choice';
+export const QUICK_LAUNCH_PROFILE_CHOICE = 'workbench.action.terminal.profile.choice'
 
 export const enum TerminalCommandId {
 	Toggle = 'workbench.action.terminal.toggleTerminal',
@@ -625,65 +703,93 @@ export const DEFAULT_COMMANDS_TO_SKIP_SHELL: string[] = [
 	'workbench.action.terminal.chat.insertCommand',
 	'workbench.action.terminal.chat.viewInChat',
 	...defaultTerminalContribCommandsToSkipShell,
-];
+]
 
 export const terminalContributionsDescriptor: IExtensionPointDescriptor<ITerminalContributions> = {
 	extensionPoint: 'terminal',
 	defaultExtensionKind: ['workspace'],
-	activationEventsGenerator: (contribs: ITerminalContributions[], result: { push(item: string): void }) => {
+	activationEventsGenerator: (
+		contribs: ITerminalContributions[],
+		result: { push(item: string): void },
+	) => {
 		for (const contrib of contribs) {
-			for (const profileContrib of (contrib.profiles ?? [])) {
-				result.push(`onTerminalProfile:${profileContrib.id}`);
+			for (const profileContrib of contrib.profiles ?? []) {
+				result.push(`onTerminalProfile:${profileContrib.id}`)
 			}
 		}
 	},
 	jsonSchema: {
-		description: nls.localize('vscode.extension.contributes.terminal', 'Contributes terminal functionality.'),
+		description: nls.localize(
+			'vscode.extension.contributes.terminal',
+			'Contributes terminal functionality.',
+		),
 		type: 'object',
 		properties: {
 			profiles: {
 				type: 'array',
-				description: nls.localize('vscode.extension.contributes.terminal.profiles', "Defines additional terminal profiles that the user can create."),
+				description: nls.localize(
+					'vscode.extension.contributes.terminal.profiles',
+					'Defines additional terminal profiles that the user can create.',
+				),
 				items: {
 					type: 'object',
 					required: ['id', 'title'],
-					defaultSnippets: [{
-						body: {
-							id: '$1',
-							title: '$2'
-						}
-					}],
+					defaultSnippets: [
+						{
+							body: {
+								id: '$1',
+								title: '$2',
+							},
+						},
+					],
 					properties: {
 						id: {
-							description: nls.localize('vscode.extension.contributes.terminal.profiles.id', "The ID of the terminal profile provider."),
+							description: nls.localize(
+								'vscode.extension.contributes.terminal.profiles.id',
+								'The ID of the terminal profile provider.',
+							),
 							type: 'string',
 						},
 						title: {
-							description: nls.localize('vscode.extension.contributes.terminal.profiles.title', "Title for this terminal profile."),
+							description: nls.localize(
+								'vscode.extension.contributes.terminal.profiles.title',
+								'Title for this terminal profile.',
+							),
 							type: 'string',
 						},
 						icon: {
-							description: nls.localize('vscode.extension.contributes.terminal.types.icon', "A codicon, URI, or light and dark URIs to associate with this terminal type."),
-							anyOf: [{
-								type: 'string',
-							},
-							{
-								type: 'object',
-								properties: {
-									light: {
-										description: nls.localize('vscode.extension.contributes.terminal.types.icon.light', 'Icon path when a light theme is used'),
-										type: 'string'
+							description: nls.localize(
+								'vscode.extension.contributes.terminal.types.icon',
+								'A codicon, URI, or light and dark URIs to associate with this terminal type.',
+							),
+							anyOf: [
+								{
+									type: 'string',
+								},
+								{
+									type: 'object',
+									properties: {
+										light: {
+											description: nls.localize(
+												'vscode.extension.contributes.terminal.types.icon.light',
+												'Icon path when a light theme is used',
+											),
+											type: 'string',
+										},
+										dark: {
+											description: nls.localize(
+												'vscode.extension.contributes.terminal.types.icon.dark',
+												'Icon path when a dark theme is used',
+											),
+											type: 'string',
+										},
 									},
-									dark: {
-										description: nls.localize('vscode.extension.contributes.terminal.types.icon.dark', 'Icon path when a dark theme is used'),
-										type: 'string'
-									}
-								}
-							}]
+								},
+							],
 						},
 					},
 				},
 			},
 		},
 	},
-};
+}

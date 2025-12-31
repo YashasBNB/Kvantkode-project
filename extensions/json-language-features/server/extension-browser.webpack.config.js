@@ -5,10 +5,10 @@
 
 //@ts-check
 
-'use strict';
+'use strict'
 
-const withBrowserDefaults = require('../../shared.webpack.config').browser;
-const path = require('path');
+const withBrowserDefaults = require('../../shared.webpack.config').browser
+const path = require('path')
 
 module.exports = withBrowserDefaults({
 	context: __dirname,
@@ -19,6 +19,6 @@ module.exports = withBrowserDefaults({
 		filename: 'jsonServerMain.js',
 		path: path.join(__dirname, 'dist', 'browser'),
 		libraryTarget: 'var',
-		library: 'serverExportVar'
-	}
-});
+		library: 'serverExportVar',
+	},
+})

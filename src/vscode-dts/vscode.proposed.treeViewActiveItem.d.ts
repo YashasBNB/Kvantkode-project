@@ -4,18 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/170248
 
 	export interface TreeView<T> extends Disposable {
 		/**
 		 * Currently active item.
 		 */
-		readonly activeItem: T | undefined;
+		readonly activeItem: T | undefined
 		/**
 		 * Event that is fired when the {@link TreeView.activeItem active item} has changed
 		 */
-		readonly onDidChangeActiveItem: Event<TreeViewActiveItemChangeEvent<T>>;
+		readonly onDidChangeActiveItem: Event<TreeViewActiveItemChangeEvent<T>>
 	}
 
 	/**
@@ -25,6 +24,6 @@ declare module 'vscode' {
 		/**
 		 * Active item.
 		 */
-		readonly activeItem: T | undefined;
+		readonly activeItem: T | undefined
 	}
 }

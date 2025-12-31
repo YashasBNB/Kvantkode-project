@@ -3,74 +3,73 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fs from 'fs';
-import * as os from 'os';
-import * as cp from 'child_process';
-import * as path from 'path';
+import * as fs from 'fs'
+import * as os from 'os'
+import * as cp from 'child_process'
+import * as path from 'path'
 
-let hasWSLFeaturePromise: Promise<boolean> | undefined;
+let hasWSLFeaturePromise: Promise<boolean> | undefined
 
 export async function hasWSLFeatureInstalled(refresh = false): Promise<boolean> {
 	if (hasWSLFeaturePromise === undefined || refresh) {
-		hasWSLFeaturePromise = testWSLFeatureInstalled();
+		hasWSLFeaturePromise = testWSLFeatureInstalled()
 	}
-	return hasWSLFeaturePromise;
+	return hasWSLFeaturePromise
 }
 
 async function testWSLFeatureInstalled(): Promise<boolean> {
-	const windowsBuildNumber = getWindowsBuildNumber();
+	const windowsBuildNumber = getWindowsBuildNumber()
 	if (windowsBuildNumber === undefined) {
-		return false;
+		return false
 	}
 	if (windowsBuildNumber >= 22000) {
-		const wslExePath = getWSLExecutablePath();
+		const wslExePath = getWSLExecutablePath()
 		if (wslExePath) {
-			return new Promise<boolean>(s => {
+			return new Promise<boolean>((s) => {
 				try {
-					cp.execFile(wslExePath, ['--status'], err => s(!err));
+					cp.execFile(wslExePath, ['--status'], (err) => s(!err))
 				} catch (e) {
-					s(false);
+					s(false)
 				}
-			});
+			})
 		}
 	} else {
-		const dllPath = getLxssManagerDllPath();
+		const dllPath = getLxssManagerDllPath()
 		if (dllPath) {
 			try {
 				if ((await fs.promises.stat(dllPath)).isFile()) {
-					return true;
+					return true
 				}
-			} catch (e) {
-			}
+			} catch (e) {}
 		}
 	}
-	return false;
+	return false
 }
 
 function getWindowsBuildNumber(): number | undefined {
-	const osVersion = (/(\d+)\.(\d+)\.(\d+)/g).exec(os.release());
+	const osVersion = /(\d+)\.(\d+)\.(\d+)/g.exec(os.release())
 	if (osVersion) {
-		return parseInt(osVersion[3]);
+		return parseInt(osVersion[3])
 	}
-	return undefined;
+	return undefined
 }
 
 function getSystem32Path(subPath: string): string | undefined {
-	const systemRoot = process.env['SystemRoot'];
+	const systemRoot = process.env['SystemRoot']
 	if (systemRoot) {
-		const is32ProcessOn64Windows = process.env.hasOwnProperty('PROCESSOR_ARCHITEW6432');
-		return path.join(systemRoot, is32ProcessOn64Windows ? 'Sysnative' : 'System32', subPath);
+		const is32ProcessOn64Windows = process.env.hasOwnProperty('PROCESSOR_ARCHITEW6432')
+		return path.join(systemRoot, is32ProcessOn64Windows ? 'Sysnative' : 'System32', subPath)
 	}
-	return undefined;
+	return undefined
 }
 
 function getWSLExecutablePath(): string | undefined {
-	return getSystem32Path('wsl.exe');
+	return getSystem32Path('wsl.exe')
 }
 
 /**
  * In builds < 22000 this dll inidcates that WSL is installed
  */
 function getLxssManagerDllPath(): string | undefined {
-	return getSystem32Path('lxss\\LxssManager.dll');
+	return getSystem32Path('lxss\\LxssManager.dll')
 }

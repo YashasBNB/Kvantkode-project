@@ -4,11 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/241449
 
 	export interface TextDocument {
-
 		/**
 		 * The file encoding of this document that will be used when the document is saved.
 		 *
@@ -25,11 +23,10 @@ declare module 'vscode' {
 		 * 'eucjp', 'euckr', 'windows874', 'iso885911', 'koi8ru', 'koi8t', 'gb2312',
 		 * 'cp865', 'cp850'.
 		 */
-		readonly encoding: string;
+		readonly encoding: string
 	}
 
 	export namespace workspace {
-
 		/**
 		 * Opens a document. Will return early if this document is already open. Otherwise
 		 * the document is loaded and the {@link workspace.onDidOpenTextDocument didOpen}-event fires.
@@ -52,27 +49,30 @@ declare module 'vscode' {
 		 * @param options Options to control how the document will be opened.
 		 * @returns A promise that resolves to a {@link TextDocument document}.
 		 */
-		export function openTextDocument(uri: Uri, options?: {
-			/**
-			 * The {@link TextDocument.encoding encoding} of the document to use
-			 * for decoding the underlying buffer to text. If omitted, the encoding
-			 * will be guessed based on the file content and/or the editor settings
-			 * unless the document is already opened.
-			 *
-			 * See {@link TextDocument.encoding} for more information about valid
-			 * values for encoding.
-			 *
-			 * *Note* that opening a text document that was already opened with a
-			 * different encoding has the potential of changing the text contents of
-			 * the text document. Specifically, when the encoding results in a
-			 * different set of characters than the previous encoding.
-			 *
-			 * *Note* that if you open a document with an encoding that does not
-			 * support decoding the underlying bytes, content may be replaced with
-			 * substitution characters as appropriate.
-			 */
-			encoding?: string;
-		}): Thenable<TextDocument>;
+		export function openTextDocument(
+			uri: Uri,
+			options?: {
+				/**
+				 * The {@link TextDocument.encoding encoding} of the document to use
+				 * for decoding the underlying buffer to text. If omitted, the encoding
+				 * will be guessed based on the file content and/or the editor settings
+				 * unless the document is already opened.
+				 *
+				 * See {@link TextDocument.encoding} for more information about valid
+				 * values for encoding.
+				 *
+				 * *Note* that opening a text document that was already opened with a
+				 * different encoding has the potential of changing the text contents of
+				 * the text document. Specifically, when the encoding results in a
+				 * different set of characters than the previous encoding.
+				 *
+				 * *Note* that if you open a document with an encoding that does not
+				 * support decoding the underlying bytes, content may be replaced with
+				 * substitution characters as appropriate.
+				 */
+				encoding?: string
+			},
+		): Thenable<TextDocument>
 
 		/**
 		 * A short-hand for `openTextDocument(Uri.file(path))`.
@@ -82,27 +82,30 @@ declare module 'vscode' {
 		 * @param options Options to control how the document will be opened.
 		 * @returns A promise that resolves to a {@link TextDocument document}.
 		 */
-		export function openTextDocument(path: string, options?: {
-			/**
-			 * The {@link TextDocument.encoding encoding} of the document to use
-			 * for decoding the underlying buffer to text. If omitted, the encoding
-			 * will be guessed based on the file content and/or the editor settings
-			 * unless the document is already opened.
-			 *
-			 * See {@link TextDocument.encoding} for more information about valid
-			 * values for encoding.
-			 *
-			 * *Note* that opening a text document that was already opened with a
-			 * different encoding has the potential of changing the text contents of
-			 * the text document. Specifically, when the encoding results in a
-			 * different set of characters than the previous encoding.
-			 *
-			 * *Note* that if you open a document with an encoding that does not
-			 * support decoding the underlying bytes, content may be replaced with
-			 * substitution characters as appropriate.
-			 */
-			encoding?: string;
-		}): Thenable<TextDocument>;
+		export function openTextDocument(
+			path: string,
+			options?: {
+				/**
+				 * The {@link TextDocument.encoding encoding} of the document to use
+				 * for decoding the underlying buffer to text. If omitted, the encoding
+				 * will be guessed based on the file content and/or the editor settings
+				 * unless the document is already opened.
+				 *
+				 * See {@link TextDocument.encoding} for more information about valid
+				 * values for encoding.
+				 *
+				 * *Note* that opening a text document that was already opened with a
+				 * different encoding has the potential of changing the text contents of
+				 * the text document. Specifically, when the encoding results in a
+				 * different set of characters than the previous encoding.
+				 *
+				 * *Note* that if you open a document with an encoding that does not
+				 * support decoding the underlying bytes, content may be replaced with
+				 * substitution characters as appropriate.
+				 */
+				encoding?: string
+			},
+		): Thenable<TextDocument>
 
 		/**
 		 * Opens an untitled text document. The editor will prompt the user for a file
@@ -116,16 +119,16 @@ declare module 'vscode' {
 			/**
 			 * The {@link TextDocument.languageId language} of the document.
 			 */
-			language?: string;
+			language?: string
 			/**
 			 * The initial contents of the document.
 			 */
-			content?: string;
+			content?: string
 			/**
 			 * The {@link TextDocument.encoding encoding} of the document.
 			 */
-			encoding?: string;
-		}): Thenable<TextDocument>;
+			encoding?: string
+		}): Thenable<TextDocument>
 
 		/**
 		 * Decodes the content from a `Uint8Array` to a `string`. You MUST
@@ -150,7 +153,11 @@ declare module 'vscode' {
 		 * for more information about valid values for encoding.
 		 * @returns A thenable that resolves to the decoded `string`.
 		 */
-		export function decode(content: Uint8Array, uri: Uri | undefined, options?: { encoding: string }): Thenable<string>;
+		export function decode(
+			content: Uint8Array,
+			uri: Uri | undefined,
+			options?: { encoding: string },
+		): Thenable<string>
 
 		/**
 		 * Encodes the content of a `string` to a `Uint8Array`.
@@ -165,6 +172,10 @@ declare module 'vscode' {
 		 * for more information about valid values for encoding.
 		 * @returns A thenable that resolves to the encoded `Uint8Array`.
 		 */
-		export function encode(content: string, uri: Uri | undefined, options?: { encoding: string }): Thenable<Uint8Array>;
+		export function encode(
+			content: string,
+			uri: Uri | undefined,
+			options?: { encoding: string },
+		): Thenable<Uint8Array>
 	}
 }

@@ -3,7 +3,6 @@
  *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 
-
 // register inline diffs
 import './editCodeService.js'
 
@@ -13,7 +12,6 @@ import './sidebarPane.js'
 
 // register quick edit (Ctrl+K)
 import './quickEditActions.js'
-
 
 // register Autocomplete
 import './autocompleteService.js'
@@ -53,7 +51,7 @@ import './voidSelectionHelperWidget.js'
 import './tooltipService.js'
 
 // register onboarding service
-import './voidOnboardingService.js'
+// import './voidOnboardingService.js'
 
 // register misc service
 import './miscWokrbenchContrib.js'

@@ -76,7 +76,7 @@ function getExtensionDownloadStream(extension: IExtensionDefinition) {
 	} else if (productjson.extensionsGallery?.serviceUrl) {
 		input = ext.fromMarketplace(productjson.extensionsGallery.serviceUrl, extension);
 	} else {
-		input = ext.fromGithub(extension);
+		input = ext.fromGithub(extension);11
 	}
 
 	return input.pipe(rename(p => p.dirname = `${extension.name}/${p.dirname}`));

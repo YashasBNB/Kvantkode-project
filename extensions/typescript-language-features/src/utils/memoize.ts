@@ -4,20 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 
 export function memoize(_target: any, key: string, descriptor: any) {
-	let fnKey: string | undefined;
-	let fn: Function | undefined;
+	let fnKey: string | undefined
+	let fn: Function | undefined
 
 	if (typeof descriptor.value === 'function') {
-		fnKey = 'value';
-		fn = descriptor.value;
+		fnKey = 'value'
+		fn = descriptor.value
 	} else if (typeof descriptor.get === 'function') {
-		fnKey = 'get';
-		fn = descriptor.get;
+		fnKey = 'get'
+		fn = descriptor.get
 	} else {
-		throw new Error('not supported');
+		throw new Error('not supported')
 	}
 
-	const memoizeKey = `$memoize$${key}`;
+	const memoizeKey = `$memoize$${key}`
 
 	descriptor[fnKey] = function (...args: any[]) {
 		if (!this.hasOwnProperty(memoizeKey)) {
@@ -25,10 +25,10 @@ export function memoize(_target: any, key: string, descriptor: any) {
 				configurable: false,
 				enumerable: false,
 				writable: false,
-				value: fn!.apply(this, args)
-			});
+				value: fn!.apply(this, args),
+			})
 		}
 
-		return this[memoizeKey];
-	};
+		return this[memoizeKey]
+	}
 }

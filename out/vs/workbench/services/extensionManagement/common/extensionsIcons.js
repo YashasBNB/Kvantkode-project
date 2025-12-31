@@ -1,0 +1,11 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { Codicon } from '../../../../base/common/codicons.js';
+import { localize } from '../../../../nls.js';
+import { registerColor, textLinkForeground, } from '../../../../platform/theme/common/colorRegistry.js';
+import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
+export const verifiedPublisherIcon = registerIcon('extensions-verified-publisher', Codicon.verifiedFilled, localize('verifiedPublisher', 'Icon used for the verified extension publisher in the extensions view and editor.'));
+export const extensionVerifiedPublisherIconColor = registerColor('extensionIcon.verifiedForeground', textLinkForeground, localize('extensionIconVerifiedForeground', 'The icon color for extension verified publisher.'), false);
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZXh0ZW5zaW9uc0ljb25zLmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vVXNlcnMveWFzaGFzbmFpZHUvS3ZhbnRjb2RlL3ZvaWQvc3JjLyIsInNvdXJjZXMiOlsidnMvd29ya2JlbmNoL3NlcnZpY2VzL2V4dGVuc2lvbk1hbmFnZW1lbnQvY29tbW9uL2V4dGVuc2lvbnNJY29ucy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRztBQUVoRyxPQUFPLEVBQUUsT0FBTyxFQUFFLE1BQU0scUNBQXFDLENBQUE7QUFDN0QsT0FBTyxFQUFFLFFBQVEsRUFBRSxNQUFNLG9CQUFvQixDQUFBO0FBQzdDLE9BQU8sRUFDTixhQUFhLEVBQ2Isa0JBQWtCLEdBQ2xCLE1BQU0sb0RBQW9ELENBQUE7QUFDM0QsT0FBTyxFQUFFLFlBQVksRUFBRSxNQUFNLG1EQUFtRCxDQUFBO0FBRWhGLE1BQU0sQ0FBQyxNQUFNLHFCQUFxQixHQUFHLFlBQVksQ0FDaEQsK0JBQStCLEVBQy9CLE9BQU8sQ0FBQyxjQUFjLEVBQ3RCLFFBQVEsQ0FDUCxtQkFBbUIsRUFDbkIsbUZBQW1GLENBQ25GLENBQ0QsQ0FBQTtBQUNELE1BQU0sQ0FBQyxNQUFNLG1DQUFtQyxHQUFHLGFBQWEsQ0FDL0Qsa0NBQWtDLEVBQ2xDLGtCQUFrQixFQUNsQixRQUFRLENBQUMsaUNBQWlDLEVBQUUsa0RBQWtELENBQUMsRUFDL0YsS0FBSyxDQUNMLENBQUEifQ==

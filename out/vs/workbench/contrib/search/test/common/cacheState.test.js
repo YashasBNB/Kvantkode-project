@@ -1,0 +1,181 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import assert from 'assert';
+import * as errors from '../../../../../base/common/errors.js';
+import { FileQueryCacheState } from '../../common/cacheState.js';
+import { DeferredPromise } from '../../../../../base/common/async.js';
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
+suite('FileQueryCacheState', () => {
+    ensureNoDisposablesAreLeakedInTestSuite();
+    test('reuse old cacheKey until new cache is loaded', async function () {
+        const cache = new MockCache();
+        const first = createCacheState(cache);
+        const firstKey = first.cacheKey;
+        assert.strictEqual(first.isLoaded, false);
+        assert.strictEqual(first.isUpdating, false);
+        first.load();
+        assert.strictEqual(first.isLoaded, false);
+        assert.strictEqual(first.isUpdating, true);
+        await cache.loading[firstKey].complete(null);
+        assert.strictEqual(first.isLoaded, true);
+        assert.strictEqual(first.isUpdating, false);
+        const second = createCacheState(cache, first);
+        second.load();
+        assert.strictEqual(second.isLoaded, true);
+        assert.strictEqual(second.isUpdating, true);
+        await cache.awaitDisposal(0);
+        assert.strictEqual(second.cacheKey, firstKey); // still using old cacheKey
+        const secondKey = cache.cacheKeys[1];
+        await cache.loading[secondKey].complete(null);
+        assert.strictEqual(second.isLoaded, true);
+        assert.strictEqual(second.isUpdating, false);
+        await cache.awaitDisposal(1);
+        assert.strictEqual(second.cacheKey, secondKey);
+    });
+    test('do not spawn additional load if previous is still loading', async function () {
+        const cache = new MockCache();
+        const first = createCacheState(cache);
+        const firstKey = first.cacheKey;
+        first.load();
+        assert.strictEqual(first.isLoaded, false);
+        assert.strictEqual(first.isUpdating, true);
+        assert.strictEqual(Object.keys(cache.loading).length, 1);
+        const second = createCacheState(cache, first);
+        second.load();
+        assert.strictEqual(second.isLoaded, false);
+        assert.strictEqual(second.isUpdating, true);
+        assert.strictEqual(cache.cacheKeys.length, 2);
+        assert.strictEqual(Object.keys(cache.loading).length, 1); // still only one loading
+        assert.strictEqual(second.cacheKey, firstKey);
+        await cache.loading[firstKey].complete(null);
+        assert.strictEqual(second.isLoaded, true);
+        assert.strictEqual(second.isUpdating, false);
+        await cache.awaitDisposal(0);
+    });
+    test('do not use previous cacheKey if query changed', async function () {
+        const cache = new MockCache();
+        const first = createCacheState(cache);
+        const firstKey = first.cacheKey;
+        first.load();
+        await cache.loading[firstKey].complete(null);
+        assert.strictEqual(first.isLoaded, true);
+        assert.strictEqual(first.isUpdating, false);
+        await cache.awaitDisposal(0);
+        cache.baseQuery.excludePattern = { '**/node_modules': true };
+        const second = createCacheState(cache, first);
+        assert.strictEqual(second.isLoaded, false);
+        assert.strictEqual(second.isUpdating, false);
+        await cache.awaitDisposal(1);
+        second.load();
+        assert.strictEqual(second.isLoaded, false);
+        assert.strictEqual(second.isUpdating, true);
+        assert.notStrictEqual(second.cacheKey, firstKey); // not using old cacheKey
+        const secondKey = cache.cacheKeys[1];
+        assert.strictEqual(second.cacheKey, secondKey);
+        await cache.loading[secondKey].complete(null);
+        assert.strictEqual(second.isLoaded, true);
+        assert.strictEqual(second.isUpdating, false);
+        await cache.awaitDisposal(1);
+    });
+    test('dispose propagates', async function () {
+        const cache = new MockCache();
+        const first = createCacheState(cache);
+        const firstKey = first.cacheKey;
+        first.load();
+        await cache.loading[firstKey].complete(null);
+        const second = createCacheState(cache, first);
+        assert.strictEqual(second.isLoaded, true);
+        assert.strictEqual(second.isUpdating, false);
+        await cache.awaitDisposal(0);
+        second.dispose();
+        assert.strictEqual(second.isLoaded, false);
+        assert.strictEqual(second.isUpdating, false);
+        await cache.awaitDisposal(1);
+        assert.ok(cache.disposing[firstKey]);
+    });
+    test('keep using old cacheKey when loading fails', async function () {
+        const cache = new MockCache();
+        const first = createCacheState(cache);
+        const firstKey = first.cacheKey;
+        first.load();
+        await cache.loading[firstKey].complete(null);
+        const second = createCacheState(cache, first);
+        second.load();
+        const secondKey = cache.cacheKeys[1];
+        const origErrorHandler = errors.errorHandler.getUnexpectedErrorHandler();
+        try {
+            errors.setUnexpectedErrorHandler(() => null);
+            await cache.loading[secondKey].error('loading failed');
+        }
+        finally {
+            errors.setUnexpectedErrorHandler(origErrorHandler);
+        }
+        assert.strictEqual(second.isLoaded, true);
+        assert.strictEqual(second.isUpdating, false);
+        assert.strictEqual(Object.keys(cache.loading).length, 2);
+        await cache.awaitDisposal(0);
+        assert.strictEqual(second.cacheKey, firstKey); // keep using old cacheKey
+        const third = createCacheState(cache, second);
+        third.load();
+        assert.strictEqual(third.isLoaded, true);
+        assert.strictEqual(third.isUpdating, true);
+        assert.strictEqual(Object.keys(cache.loading).length, 3);
+        await cache.awaitDisposal(0);
+        assert.strictEqual(third.cacheKey, firstKey);
+        const thirdKey = cache.cacheKeys[2];
+        await cache.loading[thirdKey].complete(null);
+        assert.strictEqual(third.isLoaded, true);
+        assert.strictEqual(third.isUpdating, false);
+        assert.strictEqual(Object.keys(cache.loading).length, 3);
+        await cache.awaitDisposal(2);
+        assert.strictEqual(third.cacheKey, thirdKey); // recover with next successful load
+    });
+    function createCacheState(cache, previous) {
+        return new FileQueryCacheState((cacheKey) => cache.query(cacheKey), (query) => cache.load(query), (cacheKey) => cache.dispose(cacheKey), previous);
+    }
+    class MockCache {
+        constructor() {
+            this.cacheKeys = [];
+            this.loading = {};
+            this.disposing = {};
+            this._awaitDisposal = [];
+            this.baseQuery = {
+                type: 1 /* QueryType.File */,
+                folderQueries: [],
+            };
+        }
+        query(cacheKey) {
+            this.cacheKeys.push(cacheKey);
+            return Object.assign({ cacheKey: cacheKey }, this.baseQuery);
+        }
+        load(query) {
+            const promise = new DeferredPromise();
+            this.loading[query.cacheKey] = promise;
+            return promise.p;
+        }
+        dispose(cacheKey) {
+            const promise = new DeferredPromise();
+            this.disposing[cacheKey] = promise;
+            const n = Object.keys(this.disposing).length;
+            for (const done of this._awaitDisposal[n] || []) {
+                done();
+            }
+            delete this._awaitDisposal[n];
+            return promise.p;
+        }
+        awaitDisposal(n) {
+            return new Promise((resolve) => {
+                if (n === Object.keys(this.disposing).length) {
+                    resolve();
+                }
+                else {
+                    ;
+                    (this._awaitDisposal[n] || (this._awaitDisposal[n] = [])).push(resolve);
+                }
+            });
+        }
+    }
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY2FjaGVTdGF0ZS50ZXN0LmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vVXNlcnMveWFzaGFzbmFpZHUvS3ZhbnRjb2RlL3ZvaWQvc3JjLyIsInNvdXJjZXMiOlsidnMvd29ya2JlbmNoL2NvbnRyaWIvc2VhcmNoL3Rlc3QvY29tbW9uL2NhY2hlU3RhdGUudGVzdC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRztBQUVoRyxPQUFPLE1BQU0sTUFBTSxRQUFRLENBQUE7QUFDM0IsT0FBTyxLQUFLLE1BQU0sTUFBTSxzQ0FBc0MsQ0FBQTtBQUU5RCxPQUFPLEVBQUUsbUJBQW1CLEVBQUUsTUFBTSw0QkFBNEIsQ0FBQTtBQUNoRSxPQUFPLEVBQUUsZUFBZSxFQUFFLE1BQU0scUNBQXFDLENBQUE7QUFDckUsT0FBTyxFQUFFLHVDQUF1QyxFQUFFLE1BQU0sMENBQTBDLENBQUE7QUFFbEcsS0FBSyxDQUFDLHFCQUFxQixFQUFFLEdBQUcsRUFBRTtJQUNqQyx1Q0FBdUMsRUFBRSxDQUFBO0lBRXpDLElBQUksQ0FBQyw4Q0FBOEMsRUFBRSxLQUFLO1FBQ3pELE1BQU0sS0FBSyxHQUFHLElBQUksU0FBUyxFQUFFLENBQUE7UUFFN0IsTUFBTSxLQUFLLEdBQUcsZ0JBQWdCLENBQUMsS0FBSyxDQUFDLENBQUE7UUFDckMsTUFBTSxRQUFRLEdBQUcsS0FBSyxDQUFDLFFBQVEsQ0FBQTtRQUMvQixNQUFNLENBQUMsV0FBVyxDQUFDLEtBQUssQ0FBQyxRQUFRLEVBQUUsS0FBSyxDQUFDLENBQUE7UUFDekMsTUFBTSxDQUFDLFdBQVcsQ0FBQyxLQUFLLENBQUMsVUFBVSxFQUFFLEtBQUssQ0FBQyxDQUFBO1FBRTNDLEtBQUssQ0FBQyxJQUFJLEVBQUUsQ0FBQTtRQUNaLE1BQU0sQ0FBQyxXQUFXLENBQUMsS0FBSyxDQUFDLFFBQVEsRUFBRSxLQUFLLENBQUMsQ0FBQTtRQUN6QyxNQUFNLENBQUMsV0FBVyxDQUFDLEtBQUssQ0FBQyxVQUFVLEVBQUUsSUFB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

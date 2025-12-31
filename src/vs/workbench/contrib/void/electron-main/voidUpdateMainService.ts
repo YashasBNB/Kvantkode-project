@@ -3,17 +3,15 @@
  *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IEnvironmentMainService } from '../../../../platform/environment/electron-main/environmentMainService.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { IUpdateService, StateType } from '../../../../platform/update/common/update.js';
-import { IVoidUpdateService } from '../common/voidUpdateService.js';
-import { VoidCheckUpdateRespose } from '../common/voidUpdateServiceTypes.js';
-
-
+import { Disposable } from '../../../../base/common/lifecycle.js'
+import { IEnvironmentMainService } from '../../../../platform/environment/electron-main/environmentMainService.js'
+import { IProductService } from '../../../../platform/product/common/productService.js'
+import { IUpdateService, StateType } from '../../../../platform/update/common/update.js'
+import { IVoidUpdateService } from '../common/voidUpdateService.js'
+import { VoidCheckUpdateRespose } from '../common/voidUpdateServiceTypes.js'
 
 export class VoidMainUpdateService extends Disposable implements IVoidUpdateService {
-	_serviceBrand: undefined;
+	_serviceBrand: undefined
 
 	constructor(
 		@IProductService private readonly _productService: IProductService,
@@ -23,9 +21,7 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 		super()
 	}
 
-
 	async check(explicit: boolean): Promise<VoidCheckUpdateRespose> {
-
 		const isDevMode = !this._envMainService.isBuilt // found in abstractUpdateService.ts
 
 		if (isDevMode) {
@@ -34,8 +30,7 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 
 		// if disabled and not explicitly checking, return early
 		if (this._updateService.state.type === StateType.Disabled) {
-			if (!explicit)
-				return { message: null } as const
+			if (!explicit) return { message: null } as const
 		}
 
 		this._updateService.checkForUpdates(false) // implicity check, then handle result ourselves
@@ -44,12 +39,18 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 
 		if (this._updateService.state.type === StateType.Uninitialized) {
 			// The update service hasn't been initialized yet
-			return { message: explicit ? 'Checking for updates soon...' : null, action: explicit ? 'reinstall' : undefined } as const
+			return {
+				message: explicit ? 'Checking for updates soon...' : null,
+				action: explicit ? 'reinstall' : undefined,
+			} as const
 		}
 
 		if (this._updateService.state.type === StateType.Idle) {
 			// No updates currently available
-			return { message: explicit ? 'No updates found!' : null, action: explicit ? 'reinstall' : undefined } as const
+			return {
+				message: explicit ? 'No updates found!' : null,
+				action: explicit ? 'reinstall' : undefined,
+			} as const
 		}
 
 		if (this._updateService.state.type === StateType.CheckingForUpdates) {
@@ -59,7 +60,7 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 
 		if (this._updateService.state.type === StateType.AvailableForDownload) {
 			// Update available but requires manual download (mainly for Linux)
-			return { message: 'A new update is available!', action: 'download', } as const
+			return { message: 'A new update is available!', action: 'download' } as const
 		}
 
 		if (this._updateService.state.type === StateType.Downloading) {
@@ -69,7 +70,10 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 
 		if (this._updateService.state.type === StateType.Downloaded) {
 			// Update has been downloaded but not yet ready
-			return { message: explicit ? 'An update is ready to be applied!' : null, action: 'apply' } as const
+			return {
+				message: explicit ? 'An update is ready to be applied!' : null,
+				action: 'apply',
+			} as const
 		}
 
 		if (this._updateService.state.type === StateType.Updating) {
@@ -88,17 +92,14 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 		return null
 	}
 
-
-
-
-
-
 	private async _manualCheckGHTagIfDisabled(explicit: boolean): Promise<VoidCheckUpdateRespose> {
 		try {
-			const response = await fetch('https://api.github.com/repos/voideditor/binaries/releases/latest');
+			const response = await fetch(
+				'https://api.github.com/repos/voideditor/binaries/releases/latest',
+			)
 
-			const data = await response.json();
-			const version = data.tag_name;
+			const data = await response.json()
+			const version = data.tag_name
 
 			const myVersion = this._productService.version
 			const latestVersion = version
@@ -112,14 +113,13 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 			if (explicit) {
 				if (response.ok) {
 					if (!isUpToDate) {
-						message = 'A new version of Void is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
+						message =
+							'A new version of Void is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
 						action = 'reinstall'
-					}
-					else {
+					} else {
 						message = 'Void is up-to-date!'
 					}
-				}
-				else {
+				} else {
 					message = `An error occurred when fetching the latest GitHub release tag. Please try again in ~5 minutes, or reinstall.`
 					action = 'reinstall'
 				}
@@ -127,23 +127,21 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 			// not explicit
 			else {
 				if (response.ok && !isUpToDate) {
-					message = 'A new version of Void is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
+					message =
+						'A new version of Void is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
 					action = 'reinstall'
-				}
-				else {
+				} else {
 					message = null
 				}
 			}
 			return { message, action } as const
-		}
-		catch (e) {
+		} catch (e) {
 			if (explicit) {
 				return {
 					message: `An error occurred when fetching the latest GitHub release tag: ${e}. Please try again in ~5 minutes.`,
 					action: 'reinstall',
 				}
-			}
-			else {
+			} else {
 				return { message: null } as const
 			}
 		}

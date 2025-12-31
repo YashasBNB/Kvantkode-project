@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/120173
 
 	/**
@@ -16,7 +15,7 @@ declare module 'vscode' {
 		 * trust. If omitted, a generic message will be displayed in the workspace
 		 * trust request dialog.
 		 */
-		readonly message?: string;
+		readonly message?: string
 	}
 
 	export namespace workspace {
@@ -25,6 +24,8 @@ declare module 'vscode' {
 		 * @param options Optional object describing the properties of the
 		 * workspace trust request.
 		 */
-		export function requestWorkspaceTrust(options?: WorkspaceTrustRequestOptions): Thenable<boolean | undefined>;
+		export function requestWorkspaceTrust(
+			options?: WorkspaceTrustRequestOptions,
+		): Thenable<boolean | undefined>
 	}
 }

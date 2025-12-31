@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { IHoverDelegate } from './hoverDelegate.js';
-import type { HoverPosition } from './hoverWidget.js';
-import type { CancellationToken } from '../../../common/cancellation.js';
-import type { IMarkdownString } from '../../../common/htmlContent.js';
-import type { IDisposable } from '../../../common/lifecycle.js';
+import type { IHoverDelegate } from './hoverDelegate.js'
+import type { HoverPosition } from './hoverWidget.js'
+import type { CancellationToken } from '../../../common/cancellation.js'
+import type { IMarkdownString } from '../../../common/htmlContent.js'
+import type { IDisposable } from '../../../common/lifecycle.js'
 
 /**
  * Enables the convenient display of rich markdown-based hovers in the workbench.
@@ -29,7 +29,7 @@ export interface IHoverDelegate2 {
 	showDelayedHover(
 		options: IHoverOptions,
 		lifecycleOptions: Pick<IHoverLifecycleOptions, 'groupId'>,
-	): IHoverWidget | undefined;
+	): IHoverWidget | undefined
 
 	/**
 	 * A simple wrapper around showDelayedHover that includes listening to events on the
@@ -49,7 +49,7 @@ export interface IHoverDelegate2 {
 		target: HTMLElement,
 		hoverOptions: (() => IDelayedHoverOptions) | IDelayedHoverOptions,
 		lifecycleOptions?: IHoverLifecycleOptions,
-	): IDisposable;
+	): IDisposable
 
 	/**
 	 * A simple wrapper around showDelayedHover that includes listening to events on the
@@ -72,7 +72,7 @@ export interface IHoverDelegate2 {
 		target: HTMLElement,
 		hoverOptions: (() => IDelayedHoverAtMouseOptions) | IDelayedHoverAtMouseOptions,
 		lifecycleOptions?: IHoverLifecycleOptions,
-	): IDisposable;
+	): IDisposable
 
 	/**
 	 * Shows a hover immediately, provided a hover with the same {@link options} object is not
@@ -95,22 +95,19 @@ export interface IHoverDelegate2 {
 	 * });
 	 * ```
 	 */
-	showInstantHover(
-		options: IHoverOptions,
-		focus?: boolean
-	): IHoverWidget | undefined;
+	showInstantHover(options: IHoverOptions, focus?: boolean): IHoverWidget | undefined
 
 	/**
 	 * Hides the hover if it was visible. This call will be ignored if the hover is currently
 	 * "locked" via the alt/option key unless `force` is set.
 	 */
-	hideHover(force?: boolean): void;
+	hideHover(force?: boolean): void
 
 	/**
 	 * This should only be used until we have the ability to show multiple context views
 	 * simultaneously. #188822
 	 */
-	showAndFocusLastHover(): void;
+	showAndFocusLastHover(): void
 
 	/**
 	 * Sets up a managed hover for the given element. A managed hover will set up listeners for
@@ -128,7 +125,12 @@ export interface IHoverDelegate2 {
 	 * @deprecated Use {@link setupDelayedHover} or {@link setupDelayedHoverAtMouse} instead where
 	 * possible.
 	 */
-	setupManagedHover(hoverDelegate: IHoverDelegate, targetElement: HTMLElement, content: IManagedHoverContentOrFactory, options?: IManagedHoverOptions): IManagedHover;
+	setupManagedHover(
+		hoverDelegate: IHoverDelegate,
+		targetElement: HTMLElement,
+		content: IManagedHoverContentOrFactory,
+		options?: IManagedHoverOptions,
+	): IManagedHover
 
 	/**
 	 * Shows the hover for the given element if one has been setup.
@@ -138,14 +140,14 @@ export interface IHoverDelegate2 {
 	 * @deprecated Use {@link setupDelayedHover} or {@link setupDelayedHoverAtMouse} instead where
 	 * possible.
 	 */
-	showManagedHover(targetElement: HTMLElement): void;
+	showManagedHover(targetElement: HTMLElement): void
 }
 
 export interface IHoverWidget extends IDisposable {
 	/**
 	 * Whether the hover widget has been disposed.
 	 */
-	readonly isDisposed: boolean;
+	readonly isDisposed: boolean
 }
 
 export interface IHoverOptions {
@@ -153,7 +155,7 @@ export interface IHoverOptions {
 	 * The content to display in the primary section of the hover. The type of text determines the
 	 * default `hideOnHover` behavior.
 	 */
-	content: IMarkdownString | string | HTMLElement;
+	content: IMarkdownString | string | HTMLElement
 
 	/**
 	 * The target for the hover. This determines the position of the hover and it will only be
@@ -161,7 +163,7 @@ export interface IHoverOptions {
 	 * simple cases and a IHoverTarget for more complex cases where multiple elements and/or a
 	 * dispose method is required.
 	 */
-	target: IHoverTarget | HTMLElement;
+	target: IHoverTarget | HTMLElement
 
 	/*
 	 * The container to pass to {@link IContextViewProvider.showContextView} which renders the hover
@@ -169,7 +171,7 @@ export interface IHoverOptions {
 	 * created as the next tab index after the element being hovered and/or to workaround the
 	 * element's container hiding on `focusout`.
 	 */
-	container?: HTMLElement;
+	container?: HTMLElement
 
 	/**
 	 * An ID to associate with the hover to be used as an equality check. Normally when calling
@@ -179,23 +181,23 @@ export interface IHoverOptions {
 	 * When `undefined`, this will default to a serialized version of {@link content}. In this case
 	 * it will remain `undefined` if {@link content} is a `HTMLElement`.
 	 */
-	id?: string;
+	id?: string
 
 	/**
 	 * A set of actions for the hover's "status bar".
 	 */
-	actions?: IHoverAction[];
+	actions?: IHoverAction[]
 
 	/**
 	 * An optional array of classes to add to the hover element.
 	 */
-	additionalClasses?: string[];
+	additionalClasses?: string[]
 
 	/**
 	 * An optional link handler for markdown links, if this is not provided the IOpenerService will
 	 * be used to open the links using its default options.
 	 */
-	linkHandler?(url: string): void;
+	linkHandler?(url: string): void
 
 	/**
 	 * Whether to trap focus in the following ways:
@@ -203,31 +205,33 @@ export interface IHoverOptions {
 	 * - If there are elements in the hover to focus, focus stays inside of the hover when tabbing
 	 * Note that this is overridden to true when in screen reader optimized mode.
 	 */
-	trapFocus?: boolean;
+	trapFocus?: boolean
 
 	/**
 	 * Options that defines where the hover is positioned.
 	 */
-	position?: IHoverPositionOptions;
+	position?: IHoverPositionOptions
 
 	/**
 	 * Options that defines how long the hover is shown and when it hides.
 	 */
-	persistence?: IHoverPersistenceOptions;
+	persistence?: IHoverPersistenceOptions
 
 	/**
 	 * Options that define how the hover looks.
 	 */
-	appearance?: IHoverAppearanceOptions;
+	appearance?: IHoverAppearanceOptions
 }
 
 // `target` is ignored for delayed hover methods as it's included in the method and added
 // automatically when the hover options get resolved.
-export type IDelayedHoverOptions = Omit<IHoverOptions, 'target'>;
+export type IDelayedHoverOptions = Omit<IHoverOptions, 'target'>
 
 // `position` is ignored for delayed at mouse hover methods as it's overwritten by the mouse event.
 // `showPointer` is always false when using mouse positioning
-export type IDelayedHoverAtMouseOptions = Omit<IDelayedHoverOptions, 'position' | 'appearance'> & { appearance?: Omit<IHoverAppearanceOptions, 'showPointer'> };
+export type IDelayedHoverAtMouseOptions = Omit<IDelayedHoverOptions, 'position' | 'appearance'> & {
+	appearance?: Omit<IHoverAppearanceOptions, 'showPointer'>
+}
 
 export interface IHoverLifecycleOptions {
 	/**
@@ -249,7 +253,7 @@ export interface IHoverLifecycleOptions {
 	 * showDelayedHover({ content: 'Button 2', target: someElement2 }, { groupId: 'my-feature-items' });
 	 * ```
 	 */
-	groupId?: string;
+	groupId?: string
 
 	/**
 	 * Whether to set up space and enter keyboard events for the hover, when these are pressed when
@@ -258,7 +262,7 @@ export interface IHoverLifecycleOptions {
 	 * Typically this should _not_ be used when the space or enter events are already handled by
 	 * something else.
 	 */
-	setupKeyboardEvents?: boolean;
+	setupKeyboardEvents?: boolean
 }
 
 export interface IHoverPositionOptions {
@@ -267,13 +271,13 @@ export interface IHoverPositionOptions {
 	 * if there is not enough room to layout the hover in the specified position, unless the
 	 * forcePosition option is set.
 	 */
-	hoverPosition?: HoverPosition | MouseEvent;
+	hoverPosition?: HoverPosition | MouseEvent
 
 	/**
 	 * Force the hover position, reducing the size of the hover instead of adjusting the hover
 	 * position.
 	 */
-	forcePosition?: boolean;
+	forcePosition?: boolean
 }
 
 export interface IHoverPersistenceOptions {
@@ -287,30 +291,30 @@ export interface IHoverPersistenceOptions {
 	 * - Regular text where selection is not important
 	 * - Markdown that contains no links where selection is not important
 	 */
-	hideOnHover?: boolean;
+	hideOnHover?: boolean
 
 	/**
 	 * Whether to hide the hover when a key is pressed.
 	 */
-	hideOnKeyDown?: boolean;
+	hideOnKeyDown?: boolean
 
 	/**
 	 * Whether to make the hover sticky, this means it will not be hidden when the mouse leaves the
 	 * hover.
 	 */
-	sticky?: boolean;
+	sticky?: boolean
 }
 
 export interface IHoverAppearanceOptions {
 	/**
 	 * Whether to show the hover pointer, a little arrow that connects the target and the hover.
 	 */
-	showPointer?: boolean;
+	showPointer?: boolean
 
 	/**
 	 * Whether to show a compact hover, reducing the font size and padding of the hover.
 	 */
-	compact?: boolean;
+	compact?: boolean
 
 	/**
 	 * When {@link hideOnHover} is explicitly true or undefined and its auto value is detected to
@@ -318,37 +322,37 @@ export interface IHoverAppearanceOptions {
 	 * should be used in the cases where despite the hover having no interactive content, it's
 	 * likely the user may want to interact with it somehow.
 	 */
-	showHoverHint?: boolean;
+	showHoverHint?: boolean
 
 	/**
 	 * Whether to skip the fade in animation, this should be used when hovering from one hover to
 	 * another in the same group so it looks like the hover is moving from one element to the other.
 	 */
-	skipFadeInAnimation?: boolean;
+	skipFadeInAnimation?: boolean
 }
 
 export interface IHoverAction {
 	/**
 	 * The label to use in the hover's status bar.
 	 */
-	label: string;
+	label: string
 
 	/**
 	 * The command ID of the action, this is used to resolve the keybinding to display after the
 	 * action label.
 	 */
-	commandId: string;
+	commandId: string
 
 	/**
 	 * An optional class of an icon that will be displayed before the label.
 	 */
-	iconClass?: string;
+	iconClass?: string
 
 	/**
 	 * The callback to run the action.
 	 * @param target The action element that was activated.
 	 */
-	run(target: HTMLElement): void;
+	run(target: HTMLElement): void
 }
 
 /**
@@ -360,64 +364,82 @@ export interface IHoverTarget extends Partial<IDisposable> {
 	 * will try to not overlap any target element. An example use case for this is show a hover for
 	 * wrapped text.
 	 */
-	readonly targetElements: readonly HTMLElement[];
+	readonly targetElements: readonly HTMLElement[]
 
 	/**
 	 * An optional absolute x coordinate to position the hover with, for example to position the
 	 * hover using `MouseEvent.pageX`.
 	 */
-	readonly x?: number;
+	readonly x?: number
 
 	/**
 	 * An optional absolute y coordinate to position the hover with, for example to position the
 	 * hover using `MouseEvent.pageY`.
 	 */
-	readonly y?: number;
+	readonly y?: number
 }
 
 // #region Managed hover
 
 export interface IManagedHoverTooltipMarkdownString {
-	markdown: IMarkdownString | string | undefined | ((token: CancellationToken) => Promise<IMarkdownString | string | undefined>);
-	markdownNotSupportedFallback: string | undefined;
+	markdown:
+		| IMarkdownString
+		| string
+		| undefined
+		| ((token: CancellationToken) => Promise<IMarkdownString | string | undefined>)
+	markdownNotSupportedFallback: string | undefined
 }
 
-export function isManagedHoverTooltipMarkdownString(obj: unknown): obj is IManagedHoverTooltipMarkdownString {
-	const candidate = obj as IManagedHoverTooltipMarkdownString;
-	return typeof candidate === 'object' && 'markdown' in candidate && 'markdownNotSupportedFallback' in candidate;
+export function isManagedHoverTooltipMarkdownString(
+	obj: unknown,
+): obj is IManagedHoverTooltipMarkdownString {
+	const candidate = obj as IManagedHoverTooltipMarkdownString
+	return (
+		typeof candidate === 'object' &&
+		'markdown' in candidate &&
+		'markdownNotSupportedFallback' in candidate
+	)
 }
 
 export interface IManagedHoverTooltipHTMLElement {
-	element: (token: CancellationToken) => HTMLElement | Promise<HTMLElement>;
+	element: (token: CancellationToken) => HTMLElement | Promise<HTMLElement>
 }
 
-export function isManagedHoverTooltipHTMLElement(obj: unknown): obj is IManagedHoverTooltipHTMLElement {
-	const candidate = obj as IManagedHoverTooltipHTMLElement;
-	return typeof candidate === 'object' && 'element' in candidate;
+export function isManagedHoverTooltipHTMLElement(
+	obj: unknown,
+): obj is IManagedHoverTooltipHTMLElement {
+	const candidate = obj as IManagedHoverTooltipHTMLElement
+	return typeof candidate === 'object' && 'element' in candidate
 }
 
-export type IManagedHoverContent = string | IManagedHoverTooltipMarkdownString | IManagedHoverTooltipHTMLElement | HTMLElement | undefined;
-export type IManagedHoverContentOrFactory = IManagedHoverContent | (() => IManagedHoverContent);
+export type IManagedHoverContent =
+	| string
+	| IManagedHoverTooltipMarkdownString
+	| IManagedHoverTooltipHTMLElement
+	| HTMLElement
+	| undefined
+export type IManagedHoverContentOrFactory = IManagedHoverContent | (() => IManagedHoverContent)
 
-export interface IManagedHoverOptions extends Pick<IHoverOptions, 'actions' | 'linkHandler' | 'trapFocus'> {
-	appearance?: Pick<IHoverAppearanceOptions, 'showHoverHint'>;
+export interface IManagedHoverOptions
+	extends Pick<IHoverOptions, 'actions' | 'linkHandler' | 'trapFocus'> {
+	appearance?: Pick<IHoverAppearanceOptions, 'showHoverHint'>
 }
 
 export interface IManagedHover extends IDisposable {
 	/**
 	 * Allows to programmatically open the hover.
 	 */
-	show(focus?: boolean): void;
+	show(focus?: boolean): void
 
 	/**
 	 * Allows to programmatically hide the hover.
 	 */
-	hide(): void;
+	hide(): void
 
 	/**
 	 * Updates the contents of the hover.
 	 */
-	update(tooltip: IManagedHoverContent, options?: IManagedHoverOptions): void;
+	update(tooltip: IManagedHoverContent, options?: IManagedHoverOptions): void
 }
 
 // #endregion Managed hover

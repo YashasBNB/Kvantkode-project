@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BasePromptParser } from './basePromptParser.js';
-import { ITextModel } from '../../../../../../editor/common/model.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { TextModelContentsProvider } from '../contentProviders/textModelContentsProvider.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
+import { BasePromptParser } from './basePromptParser.js'
+import { ITextModel } from '../../../../../../editor/common/model.js'
+import { ILogService } from '../../../../../../platform/log/common/log.js'
+import { TextModelContentsProvider } from '../contentProviders/textModelContentsProvider.js'
+import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js'
 
 /**
  * Class capable of parsing prompt syntax out of a provided text model,
@@ -20,17 +20,17 @@ export class TextModelPromptParser extends BasePromptParser<TextModelContentsPro
 		@IInstantiationService initService: IInstantiationService,
 		@ILogService logService: ILogService,
 	) {
-		const contentsProvider = initService.createInstance(TextModelContentsProvider, model);
+		const contentsProvider = initService.createInstance(TextModelContentsProvider, model)
 
-		super(contentsProvider, seenReferences, initService, logService);
+		super(contentsProvider, seenReferences, initService, logService)
 
-		this._register(contentsProvider);
+		this._register(contentsProvider)
 	}
 
 	/**
 	 * Returns a string representation of this object.
 	 */
 	public override toString() {
-		return `text-model-prompt:${this.uri.path}`;
+		return `text-model-prompt:${this.uri.path}`
 	}
 }

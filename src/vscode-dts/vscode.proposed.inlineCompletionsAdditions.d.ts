@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/124024 @hediet
 
 	export namespace languages {
@@ -20,35 +19,39 @@ declare module 'vscode' {
 		 * @param metadata Metadata about the provider.
 		 * @return A {@link Disposable} that unregisters this provider when being disposed.
 		 */
-		export function registerInlineCompletionItemProvider(selector: DocumentSelector, provider: InlineCompletionItemProvider, metadata: InlineCompletionItemProviderMetadata): Disposable;
+		export function registerInlineCompletionItemProvider(
+			selector: DocumentSelector,
+			provider: InlineCompletionItemProvider,
+			metadata: InlineCompletionItemProviderMetadata,
+		): Disposable
 	}
 
 	export interface InlineCompletionItem {
 		/**
 		 * If set to `true`, unopened closing brackets are removed and unclosed opening brackets are closed.
 		 * Defaults to `false`.
-		*/
-		completeBracketPairs?: boolean;
+		 */
+		completeBracketPairs?: boolean
 
-		warning?: InlineCompletionWarning;
+		warning?: InlineCompletionWarning
 
 		/** If set to `true`, this item is treated as inline edit. */
-		isInlineEdit?: boolean;
+		isInlineEdit?: boolean
 
 		/**
 		 * A range specifying when the edit can be shown based on the cursor position.
 		 * If the cursor is within this range, the inline edit can be displayed.
 		 */
-		showRange?: Range;
+		showRange?: Range
 
-		showInlineEditMenu?: boolean;
+		showInlineEditMenu?: boolean
 
-		action?: Command;
+		action?: Command
 	}
 
 	export interface InlineCompletionWarning {
-		message: MarkdownString | string;
-		icon?: ThemeIcon;
+		message: MarkdownString | string
+		icon?: ThemeIcon
 	}
 
 	export interface InlineCompletionItemProviderMetadata {
@@ -56,11 +59,11 @@ declare module 'vscode' {
 		 * Specifies a list of extension ids that this provider yields to if they return a result.
 		 * If some inline completion provider registered by such an extension returns a result, this provider is not asked.
 		 */
-		yieldTo?: string[];
+		yieldTo?: string[]
 
-		debounceDelayMs?: number;
+		debounceDelayMs?: number
 
-		displayName?: string;
+		displayName?: string
 	}
 
 	export interface InlineCompletionItemProvider {
@@ -69,13 +72,16 @@ declare module 'vscode' {
 		 * @param updatedInsertText The actual insert text (after brackets were fixed).
 		 */
 		// eslint-disable-next-line local/vscode-dts-provider-naming
-		handleDidShowCompletionItem?(completionItem: InlineCompletionItem, updatedInsertText: string): void;
+		handleDidShowCompletionItem?(
+			completionItem: InlineCompletionItem,
+			updatedInsertText: string,
+		): void
 
 		/**
 		 * @param completionItem The completion item that was rejected.
-		*/
+		 */
 		// eslint-disable-next-line local/vscode-dts-provider-naming
-		handleDidRejectCompletionItem?(completionItem: InlineCompletionItem): void;
+		handleDidRejectCompletionItem?(completionItem: InlineCompletionItem): void
 
 		/**
 		 * Is called when an inline completion item was accepted partially.
@@ -83,32 +89,43 @@ declare module 'vscode' {
 		 * @deprecated Use `handleDidPartiallyAcceptCompletionItem` with `PartialAcceptInfo` instead.
 		 */
 		// eslint-disable-next-line local/vscode-dts-provider-naming
-		handleDidPartiallyAcceptCompletionItem?(completionItem: InlineCompletionItem, acceptedLength: number): void;
+		handleDidPartiallyAcceptCompletionItem?(
+			completionItem: InlineCompletionItem,
+			acceptedLength: number,
+		): void
 
 		/**
 		 * Is called when an inline completion item was accepted partially.
 		 * @param info Additional info for the partial accepted trigger.
 		 */
 		// eslint-disable-next-line local/vscode-dts-provider-naming
-		handleDidPartiallyAcceptCompletionItem?(completionItem: InlineCompletionItem, info: PartialAcceptInfo): void;
+		handleDidPartiallyAcceptCompletionItem?(
+			completionItem: InlineCompletionItem,
+			info: PartialAcceptInfo,
+		): void
 
-		provideInlineEditsForRange?(document: TextDocument, range: Range, context: InlineCompletionContext, token: CancellationToken): ProviderResult<InlineCompletionItem[] | InlineCompletionList>;
+		provideInlineEditsForRange?(
+			document: TextDocument,
+			range: Range,
+			context: InlineCompletionContext,
+			token: CancellationToken,
+		): ProviderResult<InlineCompletionItem[] | InlineCompletionList>
 
-		readonly debounceDelayMs?: number;
+		readonly debounceDelayMs?: number
 	}
 
 	export interface InlineCompletionContext {
-		readonly userPrompt?: string;
+		readonly userPrompt?: string
 
-		readonly requestUuid?: string;
+		readonly requestUuid?: string
 	}
 
 	export interface PartialAcceptInfo {
-		kind: PartialAcceptTriggerKind;
+		kind: PartialAcceptTriggerKind
 		/**
 		 * The length of the substring of the provided inline completion text that was accepted already.
-		*/
-		acceptedLength: number;
+		 */
+		acceptedLength: number
 	}
 
 	export enum PartialAcceptTriggerKind {
@@ -123,12 +140,12 @@ declare module 'vscode' {
 		/**
 		 * A list of commands associated with the inline completions of this list.
 		 */
-		commands?: Command[];
+		commands?: Command[]
 
 		/**
 		 * When set and the user types a suggestion without deviating from it, the inline suggestion is not updated.
 		 * Defaults to false (might change).
 		 */
-		enableForwardStability?: boolean;
+		enableForwardStability?: boolean
 	}
 }

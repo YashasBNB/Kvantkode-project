@@ -2,165 +2,82 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import assert from 'assert';
+import assert from 'assert'
 
-import { parse, stripComments } from '../../common/jsonc.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from './utils.js';
+import { parse, stripComments } from '../../common/jsonc.js'
+import { ensureNoDisposablesAreLeakedInTestSuite } from './utils.js'
 
 suite('JSON Parse', () => {
-	ensureNoDisposablesAreLeakedInTestSuite();
+	ensureNoDisposablesAreLeakedInTestSuite()
 
 	test('Line comment', () => {
-		const content: string = [
-			"{",
-			"  \"prop\": 10 // a comment",
-			"}",
-		].join('\n');
-		const expected = [
-			"{",
-			"  \"prop\": 10 ",
-			"}",
-		].join('\n');
-		assert.deepEqual(parse(content), JSON.parse(expected));
-	});
+		const content: string = ['{', '  "prop": 10 // a comment', '}'].join('\n')
+		const expected = ['{', '  "prop": 10 ', '}'].join('\n')
+		assert.deepEqual(parse(content), JSON.parse(expected))
+	})
 	test('Line comment - EOF', () => {
-		const content: string = [
-			"{",
-			"}",
-			"// a comment"
-		].join('\n');
-		const expected = [
-			"{",
-			"}",
-			""
-		].join('\n');
-		assert.deepEqual(parse(content), JSON.parse(expected));
-	});
+		const content: string = ['{', '}', '// a comment'].join('\n')
+		const expected = ['{', '}', ''].join('\n')
+		assert.deepEqual(parse(content), JSON.parse(expected))
+	})
 	test('Line comment - \\r\\n', () => {
-		const content: string = [
-			"{",
-			"  \"prop\": 10 // a comment",
-			"}",
-		].join('\r\n');
-		const expected = [
-			"{",
-			"  \"prop\": 10 ",
-			"}",
-		].join('\r\n');
-		assert.deepEqual(parse(content), JSON.parse(expected));
-	});
+		const content: string = ['{', '  "prop": 10 // a comment', '}'].join('\r\n')
+		const expected = ['{', '  "prop": 10 ', '}'].join('\r\n')
+		assert.deepEqual(parse(content), JSON.parse(expected))
+	})
 	test('Line comment - EOF - \\r\\n', () => {
-		const content: string = [
-			"{",
-			"}",
-			"// a comment"
-		].join('\r\n');
-		const expected = [
-			"{",
-			"}",
-			""
-		].join('\r\n');
-		assert.deepEqual(parse(content), JSON.parse(expected));
-	});
+		const content: string = ['{', '}', '// a comment'].join('\r\n')
+		const expected = ['{', '}', ''].join('\r\n')
+		assert.deepEqual(parse(content), JSON.parse(expected))
+	})
 	test('Block comment - single line', () => {
-		const content: string = [
-			"{",
-			"  /* before */\"prop\": 10/* after */",
-			"}",
-		].join('\n');
-		const expected = [
-			"{",
-			"  \"prop\": 10",
-			"}",
-		].join('\n');
-		assert.deepEqual(parse(content), JSON.parse(expected));
-	});
+		const content: string = ['{', '  /* before */"prop": 10/* after */', '}'].join('\n')
+		const expected = ['{', '  "prop": 10', '}'].join('\n')
+		assert.deepEqual(parse(content), JSON.parse(expected))
+	})
 	test('Block comment - multi line', () => {
-		const content: string = [
-			"{",
-			"  /**",
-			"   * Some comment",
-			"   */",
-			"  \"prop\": 10",
-			"}",
-		].join('\n');
-		const expected = [
-			"{",
-			"  ",
-			"  \"prop\": 10",
-			"}",
-		].join('\n');
-		assert.deepEqual(parse(content), JSON.parse(expected));
-	});
+		const content: string = ['{', '  /**', '   * Some comment', '   */', '  "prop": 10', '}'].join(
+			'\n',
+		)
+		const expected = ['{', '  ', '  "prop": 10', '}'].join('\n')
+		assert.deepEqual(parse(content), JSON.parse(expected))
+	})
 	test('Block comment - shortest match', () => {
-		const content = "/* abc */ */";
-		const expected = " */";
-		assert.strictEqual(stripComments(content), expected);
-	});
+		const content = '/* abc */ */'
+		const expected = ' */'
+		assert.strictEqual(stripComments(content), expected)
+	})
 	test('No strings - double quote', () => {
-		const content: string = [
-			"{",
-			"  \"/* */\": 10",
-			"}"
-		].join('\n');
-		const expected: string = [
-			"{",
-			"  \"/* */\": 10",
-			"}"
-		].join('\n');
-		assert.deepEqual(parse(content), JSON.parse(expected));
-	});
+		const content: string = ['{', '  "/* */": 10', '}'].join('\n')
+		const expected: string = ['{', '  "/* */": 10', '}'].join('\n')
+		assert.deepEqual(parse(content), JSON.parse(expected))
+	})
 	test('No strings - single quote', () => {
-		const content: string = [
-			"{",
-			"  '/* */': 10",
-			"}"
-		].join('\n');
-		const expected: string = [
-			"{",
-			"  '/* */': 10",
-			"}"
-		].join('\n');
-		assert.strictEqual(stripComments(content), expected);
-	});
+		const content: string = ['{', "  '/* */': 10", '}'].join('\n')
+		const expected: string = ['{', "  '/* */': 10", '}'].join('\n')
+		assert.strictEqual(stripComments(content), expected)
+	})
 	test('Trailing comma in object', () => {
-		const content: string = [
-			"{",
-			`  "a": 10,`,
-			"}"
-		].join('\n');
-		const expected: string = [
-			"{",
-			`  "a": 10`,
-			"}"
-		].join('\n');
-		assert.deepEqual(parse(content), JSON.parse(expected));
-	});
+		const content: string = ['{', `  "a": 10,`, '}'].join('\n')
+		const expected: string = ['{', `  "a": 10`, '}'].join('\n')
+		assert.deepEqual(parse(content), JSON.parse(expected))
+	})
 	test('Trailing comma in array', () => {
-		const content: string = [
-			`[ "a", "b", "c", ]`
-		].join('\n');
-		const expected: string = [
-			`[ "a", "b", "c" ]`
-		].join('\n');
-		assert.deepEqual(parse(content), JSON.parse(expected));
-	});
+		const content: string = [`[ "a", "b", "c", ]`].join('\n')
+		const expected: string = [`[ "a", "b", "c" ]`].join('\n')
+		assert.deepEqual(parse(content), JSON.parse(expected))
+	})
 
 	test('Trailing comma', () => {
 		const content: string = [
-			"{",
-			"  \"propA\": 10, // a comment",
-			"  \"propB\": false, // a trailing comma",
-			"}",
-		].join('\n');
-		const expected = [
-			"{",
-			"  \"propA\": 10,",
-			"  \"propB\": false",
-			"}",
-		].join('\n');
-		assert.deepEqual(parse(content), JSON.parse(expected));
-	});
+			'{',
+			'  "propA": 10, // a comment',
+			'  "propB": false, // a trailing comma',
+			'}',
+		].join('\n')
+		const expected = ['{', '  "propA": 10,', '  "propB": false', '}'].join('\n')
+		assert.deepEqual(parse(content), JSON.parse(expected))
+	})
 
 	test('Trailing comma - EOF', () => {
 		const content = `
@@ -184,11 +101,11 @@ suite('JSON Parse', () => {
 	"locale": "en",
 	// "log-level": "trace"
 }
-`;
+`
 		assert.deepEqual(parse(content), {
-			"enable-crash-reporter": true,
-			"crash-reporter-id": "aaaaab31-7453-4506-97d0-93411b2c21c7",
-			"locale": "en"
-		});
-	});
-});
+			'enable-crash-reporter': true,
+			'crash-reporter-id': 'aaaaab31-7453-4506-97d0-93411b2c21c7',
+			locale: 'en',
+		})
+	})
+})

@@ -1,0 +1,159 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import assert from 'assert';
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
+import { Position } from '../../../../common/core/position.js';
+import { ILanguageConfigurationService } from '../../../../common/languages/languageConfigurationRegistry.js';
+import { deserializePipePositions, serializePipePositions, testRepeatedActionAndExtractPositions, } from '../../../wordOperations/test/browser/wordTestUtils.js';
+import { CursorWordPartLeft, CursorWordPartLeftSelect, CursorWordPartRight, CursorWordPartRightSelect, DeleteWordPartLeft, DeleteWordPartRight, } from '../../browser/wordPartOperations.js';
+import { StaticServiceAccessor } from './utils.js';
+import { TestLanguageConfigurationService } from '../../../../test/common/modes/testLanguageConfigurationService.js';
+suite('WordPartOperations', () => {
+    ensureNoDisposablesAreLeakedInTestSuite();
+    const _deleteWordPartLeft = new DeleteWordPartLeft();
+    const _deleteWordPartRight = new DeleteWordPartRight();
+    const _cursorWordPartLeft = new CursorWordPartLeft();
+    const _cursorWordPartLeftSelect = new CursorWordPartLeftSelect();
+    const _cursorWordPartRight = new CursorWordPartRight();
+    const _cursorWordPartRightSelect = new CursorWordPartRightSelect();
+    const serviceAccessor = new StaticServiceAccessor().withService(ILanguageConfigurationService, new TestLanguageConfigurationService());
+    function runEditorCommand(editor, command) {
+        command.runEditorCommand(serviceAccessor, editor, null);
+    }
+    function cursorWordPartLeft(editor, inSelectionmode = false) {
+        runEditorCommand(editor, inSelectionmode ? _cursorWordPartLeftSelect : _cursorWordPartLeft);
+    }
+    function cursorWordPartRight(editor, inSelectionmode = false) {
+        runEditorCommand(editor, inSelectionmode ? _cursorWordPartRightSelect : _cursorWordPartRight);
+    }
+    function deleteWordPartLeft(editor) {
+        runEditorCommand(editor, _deleteWordPartLeft);
+    }
+    function deleteWordPartRight(editor) {
+        runEditorCommand(editor, _deleteWordPartRight);
+    }
+    test('cursorWordPartLeft - basic', () => {
+        const EXPECTED = [
+            '|start| |line|',
+            '|this|Is|A|Camel|Case|Var|  |this_|is_|a_|snake_|case_|var| |THIS_|IS_|CAPS_|SNAKE| |this_|IS|Mixed|Use|',
+            '|end| |line',
+        ].join('\n');
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1000, 1000), (ed) => cursorWordPartLeft(ed), (ed) => ed.getPosition(), (ed) => ed.getPosition().equals(new Position(1, 1)));
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('cursorWordPartLeft - issue #53899: whitespace', () => {
+        const EXPECTED = "|myvar| |=| |'|demonstration|     |of| |selection| |with| |space|'";
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1000, 1000), (ed) => cursorWordPartLeft(ed), (ed) => ed.getPosition(), (ed) => ed.getPosition().equals(new Position(1, 1)));
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('cursorWordPartLeft - issue #53899: underscores', () => {
+        const EXPECTED = "|myvar| |=| |'|demonstration_____|of| |selection| |with| |space|'";
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1000, 1000), (ed) => cursorWordPartLeft(ed), (ed) => ed.getPosition(), (ed) => ed.getPosition().equals(new Position(1, 1)));
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('cursorWordPartRight - basic', () => {
+        const EXPECTED = [
+            'start| |line|',
+            '|this|Is|A|Camel|Case|Var|  |this|_is|_a|_snake|_case|_var| |THIS|_IS|_CAPS|_SNAKE| |this|_IS|Mixed|Use|',
+            '|end| |line|',
+        ].join('\n');
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1, 1), (ed) => cursorWordPartRight(ed), (ed) => ed.getPosition(), (ed) => ed.getPosition().equals(new Position(3, 9)));
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('cursorWordPartRight - issue #53899: whitespace', () => {
+        const EXPECTED = "myvar| |=| |'|demonstration|     |of| |selection| |with| |space|'|";
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1, 1), (ed) => cursorWordPartRight(ed), (ed) => ed.getPosition(), (ed) => ed.getPosition().equals(new Position(1, 52)));
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('cursorWordPartRight - issue #53899: underscores', () => {
+        const EXPECTED = "myvar| |=| |'|demonstration|_____of| |selection| |with| |space|'|";
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1, 1), (ed) => cursorWordPartRight(ed), (ed) => ed.getPosition(), (ed) => ed.getPosition().equals(new Position(1, 52)));
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('cursorWordPartRight - issue #53899: second case', () => {
+        const EXPECTED = [';| |--| |1|', '|;|        |--| |2|', '|;|    |#|3|', '|;|   |#|4|'].join('\n');
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1, 1), (ed) => cursorWordPartRight(ed), (ed) => ed.getPosition(), (ed) => ed.getPosition().equals(new Position(4, 7)));
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('issue #93239 - cursorWordPartRight', () => {
+        const EXPECTED = ['foo|_bar|'].join('\n');
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1, 1), (ed) => cursorWordPartRight(ed), (ed) => ed.getPosition(), (ed) => ed.getPosition().equals(new Position(1, 8)));
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('issue #93239 - cursorWordPartLeft', () => {
+        const EXPECTED = ['|foo_|bar'].join('\n');
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1, 8), (ed) => cursorWordPartLeft(ed), (ed) => ed.getPosition(), (ed) => ed.getPosition().equals(new Position(1, 1)));
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('deleteWordPartLeft - basic', () => {
+        const EXPECTED = '|   |/*| |Just| |some| |text| |a|+=| |3| |+|5|-|3| |*/|  |this|Is|A|Camel|Case|Var|  |this_|is_|a_|snake_|case_|var| |THIS_|IS_|CAPS_|SNAKE| |this_|IS|Mixed|Use';
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1, 1000), (ed) => deleteWordPartLeft(ed), (ed) => ed.getPosition(), (ed) => ed.getValue().length === 0);
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('deleteWordPartRight - basic', () => {
+        const EXPECTED = '   |/*| |Just| |some| |text| |a|+=| |3| |+|5|-|3| |*/|  |this|Is|A|Camel|Case|Var|  |this|_is|_a|_snake|_case|_var| |THIS|_IS|_CAPS|_SNAKE| |this|_IS|Mixed|Use|';
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1, 1), (ed) => deleteWordPartRight(ed), (ed) => new Position(1, text.length - ed.getValue().length + 1), (ed) => ed.getValue().length === 0);
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('issue #158667: cursorWordPartLeft stops at "-" even when "-" is not in word separators', () => {
+        const EXPECTED = [
+            '|this-|is-|a-|kebab-|case-|var| |THIS-|IS-|CAPS-|KEBAB| |this-|IS|Mixed|Use',
+        ].join('\n');
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1000, 1000), (ed) => cursorWordPartLeft(ed), (ed) => ed.getPosition(), (ed) => ed.getPosition().equals(new Position(1, 1)), { wordSeparators: '!"#&\'()*+,./:;<=>?@[\\]^`{|}·' });
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('issue #158667: cursorWordPartRight stops at "-" even when "-" is not in word separators', () => {
+        const EXPECTED = [
+            'this|-is|-a|-kebab|-case|-var| |THIS|-IS|-CAPS|-KEBAB| |this|-IS|Mixed|Use|',
+        ].join('\n');
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1, 1), (ed) => cursorWordPartRight(ed), (ed) => ed.getPosition(), (ed) => ed.getPosition().equals(new Position(1, 60)), { wordSeparators: '!"#&\'()*+,./:;<=>?@[\\]^`{|}·' });
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('issue #158667: deleteWordPartLeft stops at "-" even when "-" is not in word separators', () => {
+        const EXPECTED = [
+            '|this-|is-|a-|kebab-|case-|var| |THIS-|IS-|CAPS-|KEBAB| |this-|IS|Mixed|Use',
+        ].join(' ');
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1000, 1000), (ed) => deleteWordPartLeft(ed), (ed) => ed.getPosition(), (ed) => ed.getValue().length === 0, { wordSeparators: '!"#&\'()*+,./:;<=>?@[\\]^`{|}·' });
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+    test('issue #158667: deleteWordPartRight stops at "-" even when "-" is not in word separators', () => {
+        const EXPECTED = [
+            'this|-is|-a|-kebab|-case|-var| |THIS|-IS|-CAPS|-KEBAB| |this|-IS|Mixed|Use|',
+        ].join(' ');
+        const [text] = deserializePipePositions(EXPECTED);
+        const actualStops = testRepeatedActionAndExtractPositions(text, new Position(1, 1), (ed) => deleteWordPartRight(ed), (ed) => new Position(1, text.length - ed.getValue().length + 1), (ed) => ed.getValue().length === 0, { wordSeparators: '!"#&\'()*+,./:;<=>?@[\\]^`{|}·' });
+        const actual = serializePipePositions(text, actualStops);
+        assert.deepStrictEqual(actual, EXPECTED);
+    });
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoid29yZFBhcnRPcGVyYXRpb25zLnRlc3QuanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9Vc2Vycy95YXNoYXNuYWlkdS9LdmFudGNvZGUvdm9pZC9zcmMvIiwic291cmNlcyI6WyJ2cy9lZGl0b3IvY29udHJpYi93b3JkUGFydE9wZXJhdGlvbnMvdGVzdC9icm93c2VyL3dvcmRQYXJ0T3BlcmF0aW9ucy50ZXN0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7Z0dBR2dHO0FBRWhHLE9BQU8sTUFBTSxNQUFNLFFBQVEsQ0FBQTtBQUMzQixPQUFPLEVBQUUsdUNBQXVDLEVBQUUsTUFBTSwwQ0FBMEMsQ0FBQTtBQUdsRyxPQUFPLEVBQUUsUUFBUSxFQUFFLE1BQU0scUNBQXFDLENBQUE7QUFDOUQsT0FBTyxFQUFFLDZCQUE2QixFQUFFLE1BQU0sK0RBQStELENBQUE7QUFDN0csT0FBTyxFQUNOLHdCQUF3QixFQUN4QixzQkFBc0IsRUFDdEIscUNBQXFDLEdBQ3JDLE1BQU0sdURBQXVELENBQUE7QUFDOUQsT0FBTyxFQUNOLGtCQUFrQixFQUNsQix3QkFBd0IsRUFDeEIsbUJBQW1CLEVBQ25CLHlCQUF5QixFQUN6QixrQkFBa0IsRUFDbEIsbUJBQW1CLEdBQ25CLE1BQU0scUNBQXFDLENBQUE7QUFDNUMsT0FBTyxFQUFFLHFCQUFxQixFQUFFLE1BQU0sWUFBWSxDQUFBO0FBQ2xELE9BQU8sRUFBRSxnQ0FBZ0MsRUFBRSxNQUFNLG1FQUFtRSxDQUFBO0FBRXBILEtBQUssQ0FBQyxvQkFBb0IsRUFBRSxHQUFHLEVBQUU7SUFDaEMsdUNBQXVDLEVBQUUsQ0FBQTtJQUV6QyxNQUFNLG1CQUFtQixHQUFHLElBQUksa0JBQWtCLEVBQUUsQ0FBQTtJQUNwRCxNQUFNLG9CQUFvQixHQUFHLElBQUksbUJBQW1CLEVBQUUsQ0FBQTtJQUN0RCxNQUFNLG1CQUFtQixHQUFHLElBQUksa0JBQWtCLEVBQUUsQ0FBQTtJQUNwRCxNQUFNLHlCQUF5QixHQUFHLElBQUksd0JB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

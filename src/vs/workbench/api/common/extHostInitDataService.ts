@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IExtensionHostInitData } from '../../services/extensions/common/extensionHostProtocol.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
+import { IExtensionHostInitData } from '../../services/extensions/common/extensionHostProtocol.js'
+import { createDecorator } from '../../../platform/instantiation/common/instantiation.js'
 
-export const IExtHostInitDataService = createDecorator<IExtHostInitDataService>('IExtHostInitDataService');
+export const IExtHostInitDataService =
+	createDecorator<IExtHostInitDataService>('IExtHostInitDataService')
 
 export interface IExtHostInitDataService extends Readonly<IExtensionHostInitData> {
-	readonly _serviceBrand: undefined;
+	readonly _serviceBrand: undefined
 }
-

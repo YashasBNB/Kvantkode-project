@@ -3,20 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { illegalArgument } from '../../../base/common/errors.js';
-import { MainThreadNotebookEditorsShape } from './extHost.protocol.js';
-import * as extHostConverter from './extHostTypeConverters.js';
-import * as extHostTypes from './extHostTypes.js';
-import * as vscode from 'vscode';
-import { ExtHostNotebookDocument } from './extHostNotebookDocument.js';
+import { illegalArgument } from '../../../base/common/errors.js'
+import { MainThreadNotebookEditorsShape } from './extHost.protocol.js'
+import * as extHostConverter from './extHostTypeConverters.js'
+import * as extHostTypes from './extHostTypes.js'
+import * as vscode from 'vscode'
+import { ExtHostNotebookDocument } from './extHostNotebookDocument.js'
 
 export class ExtHostNotebookEditor {
+	public static readonly apiEditorsToExtHost = new WeakMap<
+		vscode.NotebookEditor,
+		ExtHostNotebookEditor
+	>()
 
-	public static readonly apiEditorsToExtHost = new WeakMap<vscode.NotebookEditor, ExtHostNotebookEditor>();
+	private _visible: boolean = false
 
-	private _visible: boolean = false;
-
-	private _editor?: vscode.NotebookEditor;
+	private _editor?: vscode.NotebookEditor
 
 	constructor(
 		readonly id: string,
@@ -25,82 +27,82 @@ export class ExtHostNotebookEditor {
 		private _visibleRanges: vscode.NotebookRange[],
 		private _selections: vscode.NotebookRange[],
 		private _viewColumn: vscode.ViewColumn | undefined,
-		private readonly viewType: string
-	) { }
+		private readonly viewType: string,
+	) {}
 
 	get apiEditor(): vscode.NotebookEditor {
 		if (!this._editor) {
-			const that = this;
+			const that = this
 			this._editor = {
 				get notebook() {
-					return that.notebookData.apiNotebook;
+					return that.notebookData.apiNotebook
 				},
 				get selection() {
-					return that._selections[0];
+					return that._selections[0]
 				},
 				set selection(selection: vscode.NotebookRange) {
-					this.selections = [selection];
+					this.selections = [selection]
 				},
 				get selections() {
-					return that._selections;
+					return that._selections
 				},
 				set selections(value: vscode.NotebookRange[]) {
 					if (!Array.isArray(value) || !value.every(extHostTypes.NotebookRange.isNotebookRange)) {
-						throw illegalArgument('selections');
+						throw illegalArgument('selections')
 					}
-					that._selections = value;
-					that._trySetSelections(value);
+					that._selections = value
+					that._trySetSelections(value)
 				},
 				get visibleRanges() {
-					return that._visibleRanges;
+					return that._visibleRanges
 				},
 				revealRange(range, revealType) {
 					that._proxy.$tryRevealRange(
 						that.id,
 						extHostConverter.NotebookRange.from(range),
-						revealType ?? extHostTypes.NotebookEditorRevealType.Default
-					);
+						revealType ?? extHostTypes.NotebookEditorRevealType.Default,
+					)
 				},
 				get viewColumn() {
-					return that._viewColumn;
+					return that._viewColumn
 				},
 				get replOptions() {
 					if (that.viewType === 'repl') {
-						return { appendIndex: this.notebook.cellCount - 1 };
+						return { appendIndex: this.notebook.cellCount - 1 }
 					}
-					return undefined;
+					return undefined
 				},
 				[Symbol.for('debug.description')]() {
-					return `NotebookEditor(${this.notebook.uri.toString()})`;
-				}
-			};
+					return `NotebookEditor(${this.notebook.uri.toString()})`
+				},
+			}
 
-			ExtHostNotebookEditor.apiEditorsToExtHost.set(this._editor, this);
+			ExtHostNotebookEditor.apiEditorsToExtHost.set(this._editor, this)
 		}
-		return this._editor;
+		return this._editor
 	}
 
 	get visible(): boolean {
-		return this._visible;
+		return this._visible
 	}
 
 	_acceptVisibility(value: boolean) {
-		this._visible = value;
+		this._visible = value
 	}
 
 	_acceptVisibleRanges(value: vscode.NotebookRange[]): void {
-		this._visibleRanges = value;
+		this._visibleRanges = value
 	}
 
 	_acceptSelections(selections: vscode.NotebookRange[]): void {
-		this._selections = selections;
+		this._selections = selections
 	}
 
 	private _trySetSelections(value: vscode.NotebookRange[]): void {
-		this._proxy.$trySetSelections(this.id, value.map(extHostConverter.NotebookRange.from));
+		this._proxy.$trySetSelections(this.id, value.map(extHostConverter.NotebookRange.from))
 	}
 
 	_acceptViewColumn(value: vscode.ViewColumn | undefined) {
-		this._viewColumn = value;
+		this._viewColumn = value
 	}
 }

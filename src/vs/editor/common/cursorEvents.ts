@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Position } from './core/position.js';
-import { Selection } from './core/selection.js';
+import { Position } from './core/position.js'
+import { Selection } from './core/selection.js'
 
 /**
  * Describes the reason the cursor has changed its position.
@@ -46,19 +46,19 @@ export interface ICursorPositionChangedEvent {
 	/**
 	 * Primary cursor's position.
 	 */
-	readonly position: Position;
+	readonly position: Position
 	/**
 	 * Secondary cursors' position.
 	 */
-	readonly secondaryPositions: Position[];
+	readonly secondaryPositions: Position[]
 	/**
 	 * Reason.
 	 */
-	readonly reason: CursorChangeReason;
+	readonly reason: CursorChangeReason
 	/**
 	 * Source of the call that caused the event.
 	 */
-	readonly source: string;
+	readonly source: string
 }
 /**
  * An event describing that the cursor selection has changed.
@@ -67,29 +67,29 @@ export interface ICursorSelectionChangedEvent {
 	/**
 	 * The primary selection.
 	 */
-	readonly selection: Selection;
+	readonly selection: Selection
 	/**
 	 * The secondary selections.
 	 */
-	readonly secondarySelections: Selection[];
+	readonly secondarySelections: Selection[]
 	/**
 	 * The model version id.
 	 */
-	readonly modelVersionId: number;
+	readonly modelVersionId: number
 	/**
 	 * The old selections.
 	 */
-	readonly oldSelections: Selection[] | null;
+	readonly oldSelections: Selection[] | null
 	/**
 	 * The model version id the that `oldSelections` refer to.
 	 */
-	readonly oldModelVersionId: number;
+	readonly oldModelVersionId: number
 	/**
 	 * Source of the call that caused the event.
 	 */
-	readonly source: string;
+	readonly source: string
 	/**
 	 * Reason.
 	 */
-	readonly reason: CursorChangeReason;
+	readonly reason: CursorChangeReason
 }

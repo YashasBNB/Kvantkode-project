@@ -14,43 +14,54 @@
  *   - add `Windows` support
  */
 
-import { LANGUAGE_SELECTOR } from '../constants.js';
-import { IPromptsService } from '../service/types.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { assertOneOf } from '../../../../../../base/common/types.js';
-import { isWindows } from '../../../../../../base/common/platform.js';
-import { ITextModel } from '../../../../../../editor/common/model.js';
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { CancellationError } from '../../../../../../base/common/errors.js';
-import { Position } from '../../../../../../editor/common/core/position.js';
-import { IPromptFileReference, IPromptReference } from '../parsers/types.js';
-import { dirname, extUri } from '../../../../../../base/common/resources.js';
-import { assert, assertNever } from '../../../../../../base/common/assert.js';
-import { IFileService } from '../../../../../../platform/files/common/files.js';
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { Registry } from '../../../../../../platform/registry/common/platform.js';
-import { LifecyclePhase } from '../../../../../services/lifecycle/common/lifecycle.js';
-import { ILanguageFeaturesService } from '../../../../../../editor/common/services/languageFeatures.js';
-import { IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions } from '../../../../../common/contributions.js';
-import { CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList } from '../../../../../../editor/common/languages.js';
+import { LANGUAGE_SELECTOR } from '../constants.js'
+import { IPromptsService } from '../service/types.js'
+import { URI } from '../../../../../../base/common/uri.js'
+import { assertOneOf } from '../../../../../../base/common/types.js'
+import { isWindows } from '../../../../../../base/common/platform.js'
+import { ITextModel } from '../../../../../../editor/common/model.js'
+import { Disposable } from '../../../../../../base/common/lifecycle.js'
+import { CancellationError } from '../../../../../../base/common/errors.js'
+import { Position } from '../../../../../../editor/common/core/position.js'
+import { IPromptFileReference, IPromptReference } from '../parsers/types.js'
+import { dirname, extUri } from '../../../../../../base/common/resources.js'
+import { assert, assertNever } from '../../../../../../base/common/assert.js'
+import { IFileService } from '../../../../../../platform/files/common/files.js'
+import { CancellationToken } from '../../../../../../base/common/cancellation.js'
+import { Registry } from '../../../../../../platform/registry/common/platform.js'
+import { LifecyclePhase } from '../../../../../services/lifecycle/common/lifecycle.js'
+import { ILanguageFeaturesService } from '../../../../../../editor/common/services/languageFeatures.js'
+import {
+	IWorkbenchContributionsRegistry,
+	Extensions as WorkbenchExtensions,
+} from '../../../../../common/contributions.js'
+import {
+	CompletionContext,
+	CompletionItem,
+	CompletionItemKind,
+	CompletionItemProvider,
+	CompletionList,
+} from '../../../../../../editor/common/languages.js'
 
 /**
  * Type for a filesystem completion item - the one that has its {@link CompletionItem.kind kind} set
  * to either {@link CompletionItemKind.File} or {@link CompletionItemKind.Folder}.
  */
-type TFilesystemCompletionItem = CompletionItem & { kind: CompletionItemKind.File | CompletionItemKind.Folder };
+type TFilesystemCompletionItem = CompletionItem & {
+	kind: CompletionItemKind.File | CompletionItemKind.Folder
+}
 
 /**
  * Type for a "raw" folder suggestion. Unlike the full completion item,
  * this one does not have `insertText` and `range` properties which are
  * meant to be added later.
  */
-type TFolderSuggestion = Omit<TFilesystemCompletionItem, 'insertText' | 'range'> & { label: string };
+type TFolderSuggestion = Omit<TFilesystemCompletionItem, 'insertText' | 'range'> & { label: string }
 
 /**
  * Type for trigger characters handled by this autocompletion provider.
  */
-type TTriggerCharacter = ':' | '.' | '/';
+type TTriggerCharacter = ':' | '.' | '/'
 
 /**
  * Finds a file reference that suites the provided `position`.
@@ -60,29 +71,29 @@ const findFileReference = (
 	position: Position,
 ): IPromptFileReference | undefined => {
 	for (const reference of references) {
-		const { range } = reference;
+		const { range } = reference
 
 		// ignore any other types of references
 		if (reference.type !== 'file') {
-			return undefined;
+			return undefined
 		}
 
 		// this ensures that we handle only the `#file:` references for now
 		if (reference.subtype !== 'prompt') {
-			return undefined;
+			return undefined
 		}
 
 		// reference must match the provided position
-		const { startLineNumber, endColumn } = range;
-		if ((startLineNumber !== position.lineNumber) || (endColumn !== position.column)) {
-			continue;
+		const { startLineNumber, endColumn } = range
+		if (startLineNumber !== position.lineNumber || endColumn !== position.column) {
+			continue
 		}
 
-		return reference;
+		return reference
 	}
 
-	return undefined;
-};
+	return undefined
+}
 
 /**
  * Provides reference paths autocompletion for the `#file:` variables inside prompts.
@@ -91,21 +102,21 @@ export class PromptPathAutocompletion extends Disposable implements CompletionIt
 	/**
 	 * Debug display name for this provider.
 	 */
-	public readonly _debugDisplayName: string = 'PromptPathAutocompletion';
+	public readonly _debugDisplayName: string = 'PromptPathAutocompletion'
 
 	/**
 	 * List of trigger characters handled by this provider.
 	 */
-	public readonly triggerCharacters: TTriggerCharacter[] = [':', '.', '/'];
+	public readonly triggerCharacters: TTriggerCharacter[] = [':', '.', '/']
 
 	constructor(
 		@IFileService private readonly fileService: IFileService,
 		@IPromptsService private readonly promptSyntaxService: IPromptsService,
 		@ILanguageFeaturesService private readonly languageService: ILanguageFeaturesService,
 	) {
-		super();
+		super()
 
-		this._register(this.languageService.completionProvider.register(LANGUAGE_SELECTOR, this));
+		this._register(this.languageService.completionProvider.register(LANGUAGE_SELECTOR, this))
 	}
 
 	/**
@@ -118,48 +129,33 @@ export class PromptPathAutocompletion extends Disposable implements CompletionIt
 		context: CompletionContext,
 		token: CancellationToken,
 	): Promise<CompletionList | undefined> {
-		assert(
-			!token.isCancellationRequested,
-			new CancellationError(),
-		);
+		assert(!token.isCancellationRequested, new CancellationError())
 
-		const { triggerCharacter } = context;
+		const { triggerCharacter } = context
 
 		// it must always have been triggered by a character
 		if (!triggerCharacter) {
-			return undefined;
+			return undefined
 		}
 
-		assertOneOf(
-			triggerCharacter,
-			this.triggerCharacters,
-			`Prompt path autocompletion provider`,
-		);
+		assertOneOf(triggerCharacter, this.triggerCharacters, `Prompt path autocompletion provider`)
 
-		const parser = this.promptSyntaxService.getSyntaxParserFor(model);
-		assert(
-			!parser.disposed,
-			'Prompt parser must not be disposed.',
-		);
+		const parser = this.promptSyntaxService.getSyntaxParserFor(model)
+		assert(!parser.disposed, 'Prompt parser must not be disposed.')
 
 		// start the parser in case it was not started yet,
 		// and wait for it to settle to a final result
-		const { references } = await parser
-			.start()
-			.settled();
+		const { references } = await parser.start().settled()
 
 		// validate that the cancellation was not yet requested
-		assert(
-			!token.isCancellationRequested,
-			new CancellationError(),
-		);
+		assert(!token.isCancellationRequested, new CancellationError())
 
-		const fileReference = findFileReference(references, position);
+		const fileReference = findFileReference(references, position)
 		if (!fileReference) {
-			return undefined;
+			return undefined
 		}
 
-		const modelDirname = dirname(model.uri);
+		const modelDirname = dirname(model.uri)
 
 		// in the case of the '.' trigger character, we must check if this is the first
 		// dot in the link path, otherwise the dot could be a part of a folder name
@@ -170,7 +166,7 @@ export class PromptPathAutocompletion extends Disposable implements CompletionIt
 					modelDirname,
 					fileReference,
 				),
-			};
+			}
 		}
 
 		if (triggerCharacter === '/' || triggerCharacter === '.') {
@@ -180,13 +176,10 @@ export class PromptPathAutocompletion extends Disposable implements CompletionIt
 					modelDirname,
 					fileReference,
 				),
-			};
+			}
 		}
 
-		assertNever(
-			triggerCharacter,
-			`Unexpected trigger character '${triggerCharacter}'.`,
-		);
+		assertNever(triggerCharacter, `Unexpected trigger character '${triggerCharacter}'.`)
 	}
 
 	/**
@@ -194,34 +187,28 @@ export class PromptPathAutocompletion extends Disposable implements CompletionIt
 	 * these ones do not have `insertText` and `range` properties which
 	 * are meant to be added by the caller later on.
 	 */
-	private async getFolderSuggestions(
-		uri: URI,
-	): Promise<TFolderSuggestion[]> {
-		const { children } = await this.fileService.resolve(uri);
-		const suggestions: TFolderSuggestion[] = [];
+	private async getFolderSuggestions(uri: URI): Promise<TFolderSuggestion[]> {
+		const { children } = await this.fileService.resolve(uri)
+		const suggestions: TFolderSuggestion[] = []
 
 		// no `children` - no suggestions
 		if (!children) {
-			return suggestions;
+			return suggestions
 		}
 
 		for (const child of children) {
-			const kind = child.isDirectory
-				? CompletionItemKind.Folder
-				: CompletionItemKind.File;
+			const kind = child.isDirectory ? CompletionItemKind.Folder : CompletionItemKind.File
 
-			const sortText = child.isDirectory
-				? '1'
-				: '2';
+			const sortText = child.isDirectory ? '1' : '2'
 
 			suggestions.push({
 				label: child.name,
 				kind,
 				sortText,
-			});
+			})
 		}
 
-		return suggestions;
+		return suggestions
 	}
 
 	/**
@@ -239,31 +226,31 @@ export class PromptPathAutocompletion extends Disposable implements CompletionIt
 		fileFolderUri: URI,
 		fileReference: IPromptFileReference,
 	): Promise<TFilesystemCompletionItem[]> {
-		const { linkRange } = fileReference;
+		const { linkRange } = fileReference
 
 		// when character is `:`, there must be no link present yet
 		// otherwise the `:` was used in the middle of the link hence
 		// we don't want to provide suggestions for that
-		if ((character === ':') && (linkRange !== undefined)) {
-			return [];
+		if (character === ':' && linkRange !== undefined) {
+			return []
 		}
 
 		// otherwise when the `.` character is present, it is inside the link part
 		// of the reference, hence we always expect the link range to be present
-		if ((character === '.') && (linkRange === undefined)) {
-			return [];
+		if (character === '.' && linkRange === undefined) {
+			return []
 		}
 
-		const suggestions = await this.getFolderSuggestions(fileFolderUri);
+		const suggestions = await this.getFolderSuggestions(fileFolderUri)
 
 		// replacement range for suggestions; when character is `.`, we want to also
 		// replace it, because we add `./` at the beginning of all the relative paths
-		const startColumnOffset = (character === '.') ? 1 : 0;
+		const startColumnOffset = character === '.' ? 1 : 0
 		const range = {
 			...fileReference.range,
 			endColumn: fileReference.range.endColumn,
 			startColumn: fileReference.range.endColumn - startColumnOffset,
-		};
+		}
 
 		return [
 			{
@@ -273,23 +260,20 @@ export class PromptPathAutocompletion extends Disposable implements CompletionIt
 				range,
 				sortText: '0',
 			},
-			...suggestions
-				.map((suggestion) => {
-					// add space at the end of file names since no completions
-					// that follow the file name are expected anymore
-					const suffix = (suggestion.kind === CompletionItemKind.File)
-						? ' '
-						: '';
+			...suggestions.map((suggestion) => {
+				// add space at the end of file names since no completions
+				// that follow the file name are expected anymore
+				const suffix = suggestion.kind === CompletionItemKind.File ? ' ' : ''
 
-					return {
-						...suggestion,
-						range,
-						label: `./${suggestion.label}${suffix}`,
-						// we use the `./` prefix for consistency
-						insertText: `./${suggestion.label}${suffix}`,
-					};
-				}),
-		];
+				return {
+					...suggestion,
+					range,
+					label: `./${suggestion.label}${suffix}`,
+					// we use the `./` prefix for consistency
+					insertText: `./${suggestion.label}${suffix}`,
+				}
+			}),
+		]
 	}
 
 	/**
@@ -301,47 +285,44 @@ export class PromptPathAutocompletion extends Disposable implements CompletionIt
 		fileFolderUri: URI,
 		fileReference: IPromptFileReference,
 	): Promise<TFilesystemCompletionItem[]> {
-		const { linkRange, path } = fileReference;
+		const { linkRange, path } = fileReference
 
 		if (linkRange === undefined) {
-			return [];
+			return []
 		}
 
-		const currenFolder = extUri.resolvePath(fileFolderUri, path);
-		let suggestions = await this.getFolderSuggestions(currenFolder);
+		const currenFolder = extUri.resolvePath(fileFolderUri, path)
+		let suggestions = await this.getFolderSuggestions(currenFolder)
 
 		// when trigger character was a `.`, which is we know is inside
 		// the folder/file name in the path, filter out to only items
 		// that start with the dot instead of showing all of them
 		if (character === '.') {
 			suggestions = suggestions.filter((suggestion) => {
-				return suggestion.label.startsWith('.');
-			});
+				return suggestion.label.startsWith('.')
+			})
 		}
 
 		// replacement range of the suggestions
 		// when character is `.` we want to also replace it too
-		const startColumnOffset = (character === '.') ? 1 : 0;
+		const startColumnOffset = character === '.' ? 1 : 0
 		const range = {
 			...fileReference.range,
 			endColumn: fileReference.range.endColumn,
 			startColumn: fileReference.range.endColumn - startColumnOffset,
-		};
+		}
 
-		return suggestions
-			.map((suggestion) => {
-				// add space at the end of file names since no completions
-				// that follow the file name are expected anymore
-				const suffix = (suggestion.kind === CompletionItemKind.File)
-					? ' '
-					: '';
+		return suggestions.map((suggestion) => {
+			// add space at the end of file names since no completions
+			// that follow the file name are expected anymore
+			const suffix = suggestion.kind === CompletionItemKind.File ? ' ' : ''
 
-				return {
-					...suggestion,
-					insertText: `${suggestion.label}${suffix}`,
-					range,
-				};
-			});
+			return {
+				...suggestion,
+				insertText: `${suggestion.label}${suffix}`,
+				range,
+			}
+		})
 	}
 }
 
@@ -355,6 +336,7 @@ export class PromptPathAutocompletion extends Disposable implements CompletionIt
  */
 if (!isWindows) {
 	// register the provider as a workbench contribution
-	Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench)
-		.registerWorkbenchContribution(PromptPathAutocompletion, LifecyclePhase.Eventually);
+	Registry.as<IWorkbenchContributionsRegistry>(
+		WorkbenchExtensions.Workbench,
+	).registerWorkbenchContribution(PromptPathAutocompletion, LifecyclePhase.Eventually)
 }

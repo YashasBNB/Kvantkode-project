@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../../nls.js';
-import { MenuId } from '../../../../../platform/actions/common/actions.js';
-import { RawContextKey } from '../../../../../platform/contextkey/common/contextkey.js';
+import { localize } from '../../../../../nls.js'
+import { MenuId } from '../../../../../platform/actions/common/actions.js'
+import { RawContextKey } from '../../../../../platform/contextkey/common/contextkey.js'
 
 export const enum TerminalChatCommandId {
 	Start = 'workbench.action.terminal.chat.start',
@@ -20,9 +20,9 @@ export const enum TerminalChatCommandId {
 	RerunRequest = 'workbench.action.terminal.chat.rerunRequest',
 }
 
-export const MENU_TERMINAL_CHAT_WIDGET_INPUT_SIDE_TOOLBAR = MenuId.for('terminalChatWidget');
-export const MENU_TERMINAL_CHAT_WIDGET_STATUS = MenuId.for('terminalChatWidget.status');
-export const MENU_TERMINAL_CHAT_WIDGET_TOOLBAR = MenuId.for('terminalChatWidget.toolbar');
+export const MENU_TERMINAL_CHAT_WIDGET_INPUT_SIDE_TOOLBAR = MenuId.for('terminalChatWidget')
+export const MENU_TERMINAL_CHAT_WIDGET_STATUS = MenuId.for('terminalChatWidget.status')
+export const MENU_TERMINAL_CHAT_WIDGET_TOOLBAR = MenuId.for('terminalChatWidget.toolbar')
 
 export const enum TerminalChatContextKeyStrings {
 	ChatFocus = 'terminalChatFocus',
@@ -37,27 +37,62 @@ export const enum TerminalChatContextKeyStrings {
 	ChatSessionResponseVote = 'terminalChatSessionResponseVote',
 }
 
-
 export namespace TerminalChatContextKeys {
-
 	/** Whether the chat widget is focused */
-	export const focused = new RawContextKey<boolean>(TerminalChatContextKeyStrings.ChatFocus, false, localize('chatFocusedContextKey', "Whether the chat view is focused."));
+	export const focused = new RawContextKey<boolean>(
+		TerminalChatContextKeyStrings.ChatFocus,
+		false,
+		localize('chatFocusedContextKey', 'Whether the chat view is focused.'),
+	)
 
 	/** Whether the chat widget is visible */
-	export const visible = new RawContextKey<boolean>(TerminalChatContextKeyStrings.ChatVisible, false, localize('chatVisibleContextKey', "Whether the chat view is visible."));
+	export const visible = new RawContextKey<boolean>(
+		TerminalChatContextKeyStrings.ChatVisible,
+		false,
+		localize('chatVisibleContextKey', 'Whether the chat view is visible.'),
+	)
 
 	/** Whether there is an active chat request */
-	export const requestActive = new RawContextKey<boolean>(TerminalChatContextKeyStrings.ChatActiveRequest, false, localize('chatRequestActiveContextKey', "Whether there is an active chat request."));
+	export const requestActive = new RawContextKey<boolean>(
+		TerminalChatContextKeyStrings.ChatActiveRequest,
+		false,
+		localize('chatRequestActiveContextKey', 'Whether there is an active chat request.'),
+	)
 
 	/** Whether the chat input has text */
-	export const inputHasText = new RawContextKey<boolean>(TerminalChatContextKeyStrings.ChatInputHasText, false, localize('chatInputHasTextContextKey', "Whether the chat input has text."));
+	export const inputHasText = new RawContextKey<boolean>(
+		TerminalChatContextKeyStrings.ChatInputHasText,
+		false,
+		localize('chatInputHasTextContextKey', 'Whether the chat input has text.'),
+	)
 
 	/** The chat response contains at least one code block */
-	export const responseContainsCodeBlock = new RawContextKey<boolean>(TerminalChatContextKeyStrings.ChatResponseContainsCodeBlock, false, localize('chatResponseContainsCodeBlockContextKey', "Whether the chat response contains a code block."));
+	export const responseContainsCodeBlock = new RawContextKey<boolean>(
+		TerminalChatContextKeyStrings.ChatResponseContainsCodeBlock,
+		false,
+		localize(
+			'chatResponseContainsCodeBlockContextKey',
+			'Whether the chat response contains a code block.',
+		),
+	)
 
 	/** The chat response contains multiple code blocks */
-	export const responseContainsMultipleCodeBlocks = new RawContextKey<boolean>(TerminalChatContextKeyStrings.ChatResponseContainsMultipleCodeBlocks, false, localize('chatResponseContainsMultipleCodeBlocksContextKey', "Whether the chat response contains multiple code blocks."));
+	export const responseContainsMultipleCodeBlocks = new RawContextKey<boolean>(
+		TerminalChatContextKeyStrings.ChatResponseContainsMultipleCodeBlocks,
+		false,
+		localize(
+			'chatResponseContainsMultipleCodeBlocksContextKey',
+			'Whether the chat response contains multiple code blocks.',
+		),
+	)
 
 	/** A chat agent exists for the terminal location */
-	export const hasChatAgent = new RawContextKey<boolean>(TerminalChatContextKeyStrings.ChatAgentRegistered, false, localize('chatAgentRegisteredContextKey', "Whether a chat agent is registered for the terminal location."));
+	export const hasChatAgent = new RawContextKey<boolean>(
+		TerminalChatContextKeyStrings.ChatAgentRegistered,
+		false,
+		localize(
+			'chatAgentRegisteredContextKey',
+			'Whether a chat agent is registered for the terminal location.',
+		),
+	)
 }

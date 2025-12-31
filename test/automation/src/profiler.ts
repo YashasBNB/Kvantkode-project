@@ -3,54 +3,53 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-const { decode_bytes } = require('@vscode/v8-heap-parser');
-import { Code } from './code';
-import { PlaywrightDriver } from './playwrightDriver';
+const { decode_bytes } = require('@vscode/v8-heap-parser')
+import { Code } from './code'
+import { PlaywrightDriver } from './playwrightDriver'
 
 export class Profiler {
-	constructor(private readonly code: Code) {
-	}
+	constructor(private readonly code: Code) {}
 
 	async checkObjectLeaks(classNames: string | string[], fn: () => Promise<void>): Promise<void> {
-		await this.code.driver.startCDP();
+		await this.code.driver.startCDP()
 
-		const classNamesArray = Array.isArray(classNames) ? classNames : [classNames];
-		const countsBefore = await getInstances(this.code.driver, classNamesArray);
+		const classNamesArray = Array.isArray(classNames) ? classNames : [classNames]
+		const countsBefore = await getInstances(this.code.driver, classNamesArray)
 
-		await fn();
+		await fn()
 
-		const countAfter = await getInstances(this.code.driver, classNamesArray);
-		const leaks: string[] = [];
+		const countAfter = await getInstances(this.code.driver, classNamesArray)
+		const leaks: string[] = []
 		for (const className of classNamesArray) {
-			const count = countAfter[className] ?? 0;
-			const countBefore = countsBefore[className] ?? 0;
+			const count = countAfter[className] ?? 0
+			const countBefore = countsBefore[className] ?? 0
 			if (count !== countBefore) {
-				leaks.push(`Leaked ${count - countBefore} ${className}`);
+				leaks.push(`Leaked ${count - countBefore} ${className}`)
 			}
 		}
 
 		if (leaks.length > 0) {
-			throw new Error(leaks.join('\n'));
+			throw new Error(leaks.join('\n'))
 		}
 	}
 
 	async checkHeapLeaks(classNames: string | string[], fn: () => Promise<void>): Promise<void> {
-		await this.code.driver.startCDP();
-		await fn();
+		await this.code.driver.startCDP()
+		await fn()
 
-		const heapSnapshotAfter = await this.code.driver.takeHeapSnapshot();
-		const buff = Buffer.from(heapSnapshotAfter);
-		const graph = await decode_bytes(buff);
-		const counts: number[] = Array.from(graph.get_class_counts(classNames));
-		const leaks: string[] = [];
+		const heapSnapshotAfter = await this.code.driver.takeHeapSnapshot()
+		const buff = Buffer.from(heapSnapshotAfter)
+		const graph = await decode_bytes(buff)
+		const counts: number[] = Array.from(graph.get_class_counts(classNames))
+		const leaks: string[] = []
 		for (let i = 0; i < classNames.length; i++) {
 			if (counts[i] > 0) {
-				leaks.push(`Leaked ${counts[i]} ${classNames[i]}`);
+				leaks.push(`Leaked ${counts[i]} ${classNames[i]}`)
 			}
 		}
 
 		if (leaks.length > 0) {
-			throw new Error(leaks.join('\n'));
+			throw new Error(leaks.join('\n'))
 		}
 	}
 }
@@ -66,50 +65,48 @@ export function generateUuid(): string {
 		// > usable feature in insecure contexts: the getRandomValues() method.
 		// > In general, you should use this API only in secure contexts.
 
-		return crypto.randomUUID.bind(crypto)();
+		return crypto.randomUUID.bind(crypto)()
 	}
 
 	// prep-work
-	const _data = new Uint8Array(16);
-	const _hex: string[] = [];
+	const _data = new Uint8Array(16)
+	const _hex: string[] = []
 	for (let i = 0; i < 256; i++) {
-		_hex.push(i.toString(16).padStart(2, '0'));
+		_hex.push(i.toString(16).padStart(2, '0'))
 	}
 
 	// get data
-	crypto.getRandomValues(_data);
+	crypto.getRandomValues(_data)
 
 	// set version bits
-	_data[6] = (_data[6] & 0x0f) | 0x40;
-	_data[8] = (_data[8] & 0x3f) | 0x80;
+	_data[6] = (_data[6] & 0x0f) | 0x40
+	_data[8] = (_data[8] & 0x3f) | 0x80
 
 	// print as string
-	let i = 0;
-	let result = '';
-	result += _hex[_data[i++]];
-	result += _hex[_data[i++]];
-	result += _hex[_data[i++]];
-	result += _hex[_data[i++]];
-	result += '-';
-	result += _hex[_data[i++]];
-	result += _hex[_data[i++]];
-	result += '-';
-	result += _hex[_data[i++]];
-	result += _hex[_data[i++]];
-	result += '-';
-	result += _hex[_data[i++]];
-	result += _hex[_data[i++]];
-	result += '-';
-	result += _hex[_data[i++]];
-	result += _hex[_data[i++]];
-	result += _hex[_data[i++]];
-	result += _hex[_data[i++]];
-	result += _hex[_data[i++]];
-	result += _hex[_data[i++]];
-	return result;
+	let i = 0
+	let result = ''
+	result += _hex[_data[i++]]
+	result += _hex[_data[i++]]
+	result += _hex[_data[i++]]
+	result += _hex[_data[i++]]
+	result += '-'
+	result += _hex[_data[i++]]
+	result += _hex[_data[i++]]
+	result += '-'
+	result += _hex[_data[i++]]
+	result += _hex[_data[i++]]
+	result += '-'
+	result += _hex[_data[i++]]
+	result += _hex[_data[i++]]
+	result += '-'
+	result += _hex[_data[i++]]
+	result += _hex[_data[i++]]
+	result += _hex[_data[i++]]
+	result += _hex[_data[i++]]
+	result += _hex[_data[i++]]
+	result += _hex[_data[i++]]
+	return result
 }
-
-
 
 /*---------------------------------------------------------------------------------------------
  *  The MIT License (MIT)
@@ -118,18 +115,21 @@ export function generateUuid(): string {
  *  This code is derived from https://github.com/SimonSiefke/vscode-memory-leak-finder
  *--------------------------------------------------------------------------------------------*/
 
-const getInstances = async (driver: PlaywrightDriver, classNames: string[]): Promise<{ [key: string]: number }> => {
-	await driver.collectGarbage();
-	const objectGroup = `og:${generateUuid()}`;
+const getInstances = async (
+	driver: PlaywrightDriver,
+	classNames: string[],
+): Promise<{ [key: string]: number }> => {
+	await driver.collectGarbage()
+	const objectGroup = `og:${generateUuid()}`
 	const prototypeDescriptor = await driver.evaluate({
 		expression: 'Object.prototype',
 		returnByValue: false,
 		objectGroup,
-	});
+	})
 	const objects = await driver.queryObjects({
 		prototypeObjectId: prototypeDescriptor.result.objectId!,
 		objectGroup,
-	});
+	})
 	const fnResult1 = await driver.callFunctionOn({
 		functionDeclaration: `function(){
 	const objects = this
@@ -205,9 +205,9 @@ const getInstances = async (driver: PlaywrightDriver, classNames: string[]): Pro
 		objectId: objects.objects.objectId,
 		returnByValue: true,
 		objectGroup,
-	});
+	})
 
-	const returnObject = fnResult1.result.value;
-	await driver.releaseObjectGroup({ objectGroup: objectGroup });
-	return returnObject;
-};
+	const returnObject = fnResult1.result.value
+	await driver.releaseObjectGroup({ objectGroup: objectGroup })
+	return returnObject
+}

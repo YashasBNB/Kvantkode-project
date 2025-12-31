@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../../base/common/uri.js';
-import { Emitter } from '../../../../../base/common/event.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { FilePromptParser } from '../../common/promptSyntax/parsers/filePromptParser.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
+import { URI } from '../../../../../base/common/uri.js'
+import { Emitter } from '../../../../../base/common/event.js'
+import { Disposable } from '../../../../../base/common/lifecycle.js'
+import { FilePromptParser } from '../../common/promptSyntax/parsers/filePromptParser.js'
+import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js'
 
 /**
  * Model for a single chat prompt instructions attachment.
@@ -17,12 +17,12 @@ export class ChatPromptAttachmentModel extends Disposable {
 	 * Private reference of the underlying prompt instructions
 	 * reference instance.
 	 */
-	private readonly _reference: FilePromptParser;
+	private readonly _reference: FilePromptParser
 	/**
 	 * Get the prompt instructions reference instance.
 	 */
 	public get reference(): FilePromptParser {
-		return this._reference;
+		return this._reference
 	}
 
 	/**
@@ -30,21 +30,18 @@ export class ChatPromptAttachmentModel extends Disposable {
 	 * references it may contain, including reference of this model itself.
 	 */
 	public get references(): readonly URI[] {
-		const { reference } = this;
-		const { errorCondition } = this.reference;
+		const { reference } = this
+		const { errorCondition } = this.reference
 
 		// return no references if the attachment is disabled
 		// or if this object itself has an error
 		if (errorCondition) {
-			return [];
+			return []
 		}
 
 		// otherwise return `URI` for the main reference and
 		// all valid child `URI` references it may contain
-		return [
-			...reference.allValidReferencesUris,
-			reference.uri,
-		];
+		return [...reference.allValidReferencesUris, reference.uri]
 	}
 
 	/**
@@ -52,7 +49,7 @@ export class ChatPromptAttachmentModel extends Disposable {
 	 * including all its possible nested child references.
 	 */
 	public get allSettled(): Promise<FilePromptParser> {
-		return this.reference.allSettled();
+		return this.reference.allSettled()
 	}
 
 	/**
@@ -60,7 +57,7 @@ export class ChatPromptAttachmentModel extends Disposable {
 	 * reference, if any.
 	 */
 	public get topError() {
-		return this.reference.topError;
+		return this.reference.topError
 	}
 
 	/**
@@ -69,15 +66,15 @@ export class ChatPromptAttachmentModel extends Disposable {
 	 *
 	 * See {@linkcode onUpdate}.
 	 */
-	protected _onUpdate = this._register(new Emitter<void>());
+	protected _onUpdate = this._register(new Emitter<void>())
 	/**
 	 * Subscribe to the `onUpdate` event.
 	 * @param callback Function to invoke on update.
 	 */
 	public onUpdate(callback: () => unknown): this {
-		this._register(this._onUpdate.event(callback));
+		this._register(this._onUpdate.event(callback))
 
-		return this;
+		return this
 	}
 
 	/**
@@ -85,26 +82,27 @@ export class ChatPromptAttachmentModel extends Disposable {
 	 *
 	 * See {@linkcode onDispose}.
 	 */
-	protected _onDispose = this._register(new Emitter<void>());
+	protected _onDispose = this._register(new Emitter<void>())
 	/**
 	 * Subscribe to the `onDispose` event.
 	 * @param callback Function to invoke on dispose.
 	 */
 	public onDispose(callback: () => unknown): this {
-		this._register(this._onDispose.event(callback));
+		this._register(this._onDispose.event(callback))
 
-		return this;
+		return this
 	}
 
 	constructor(
 		uri: URI,
 		@IInstantiationService private readonly initService: IInstantiationService,
 	) {
-		super();
+		super()
 
-		this._onUpdate.fire = this._onUpdate.fire.bind(this._onUpdate);
-		this._reference = this._register(this.initService.createInstance(FilePromptParser, uri, []))
-			.onUpdate(this._onUpdate.fire);
+		this._onUpdate.fire = this._onUpdate.fire.bind(this._onUpdate)
+		this._reference = this._register(
+			this.initService.createInstance(FilePromptParser, uri, []),
+		).onUpdate(this._onUpdate.fire)
 	}
 
 	/**
@@ -112,14 +110,14 @@ export class ChatPromptAttachmentModel extends Disposable {
 	 * that it may contain.
 	 */
 	public resolve(): this {
-		this._reference.start();
+		this._reference.start()
 
-		return this;
+		return this
 	}
 
 	public override dispose(): void {
-		this._onDispose.fire();
+		this._onDispose.fire()
 
-		super.dispose();
+		super.dispose()
 	}
 }

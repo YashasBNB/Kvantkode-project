@@ -5,11 +5,11 @@
 
 //@ts-check
 
-'use strict';
+'use strict'
 
-const path = require('path');
+const path = require('path')
 
-const withDefaults = require('../shared.webpack.config');
+const withDefaults = require('../shared.webpack.config')
 
 module.exports = withDefaults({
 	context: __dirname,
@@ -18,6 +18,6 @@ module.exports = withDefaults({
 	},
 	output: {
 		path: path.join(__dirname, 'dist', 'node'),
-		filename: 'emmetNodeMain.js'
-	}
-});
+		filename: 'emmetNodeMain.js',
+	},
+})

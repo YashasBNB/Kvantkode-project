@@ -2,8 +2,15 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import code, { codeTunnelSubcommands, commonOptions, extensionManagementOptions, troubleshootingOptions, globalTunnelOptions, extTunnelSubcommand, codeTunnelOptions } from './code';
-
+import code, {
+	codeTunnelSubcommands,
+	commonOptions,
+	extensionManagementOptions,
+	troubleshootingOptions,
+	globalTunnelOptions,
+	extTunnelSubcommand,
+	codeTunnelOptions,
+} from './code'
 
 export const codeTunnelSpecOptions: Fig.Option[] = [
 	{
@@ -33,15 +40,7 @@ export const codeTunnelSpecOptions: Fig.Option[] = [
 		args: {
 			name: 'log',
 			isOptional: true,
-			suggestions: [
-				'trace',
-				'debug',
-				'info',
-				'warn',
-				'error',
-				'critical',
-				'off',
-			],
+			suggestions: ['trace', 'debug', 'info', 'warn', 'error', 'critical', 'off'],
 		},
 	},
 	{
@@ -52,12 +51,7 @@ export const codeTunnelSpecOptions: Fig.Option[] = [
 		args: {
 			name: 'telemetry_level',
 			isOptional: true,
-			suggestions: [
-				'off',
-				'crash',
-				'error',
-				'all',
-			],
+			suggestions: ['off', 'crash', 'error', 'all'],
 		},
 	},
 	{
@@ -66,29 +60,27 @@ export const codeTunnelSpecOptions: Fig.Option[] = [
 	},
 	{
 		name: '--disable-telemetry',
-		description: 'Disable telemetry for the current command, even if it was previously accepted as part of the license prompt or specified in \'--telemetry-level\'',
+		description:
+			"Disable telemetry for the current command, even if it was previously accepted as part of the license prompt or specified in '--telemetry-level'",
 	},
 	{
 		name: ['-h', '--help'],
 		description: 'Print help',
 	},
-];
+]
 
 const codeTunnelCompletionSpec: Fig.Spec = {
 	...code,
 	name: 'code-tunnel',
-	description: 'Create a tunnel that\'s accessible on vscode.dev from anywhere.',
-	subcommands: [
-		...codeTunnelSubcommands,
-		extTunnelSubcommand
-	],
+	description: "Create a tunnel that's accessible on vscode.dev from anywhere.",
+	subcommands: [...codeTunnelSubcommands, extTunnelSubcommand],
 	options: [
 		...commonOptions,
 		...extensionManagementOptions('code-tunnel'),
 		...troubleshootingOptions('code-tunnel'),
 		...globalTunnelOptions,
-		...codeTunnelOptions
-	]
-};
+		...codeTunnelOptions,
+	],
+}
 
-export default codeTunnelCompletionSpec;
+export default codeTunnelCompletionSpec

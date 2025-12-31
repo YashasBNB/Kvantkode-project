@@ -3,16 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IMainProcessService } from '../../../../platform/ipc/common/mainProcessService.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { INativeMcpDiscoveryHelperService, NativeMcpDiscoveryHelperChannelName } from '../../../../platform/mcp/common/nativeMcpDiscoveryHelper.js';
-import { NativeFilesystemMcpDiscovery } from '../common/discovery/nativeMcpDiscoveryAbstract.js';
-import { IMcpRegistry } from '../common/mcpRegistryTypes.js';
+import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js'
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js'
+import { IFileService } from '../../../../platform/files/common/files.js'
+import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js'
+import { IMainProcessService } from '../../../../platform/ipc/common/mainProcessService.js'
+import { ILabelService } from '../../../../platform/label/common/label.js'
+import { ILogService } from '../../../../platform/log/common/log.js'
+import {
+	INativeMcpDiscoveryHelperService,
+	NativeMcpDiscoveryHelperChannelName,
+} from '../../../../platform/mcp/common/nativeMcpDiscoveryHelper.js'
+import { NativeFilesystemMcpDiscovery } from '../common/discovery/nativeMcpDiscoveryAbstract.js'
+import { IMcpRegistry } from '../common/mcpRegistryTypes.js'
 
 export class NativeMcpDiscovery extends NativeFilesystemMcpDiscovery {
 	constructor(
@@ -24,19 +27,20 @@ export class NativeMcpDiscovery extends NativeFilesystemMcpDiscovery {
 		@IMcpRegistry mcpRegistry: IMcpRegistry,
 		@IConfigurationService configurationService: IConfigurationService,
 	) {
-		super(null, labelService, fileService, instantiationService, mcpRegistry, configurationService);
+		super(null, labelService, fileService, instantiationService, mcpRegistry, configurationService)
 	}
 
 	public override start(): void {
 		const service = ProxyChannel.toService<INativeMcpDiscoveryHelperService>(
-			this.mainProcess.getChannel(NativeMcpDiscoveryHelperChannelName));
+			this.mainProcess.getChannel(NativeMcpDiscoveryHelperChannelName),
+		)
 
 		service.load().then(
-			data => this.setDetails(data),
-			err => {
-				this.logService.warn('Error getting main process MCP environment', err);
-				this.setDetails(undefined);
-			}
-		);
+			(data) => this.setDetails(data),
+			(err) => {
+				this.logService.warn('Error getting main process MCP environment', err)
+				this.setDetails(undefined)
+			},
+		)
 	}
 }

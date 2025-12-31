@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 export function makeArray<T>(object: T | T[]): T[] {
-	return Array.isArray(object) ? object : [object];
+	return Array.isArray(object) ? object : [object]
 }
 
 export enum SpecLocationSource {

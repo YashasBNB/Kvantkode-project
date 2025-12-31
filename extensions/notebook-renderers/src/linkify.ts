@@ -3,49 +3,60 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ttPolicy } from './htmlHelper';
+import { ttPolicy } from './htmlHelper'
 
-const CONTROL_CODES = '\\u0000-\\u0020\\u007f-\\u009f';
-const WEB_LINK_REGEX = new RegExp('(?:[a-zA-Z][a-zA-Z0-9+.-]{2,}:\\/\\/|data:|www\\.)[^\\s' + CONTROL_CODES + '"]{2,}[^\\s' + CONTROL_CODES + '"\')}\\],:;.!?]', 'ug');
+const CONTROL_CODES = '\\u0000-\\u0020\\u007f-\\u009f'
+const WEB_LINK_REGEX = new RegExp(
+	'(?:[a-zA-Z][a-zA-Z0-9+.-]{2,}:\\/\\/|data:|www\\.)[^\\s' +
+		CONTROL_CODES +
+		'"]{2,}[^\\s' +
+		CONTROL_CODES +
+		'"\')}\\],:;.!?]',
+	'ug',
+)
 
-const WIN_ABSOLUTE_PATH = /(?<=^|\s)(?:[a-zA-Z]:(?:(?:\\|\/)[\w\.-]*)+)/;
-const WIN_RELATIVE_PATH = /(?<=^|\s)(?:(?:\~|\.)(?:(?:\\|\/)[\w\.-]*)+)/;
-const WIN_PATH = new RegExp(`(${WIN_ABSOLUTE_PATH.source}|${WIN_RELATIVE_PATH.source})`);
-const POSIX_PATH = /(?<=^|\s)((?:\~|\.)?(?:\/[\w\.-]*)+)/;
-const LINE_COLUMN = /(?:\:([\d]+))?(?:\:([\d]+))?/;
-const isWindows = (typeof navigator !== 'undefined') ? navigator.userAgent && navigator.userAgent.indexOf('Windows') >= 0 : false;
-const PATH_LINK_REGEX = new RegExp(`${isWindows ? WIN_PATH.source : POSIX_PATH.source}${LINE_COLUMN.source}`, 'g');
-const HTML_LINK_REGEX = /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1[^>]*?>.*?<\/a>/gi;
+const WIN_ABSOLUTE_PATH = /(?<=^|\s)(?:[a-zA-Z]:(?:(?:\\|\/)[\w\.-]*)+)/
+const WIN_RELATIVE_PATH = /(?<=^|\s)(?:(?:\~|\.)(?:(?:\\|\/)[\w\.-]*)+)/
+const WIN_PATH = new RegExp(`(${WIN_ABSOLUTE_PATH.source}|${WIN_RELATIVE_PATH.source})`)
+const POSIX_PATH = /(?<=^|\s)((?:\~|\.)?(?:\/[\w\.-]*)+)/
+const LINE_COLUMN = /(?:\:([\d]+))?(?:\:([\d]+))?/
+const isWindows =
+	typeof navigator !== 'undefined'
+		? navigator.userAgent && navigator.userAgent.indexOf('Windows') >= 0
+		: false
+const PATH_LINK_REGEX = new RegExp(
+	`${isWindows ? WIN_PATH.source : POSIX_PATH.source}${LINE_COLUMN.source}`,
+	'g',
+)
+const HTML_LINK_REGEX = /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1[^>]*?>.*?<\/a>/gi
 
-const MAX_LENGTH = 2000;
+const MAX_LENGTH = 2000
 
-type LinkKind = 'web' | 'path' | 'html' | 'text';
+type LinkKind = 'web' | 'path' | 'html' | 'text'
 type LinkPart = {
-	kind: LinkKind;
-	value: string;
-	captures: string[];
-};
+	kind: LinkKind
+	value: string
+	captures: string[]
+}
 
 export type LinkOptions = {
-	trustHtml?: boolean;
-	linkifyFilePaths: boolean;
-};
+	trustHtml?: boolean
+	linkifyFilePaths: boolean
+}
 
 export class LinkDetector {
-
 	// used by unit tests
-	static injectedHtmlCreator: (value: string) => string;
+	static injectedHtmlCreator: (value: string) => string
 
 	private shouldGenerateHtml(trustHtml: boolean) {
-		return trustHtml && (!!LinkDetector.injectedHtmlCreator || !!ttPolicy);
+		return trustHtml && (!!LinkDetector.injectedHtmlCreator || !!ttPolicy)
 	}
 
 	private createHtml(value: string) {
 		if (LinkDetector.injectedHtmlCreator) {
-			return LinkDetector.injectedHtmlCreator(value);
-		}
-		else {
-			return ttPolicy?.createHTML(value).toString();
+			return LinkDetector.injectedHtmlCreator(value)
+		} else {
+			return ttPolicy?.createHTML(value).toString()
 		}
 	}
 
@@ -58,53 +69,53 @@ export class LinkDetector {
 	 */
 	linkify(text: string, options: LinkOptions, splitLines?: boolean): HTMLElement {
 		if (splitLines) {
-			const lines = text.split('\n');
+			const lines = text.split('\n')
 			for (let i = 0; i < lines.length - 1; i++) {
-				lines[i] = lines[i] + '\n';
+				lines[i] = lines[i] + '\n'
 			}
 			if (!lines[lines.length - 1]) {
 				// Remove the last element ('') that split added.
-				lines.pop();
+				lines.pop()
 			}
-			const elements = lines.map(line => this.linkify(line, options, false));
+			const elements = lines.map((line) => this.linkify(line, options, false))
 			if (elements.length === 1) {
 				// Do not wrap single line with extra span.
-				return elements[0];
+				return elements[0]
 			}
-			const container = document.createElement('span');
-			elements.forEach(e => container.appendChild(e));
-			return container;
+			const container = document.createElement('span')
+			elements.forEach((e) => container.appendChild(e))
+			return container
 		}
 
-		const container = document.createElement('span');
+		const container = document.createElement('span')
 		for (const part of this.detectLinks(text, !!options.trustHtml, options.linkifyFilePaths)) {
 			try {
-				let span: HTMLSpanElement | null = null;
+				let span: HTMLSpanElement | null = null
 				switch (part.kind) {
 					case 'text':
-						container.appendChild(document.createTextNode(part.value));
-						break;
+						container.appendChild(document.createTextNode(part.value))
+						break
 					case 'web':
 					case 'path':
-						container.appendChild(this.createWebLink(part.value));
-						break;
+						container.appendChild(this.createWebLink(part.value))
+						break
 					case 'html':
-						span = document.createElement('span');
-						span.innerHTML = this.createHtml(part.value)!;
-						container.appendChild(span);
-						break;
+						span = document.createElement('span')
+						span.innerHTML = this.createHtml(part.value)!
+						container.appendChild(span)
+						break
 				}
 			} catch (e) {
-				container.appendChild(document.createTextNode(part.value));
+				container.appendChild(document.createTextNode(part.value))
 			}
 		}
-		return container;
+		return container
 	}
 
 	private createWebLink(url: string): Node {
-		const link = this.createLink(url);
-		link.href = url;
-		return link;
+		const link = this.createLink(url)
+		link.href = url
+		return link
 	}
 
 	// private createPathLink(text: string, path: string, lineNumber: number, columnNumber: number, workspaceFolder: string | undefined): Node {
@@ -146,66 +157,65 @@ export class LinkDetector {
 	// }
 
 	private createLink(text: string): HTMLAnchorElement {
-		const link = document.createElement('a');
-		link.textContent = text;
-		return link;
+		const link = document.createElement('a')
+		link.textContent = text
+		return link
 	}
 
 	private detectLinks(text: string, trustHtml: boolean, detectFilepaths: boolean): LinkPart[] {
 		if (text.length > MAX_LENGTH) {
-			return [{ kind: 'text', value: text, captures: [] }];
+			return [{ kind: 'text', value: text, captures: [] }]
 		}
 
-		const regexes: RegExp[] = [];
-		const kinds: LinkKind[] = [];
-		const result: LinkPart[] = [];
+		const regexes: RegExp[] = []
+		const kinds: LinkKind[] = []
+		const result: LinkPart[] = []
 
 		if (this.shouldGenerateHtml(trustHtml)) {
-			regexes.push(HTML_LINK_REGEX);
-			kinds.push('html');
+			regexes.push(HTML_LINK_REGEX)
+			kinds.push('html')
 		}
-		regexes.push(WEB_LINK_REGEX);
-		kinds.push('web');
+		regexes.push(WEB_LINK_REGEX)
+		kinds.push('web')
 		if (detectFilepaths) {
-			regexes.push(PATH_LINK_REGEX);
-			kinds.push('path');
+			regexes.push(PATH_LINK_REGEX)
+			kinds.push('path')
 		}
-
 
 		const splitOne = (text: string, regexIndex: number) => {
 			if (regexIndex >= regexes.length) {
-				result.push({ value: text, kind: 'text', captures: [] });
-				return;
+				result.push({ value: text, kind: 'text', captures: [] })
+				return
 			}
-			const regex = regexes[regexIndex];
-			let currentIndex = 0;
-			let match;
-			regex.lastIndex = 0;
+			const regex = regexes[regexIndex]
+			let currentIndex = 0
+			let match
+			regex.lastIndex = 0
 			while ((match = regex.exec(text)) !== null) {
-				const stringBeforeMatch = text.substring(currentIndex, match.index);
+				const stringBeforeMatch = text.substring(currentIndex, match.index)
 				if (stringBeforeMatch) {
-					splitOne(stringBeforeMatch, regexIndex + 1);
+					splitOne(stringBeforeMatch, regexIndex + 1)
 				}
-				const value = match[0];
+				const value = match[0]
 				result.push({
 					value: value,
 					kind: kinds[regexIndex],
-					captures: match.slice(1)
-				});
-				currentIndex = match.index + value.length;
+					captures: match.slice(1),
+				})
+				currentIndex = match.index + value.length
 			}
-			const stringAfterMatches = text.substring(currentIndex);
+			const stringAfterMatches = text.substring(currentIndex)
 			if (stringAfterMatches) {
-				splitOne(stringAfterMatches, regexIndex + 1);
+				splitOne(stringAfterMatches, regexIndex + 1)
 			}
-		};
+		}
 
-		splitOne(text, 0);
-		return result;
+		splitOne(text, 0)
+		return result
 	}
 }
 
-const linkDetector = new LinkDetector();
+const linkDetector = new LinkDetector()
 export function linkify(text: string, linkOptions: LinkOptions, splitLines?: boolean) {
-	return linkDetector.linkify(text, linkOptions, splitLines);
+	return linkDetector.linkify(text, linkOptions, splitLines)
 }

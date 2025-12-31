@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-let _fetch: typeof fetch;
+let _fetch: typeof fetch
 try {
-	_fetch = require('electron').net.fetch;
+	_fetch = require('electron').net.fetch
 } catch {
-	_fetch = fetch;
+	_fetch = fetch
 }
-export default _fetch;
+export default _fetch

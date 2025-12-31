@@ -3,43 +3,50 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { alert } from '../../../../base/browser/ui/aria/aria.js';
-import { localize } from '../../../../nls.js';
-import { INotificationViewItem, INotificationsModel, NotificationChangeType, INotificationChangeEvent, NotificationViewItemContentChangeKind } from '../../../common/notifications.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { toErrorMessage } from '../../../../base/common/errorMessage.js';
-import { NotificationPriority, Severity } from '../../../../platform/notification/common/notification.js';
-import { Event } from '../../../../base/common/event.js';
+import { alert } from '../../../../base/browser/ui/aria/aria.js'
+import { localize } from '../../../../nls.js'
+import {
+	INotificationViewItem,
+	INotificationsModel,
+	NotificationChangeType,
+	INotificationChangeEvent,
+	NotificationViewItemContentChangeKind,
+} from '../../../common/notifications.js'
+import { Disposable } from '../../../../base/common/lifecycle.js'
+import { toErrorMessage } from '../../../../base/common/errorMessage.js'
+import {
+	NotificationPriority,
+	Severity,
+} from '../../../../platform/notification/common/notification.js'
+import { Event } from '../../../../base/common/event.js'
 
 export class NotificationsAlerts extends Disposable {
-
 	constructor(private readonly model: INotificationsModel) {
-		super();
+		super()
 
 		// Alert initial notifications if any
 		for (const notification of model.notifications) {
-			this.triggerAriaAlert(notification);
+			this.triggerAriaAlert(notification)
 		}
 
-		this.registerListeners();
+		this.registerListeners()
 	}
 
 	private registerListeners(): void {
-		this._register(this.model.onDidChangeNotification(e => this.onDidChangeNotification(e)));
+		this._register(this.model.onDidChangeNotification((e) => this.onDidChangeNotification(e)))
 	}
 
 	private onDidChangeNotification(e: INotificationChangeEvent): void {
 		if (e.kind === NotificationChangeType.ADD) {
-
 			// ARIA alert for screen readers
-			this.triggerAriaAlert(e.item);
+			this.triggerAriaAlert(e.item)
 
 			// Always log errors to console with full details
 			if (e.item.severity === Severity.Error) {
 				if (e.item.message.original instanceof Error) {
-					console.error(e.item.message.original);
+					console.error(e.item.message.original)
 				} else {
-					console.error(toErrorMessage(e.item.message.linkedText.toString(), true));
+					console.error(toErrorMessage(e.item.message.linkedText.toString(), true))
 				}
 			}
 		}
@@ -47,31 +54,43 @@ export class NotificationsAlerts extends Disposable {
 
 	private triggerAriaAlert(notification: INotificationViewItem): void {
 		if (notification.priority === NotificationPriority.SILENT) {
-			return;
+			return
 		}
 
 		// Trigger the alert again whenever the message changes
-		const listener = notification.onDidChangeContent(e => {
+		const listener = notification.onDidChangeContent((e) => {
 			if (e.kind === NotificationViewItemContentChangeKind.MESSAGE) {
-				this.doTriggerAriaAlert(notification);
+				this.doTriggerAriaAlert(notification)
 			}
-		});
+		})
 
-		Event.once(notification.onDidClose)(() => listener.dispose());
+		Event.once(notification.onDidClose)(() => listener.dispose())
 
-		this.doTriggerAriaAlert(notification);
+		this.doTriggerAriaAlert(notification)
 	}
 
 	private doTriggerAriaAlert(notification: INotificationViewItem): void {
-		let alertText: string;
+		let alertText: string
 		if (notification.severity === Severity.Error) {
-			alertText = localize('alertErrorMessage', "Error: {0}", notification.message.linkedText.toString());
+			alertText = localize(
+				'alertErrorMessage',
+				'Error: {0}',
+				notification.message.linkedText.toString(),
+			)
 		} else if (notification.severity === Severity.Warning) {
-			alertText = localize('alertWarningMessage', "Warning: {0}", notification.message.linkedText.toString());
+			alertText = localize(
+				'alertWarningMessage',
+				'Warning: {0}',
+				notification.message.linkedText.toString(),
+			)
 		} else {
-			alertText = localize('alertInfoMessage', "Info: {0}", notification.message.linkedText.toString());
+			alertText = localize(
+				'alertInfoMessage',
+				'Info: {0}',
+				notification.message.linkedText.toString(),
+			)
 		}
 
-		alert(alertText);
+		alert(alertText)
 	}
 }

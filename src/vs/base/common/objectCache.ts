@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap } from '../../base/common/lifecycle.js';
-import { ObservableDisposable, assertNotDisposed } from './observableDisposable.js';
+import { Disposable, DisposableMap } from '../../base/common/lifecycle.js'
+import { ObservableDisposable, assertNotDisposed } from './observableDisposable.js'
 
 /**
  * Generic cache for object instances. Guarantees to return only non-disposed
@@ -79,13 +79,10 @@ export class ObjectCache<
 	TValue extends ObservableDisposable,
 	TKey extends NonNullable<unknown> = string,
 > extends Disposable {
-	private readonly cache: DisposableMap<TKey, TValue> =
-		this._register(new DisposableMap());
+	private readonly cache: DisposableMap<TKey, TValue> = this._register(new DisposableMap())
 
-	constructor(
-		private readonly factory: (key: TKey) => TValue & { disposed: false },
-	) {
-		super();
+	constructor(private readonly factory: (key: TKey) => TValue & { disposed: false }) {
+		super()
 	}
 
 	/**
@@ -97,41 +94,35 @@ export class ObjectCache<
 	 * @param key - ID of the object in the cache
 	 */
 	public get(key: TKey): TValue & { disposed: false } {
-		let object = this.cache.get(key);
+		let object = this.cache.get(key)
 
 		// if object is already disposed, remove it from the cache
 		if (object?.disposed) {
-			this.cache.deleteAndLeak(key);
-			object = undefined;
+			this.cache.deleteAndLeak(key)
+			object = undefined
 		}
 
 		// if object exists and is not disposed, return it
 		if (object) {
 			// must always hold true due to the check above
-			assertNotDisposed(
-				object,
-				'Object must not be disposed.',
-			);
+			assertNotDisposed(object, 'Object must not be disposed.')
 
-			return object;
+			return object
 		}
 
 		// create a new object by calling the factory
-		object = this.factory(key);
+		object = this.factory(key)
 
 		// newly created object must not be disposed
-		assertNotDisposed(
-			object,
-			'Newly created object must not be disposed.',
-		);
+		assertNotDisposed(object, 'Newly created object must not be disposed.')
 
 		// remove it from the cache automatically on dispose
 		object.onDispose(() => {
-			this.cache.deleteAndLeak(key);
-		});
-		this.cache.set(key, object);
+			this.cache.deleteAndLeak(key)
+		})
+		this.cache.set(key, object)
 
-		return object;
+		return object
 	}
 
 	/**
@@ -142,11 +133,11 @@ export class ObjectCache<
 	 */
 	public remove(key: TKey, dispose: boolean): this {
 		if (dispose) {
-			this.cache.deleteAndDispose(key);
-			return this;
+			this.cache.deleteAndDispose(key)
+			return this
 		}
 
-		this.cache.deleteAndLeak(key);
-		return this;
+		this.cache.deleteAndLeak(key)
+		return this
 	}
 }

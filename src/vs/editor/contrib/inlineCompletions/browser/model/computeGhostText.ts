@@ -3,37 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDiffChange, LcsDiff } from '../../../../../base/common/diff/diff.js';
-import { getLeadingWhitespace } from '../../../../../base/common/strings.js';
-import { Position } from '../../../../common/core/position.js';
-import { Range } from '../../../../common/core/range.js';
-import { SingleTextEdit } from '../../../../common/core/textEdit.js';
-import { ITextModel } from '../../../../common/model.js';
-import { GhostText, GhostTextPart } from './ghostText.js';
-import { singleTextRemoveCommonPrefix } from './singleTextEditHelpers.js';
+import { IDiffChange, LcsDiff } from '../../../../../base/common/diff/diff.js'
+import { getLeadingWhitespace } from '../../../../../base/common/strings.js'
+import { Position } from '../../../../common/core/position.js'
+import { Range } from '../../../../common/core/range.js'
+import { SingleTextEdit } from '../../../../common/core/textEdit.js'
+import { ITextModel } from '../../../../common/model.js'
+import { GhostText, GhostTextPart } from './ghostText.js'
+import { singleTextRemoveCommonPrefix } from './singleTextEditHelpers.js'
 
 /**
  * @param previewSuffixLength Sets where to split `inlineCompletion.text`.
  * 	If the text is `hello` and the suffix length is 2, the non-preview part is `hel` and the preview-part is `lo`.
-*/
+ */
 export function computeGhostText(
 	edit: SingleTextEdit,
 	model: ITextModel,
 	mode: 'prefix' | 'subword' | 'subwordSmart',
 	cursorPosition?: Position,
-	previewSuffixLength = 0
+	previewSuffixLength = 0,
 ): GhostText | undefined {
-	let e = singleTextRemoveCommonPrefix(edit, model);
+	let e = singleTextRemoveCommonPrefix(edit, model)
 
 	if (e.range.endLineNumber !== e.range.startLineNumber) {
 		// This edit might span multiple lines, but the first lines must be a common prefix.
-		return undefined;
+		return undefined
 	}
 
-	const sourceLine = model.getLineContent(e.range.startLineNumber);
-	const sourceIndentationLength = getLeadingWhitespace(sourceLine).length;
+	const sourceLine = model.getLineContent(e.range.startLineNumber)
+	const sourceIndentationLength = getLeadingWhitespace(sourceLine).length
 
-	const suggestionTouchesIndentation = e.range.startColumn - 1 <= sourceIndentationLength;
+	const suggestionTouchesIndentation = e.range.startColumn - 1 <= sourceIndentationLength
 	if (suggestionTouchesIndentation) {
 		// source:      ··········[······abc]
 		//                         ^^^^^^^^^ inlineCompletion.range
@@ -42,113 +42,131 @@ export function computeGhostText(
 		//                               ^^^ rangeThatDoesNotReplaceIndentation
 		// inlineCompletion.text: '··foo'
 		//                         ^^ suggestionAddedIndentationLength
-		const suggestionAddedIndentationLength = getLeadingWhitespace(e.text).length;
+		const suggestionAddedIndentationLength = getLeadingWhitespace(e.text).length
 
-		const replacedIndentation = sourceLine.substring(e.range.startColumn - 1, sourceIndentationLength);
+		const replacedIndentation = sourceLine.substring(
+			e.range.startColumn - 1,
+			sourceIndentationLength,
+		)
 
-		const [startPosition, endPosition] = [e.range.getStartPosition(), e.range.getEndPosition()];
-		const newStartPosition = startPosition.column + replacedIndentation.length <= endPosition.column
-			? startPosition.delta(0, replacedIndentation.length)
-			: endPosition;
-		const rangeThatDoesNotReplaceIndentation = Range.fromPositions(newStartPosition, endPosition);
+		const [startPosition, endPosition] = [e.range.getStartPosition(), e.range.getEndPosition()]
+		const newStartPosition =
+			startPosition.column + replacedIndentation.length <= endPosition.column
+				? startPosition.delta(0, replacedIndentation.length)
+				: endPosition
+		const rangeThatDoesNotReplaceIndentation = Range.fromPositions(newStartPosition, endPosition)
 
 		const suggestionWithoutIndentationChange = e.text.startsWith(replacedIndentation)
-			// Adds more indentation without changing existing indentation: We can add ghost text for this
-			? e.text.substring(replacedIndentation.length)
-			// Changes or removes existing indentation. Only add ghost text for the non-indentation part.
-			: e.text.substring(suggestionAddedIndentationLength);
+			? // Adds more indentation without changing existing indentation: We can add ghost text for this
+				e.text.substring(replacedIndentation.length)
+			: // Changes or removes existing indentation. Only add ghost text for the non-indentation part.
+				e.text.substring(suggestionAddedIndentationLength)
 
-		e = new SingleTextEdit(rangeThatDoesNotReplaceIndentation, suggestionWithoutIndentationChange);
+		e = new SingleTextEdit(rangeThatDoesNotReplaceIndentation, suggestionWithoutIndentationChange)
 	}
 
 	// This is a single line string
-	const valueToBeReplaced = model.getValueInRange(e.range);
+	const valueToBeReplaced = model.getValueInRange(e.range)
 
-	const changes = cachingDiff(valueToBeReplaced, e.text);
+	const changes = cachingDiff(valueToBeReplaced, e.text)
 
 	if (!changes) {
 		// No ghost text in case the diff would be too slow to compute
-		return undefined;
+		return undefined
 	}
 
-	const lineNumber = e.range.startLineNumber;
+	const lineNumber = e.range.startLineNumber
 
-	const parts = new Array<GhostTextPart>();
+	const parts = new Array<GhostTextPart>()
 
 	if (mode === 'prefix') {
-		const filteredChanges = changes.filter(c => c.originalLength === 0);
-		if (filteredChanges.length > 1 || filteredChanges.length === 1 && filteredChanges[0].originalStart !== valueToBeReplaced.length) {
+		const filteredChanges = changes.filter((c) => c.originalLength === 0)
+		if (
+			filteredChanges.length > 1 ||
+			(filteredChanges.length === 1 &&
+				filteredChanges[0].originalStart !== valueToBeReplaced.length)
+		) {
 			// Prefixes only have a single change.
-			return undefined;
+			return undefined
 		}
 	}
 
-	const previewStartInCompletionText = e.text.length - previewSuffixLength;
+	const previewStartInCompletionText = e.text.length - previewSuffixLength
 
 	for (const c of changes) {
-		const insertColumn = e.range.startColumn + c.originalStart + c.originalLength;
+		const insertColumn = e.range.startColumn + c.originalStart + c.originalLength
 
-		if (mode === 'subwordSmart' && cursorPosition && cursorPosition.lineNumber === e.range.startLineNumber && insertColumn < cursorPosition.column) {
+		if (
+			mode === 'subwordSmart' &&
+			cursorPosition &&
+			cursorPosition.lineNumber === e.range.startLineNumber &&
+			insertColumn < cursorPosition.column
+		) {
 			// No ghost text before cursor
-			return undefined;
+			return undefined
 		}
 
 		if (c.originalLength > 0) {
-			return undefined;
+			return undefined
 		}
 
 		if (c.modifiedLength === 0) {
-			continue;
+			continue
 		}
 
-		const modifiedEnd = c.modifiedStart + c.modifiedLength;
-		const nonPreviewTextEnd = Math.max(c.modifiedStart, Math.min(modifiedEnd, previewStartInCompletionText));
-		const nonPreviewText = e.text.substring(c.modifiedStart, nonPreviewTextEnd);
-		const italicText = e.text.substring(nonPreviewTextEnd, Math.max(c.modifiedStart, modifiedEnd));
+		const modifiedEnd = c.modifiedStart + c.modifiedLength
+		const nonPreviewTextEnd = Math.max(
+			c.modifiedStart,
+			Math.min(modifiedEnd, previewStartInCompletionText),
+		)
+		const nonPreviewText = e.text.substring(c.modifiedStart, nonPreviewTextEnd)
+		const italicText = e.text.substring(nonPreviewTextEnd, Math.max(c.modifiedStart, modifiedEnd))
 
 		if (nonPreviewText.length > 0) {
-			parts.push(new GhostTextPart(insertColumn, nonPreviewText, false));
+			parts.push(new GhostTextPart(insertColumn, nonPreviewText, false))
 		}
 		if (italicText.length > 0) {
-			parts.push(new GhostTextPart(insertColumn, italicText, true));
+			parts.push(new GhostTextPart(insertColumn, italicText, true))
 		}
 	}
 
-	return new GhostText(lineNumber, parts);
+	return new GhostText(lineNumber, parts)
 }
 
-let lastRequest: { originalValue: string; newValue: string; changes: readonly IDiffChange[] | undefined } | undefined = undefined;
+let lastRequest:
+	| { originalValue: string; newValue: string; changes: readonly IDiffChange[] | undefined }
+	| undefined = undefined
 function cachingDiff(originalValue: string, newValue: string): readonly IDiffChange[] | undefined {
 	if (lastRequest?.originalValue === originalValue && lastRequest?.newValue === newValue) {
-		return lastRequest?.changes;
+		return lastRequest?.changes
 	} else {
-		let changes = smartDiff(originalValue, newValue, true);
+		let changes = smartDiff(originalValue, newValue, true)
 		if (changes) {
-			const deletedChars = deletedCharacters(changes);
+			const deletedChars = deletedCharacters(changes)
 			if (deletedChars > 0) {
 				// For performance reasons, don't compute diff if there is nothing to improve
-				const newChanges = smartDiff(originalValue, newValue, false);
+				const newChanges = smartDiff(originalValue, newValue, false)
 				if (newChanges && deletedCharacters(newChanges) < deletedChars) {
 					// Disabling smartness seems to be better here
-					changes = newChanges;
+					changes = newChanges
 				}
 			}
 		}
 		lastRequest = {
 			originalValue,
 			newValue,
-			changes
-		};
-		return changes;
+			changes,
+		}
+		return changes
 	}
 }
 
 function deletedCharacters(changes: readonly IDiffChange[]): number {
-	let sum = 0;
+	let sum = 0
 	for (const c of changes) {
-		sum += c.originalLength;
+		sum += c.originalLength
 	}
-	return sum;
+	return sum
 }
 
 /**
@@ -159,57 +177,64 @@ function deletedCharacters(changes: readonly IDiffChange[]): number {
  *
  * The parenthesis are preprocessed to ensure that they match correctly.
  */
-export function smartDiff(originalValue: string, newValue: string, smartBracketMatching: boolean): (readonly IDiffChange[]) | undefined {
+export function smartDiff(
+	originalValue: string,
+	newValue: string,
+	smartBracketMatching: boolean,
+): readonly IDiffChange[] | undefined {
 	if (originalValue.length > 5000 || newValue.length > 5000) {
 		// We don't want to work on strings that are too big
-		return undefined;
+		return undefined
 	}
 
 	function getMaxCharCode(val: string): number {
-		let maxCharCode = 0;
+		let maxCharCode = 0
 		for (let i = 0, len = val.length; i < len; i++) {
-			const charCode = val.charCodeAt(i);
+			const charCode = val.charCodeAt(i)
 			if (charCode > maxCharCode) {
-				maxCharCode = charCode;
+				maxCharCode = charCode
 			}
 		}
-		return maxCharCode;
+		return maxCharCode
 	}
 
-	const maxCharCode = Math.max(getMaxCharCode(originalValue), getMaxCharCode(newValue));
+	const maxCharCode = Math.max(getMaxCharCode(originalValue), getMaxCharCode(newValue))
 	function getUniqueCharCode(id: number): number {
 		if (id < 0) {
-			throw new Error('unexpected');
+			throw new Error('unexpected')
 		}
-		return maxCharCode + id + 1;
+		return maxCharCode + id + 1
 	}
 
 	function getElements(source: string): Int32Array {
-		let level = 0;
-		let group = 0;
-		const characters = new Int32Array(source.length);
+		let level = 0
+		let group = 0
+		const characters = new Int32Array(source.length)
 		for (let i = 0, len = source.length; i < len; i++) {
 			// TODO support more brackets
 			if (smartBracketMatching && source[i] === '(') {
-				const id = group * 100 + level;
-				characters[i] = getUniqueCharCode(2 * id);
-				level++;
+				const id = group * 100 + level
+				characters[i] = getUniqueCharCode(2 * id)
+				level++
 			} else if (smartBracketMatching && source[i] === ')') {
-				level = Math.max(level - 1, 0);
-				const id = group * 100 + level;
-				characters[i] = getUniqueCharCode(2 * id + 1);
+				level = Math.max(level - 1, 0)
+				const id = group * 100 + level
+				characters[i] = getUniqueCharCode(2 * id + 1)
 				if (level === 0) {
-					group++;
+					group++
 				}
 			} else {
-				characters[i] = source.charCodeAt(i);
+				characters[i] = source.charCodeAt(i)
 			}
 		}
-		return characters;
+		return characters
 	}
 
-	const elements1 = getElements(originalValue);
-	const elements2 = getElements(newValue);
+	const elements1 = getElements(originalValue)
+	const elements2 = getElements(newValue)
 
-	return new LcsDiff({ getElements: () => elements1 }, { getElements: () => elements2 }).ComputeDiff(false).changes;
+	return new LcsDiff(
+		{ getElements: () => elements1 },
+		{ getElements: () => elements2 },
+	).ComputeDiff(false).changes
 }

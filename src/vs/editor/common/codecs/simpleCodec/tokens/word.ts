@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BaseToken } from '../../baseToken.js';
-import { Line } from '../../linesCodec/tokens/line.js';
-import { Range } from '../../../../../editor/common/core/range.js';
-import { Position } from '../../../../../editor/common/core/position.js';
+import { BaseToken } from '../../baseToken.js'
+import { Line } from '../../linesCodec/tokens/line.js'
+import { Range } from '../../../../../editor/common/core/range.js'
+import { Position } from '../../../../../editor/common/core/position.js'
 
 /**
  * A token that represent a word - a set of continuous
@@ -25,27 +25,20 @@ export class Word extends BaseToken {
 		 */
 		public readonly text: string,
 	) {
-		super(range);
+		super(range)
 	}
 
 	/**
 	 * Create new `Word` token with the given `text` and the range
 	 * inside the given `Line` at the specified `column number`.
 	 */
-	public static newOnLine(
-		text: string,
-		line: Line,
-		atColumnNumber: number,
-	): Word {
-		const { range } = line;
+	public static newOnLine(text: string, line: Line, atColumnNumber: number): Word {
+		const { range } = line
 
-		const startPosition = new Position(range.startLineNumber, atColumnNumber);
-		const endPosition = new Position(range.startLineNumber, atColumnNumber + text.length);
+		const startPosition = new Position(range.startLineNumber, atColumnNumber)
+		const endPosition = new Position(range.startLineNumber, atColumnNumber + text.length)
 
-		return new Word(
-			Range.fromPositions(startPosition, endPosition),
-			text,
-		);
+		return new Word(Range.fromPositions(startPosition, endPosition), text)
 	}
 
 	/**
@@ -53,20 +46,20 @@ export class Word extends BaseToken {
 	 */
 	public override equals<T extends BaseToken>(other: T): boolean {
 		if (!super.equals(other)) {
-			return false;
+			return false
 		}
 
 		if (!(other instanceof Word)) {
-			return false;
+			return false
 		}
 
-		return this.text === other.text;
+		return this.text === other.text
 	}
 
 	/**
 	 * Returns a string representation of the token.
 	 */
 	public override toString(): string {
-		return `word("${this.text}")${this.range}`;
+		return `word("${this.text}")${this.range}`
 	}
 }

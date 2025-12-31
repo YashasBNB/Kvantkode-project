@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-html, body {
+html,
+body {
 	width: 100%;
 	height: 100%;
 	text-align: center;

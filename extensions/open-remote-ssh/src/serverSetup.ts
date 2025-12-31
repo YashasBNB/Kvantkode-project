@@ -2,78 +2,87 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import * as crypto from 'crypto';
-import Log from './common/logger';
-import { getVSCodeServerConfig } from './serverConfig';
-import SSHConnection from './ssh/sshConnection';
+import * as crypto from 'crypto'
+import Log from './common/logger'
+import { getVSCodeServerConfig } from './serverConfig'
+import SSHConnection from './ssh/sshConnection'
 
 export interface ServerInstallOptions {
-	id: string;
-	quality: string;
-	commit: string;
-	version: string;
-	release?: string; // void specific
-	extensionIds: string[];
-	envVariables: string[];
-	useSocketPath: boolean;
-	serverApplicationName: string;
-	serverDataFolderName: string;
-	serverDownloadUrlTemplate: string;
+	id: string
+	quality: string
+	commit: string
+	version: string
+	release?: string // void specific
+	extensionIds: string[]
+	envVariables: string[]
+	useSocketPath: boolean
+	serverApplicationName: string
+	serverDataFolderName: string
+	serverDownloadUrlTemplate: string
 }
 
 export interface ServerInstallResult {
-	exitCode: number;
-	listeningOn: number | string;
-	connectionToken: string;
-	logFile: string;
-	osReleaseId: string;
-	arch: string;
-	platform: string;
-	tmpDir: string;
-	[key: string]: any;
+	exitCode: number
+	listeningOn: number | string
+	connectionToken: string
+	logFile: string
+	osReleaseId: string
+	arch: string
+	platform: string
+	tmpDir: string
+	[key: string]: any
 }
 
 export class ServerInstallError extends Error {
 	constructor(message: string) {
-		super(message);
+		super(message)
 	}
 }
 
-const DEFAULT_DOWNLOAD_URL_TEMPLATE = 'https://github.com/voideditor/binaries/releases/download/${version}/void-reh-${os}-${arch}-${version}.tar.gz';
+const DEFAULT_DOWNLOAD_URL_TEMPLATE =
+	'https://github.com/voideditor/binaries/releases/download/${version}/void-reh-${os}-${arch}-${version}.tar.gz'
 
-export async function installCodeServer(conn: SSHConnection, serverDownloadUrlTemplate: string | undefined, extensionIds: string[], envVariables: string[], platform: string | undefined, useSocketPath: boolean, logger: Log): Promise<ServerInstallResult> {
-	let shell = 'powershell';
+export async function installCodeServer(
+	conn: SSHConnection,
+	serverDownloadUrlTemplate: string | undefined,
+	extensionIds: string[],
+	envVariables: string[],
+	platform: string | undefined,
+	useSocketPath: boolean,
+	logger: Log,
+): Promise<ServerInstallResult> {
+	let shell = 'powershell'
 
 	// detect platform and shell for windows
 	if (!platform || platform === 'windows') {
-		const result = await conn.exec('uname -s');
+		const result = await conn.exec('uname -s')
 
 		if (result.stdout) {
 			if (result.stdout.includes('windows32')) {
-				platform = 'windows';
+				platform = 'windows'
 			} else if (result.stdout.includes('MINGW64')) {
-				platform = 'windows';
-				shell = 'bash';
+				platform = 'windows'
+				shell = 'bash'
 			}
 		} else if (result.stderr) {
 			if (result.stderr.includes('FullyQualifiedErrorId : CommandNotFoundException')) {
-				platform = 'windows';
+				platform = 'windows'
 			}
 
 			if (result.stderr.includes('is not recognized as an internal or external command')) {
-				platform = 'windows';
-				shell = 'cmd';
+				platform = 'windows'
+				shell = 'cmd'
 			}
 		}
 
 		if (platform) {
-			logger.trace(`Detected platform: ${platform}, ${shell}`);
+			logger.trace(`Detected platform: ${platform}, ${shell}`)
 		}
 	}
 
-	const scriptId = crypto.randomBytes(12).toString('hex');
+	const scriptId = crypto.randomBytes(12).toString('hex')
 
-	const vscodeServerConfig = await getVSCodeServerConfig();
+	const vscodeServerConfig = await getVSCodeServerConfig()
 	const installOptions: ServerInstallOptions = {
 		id: scriptId,
 		version: vscodeServerConfig.version,
@@ -85,27 +94,31 @@ export async function installCodeServer(conn: SSHConnection, serverDownloadUrlTe
 		useSocketPath,
 		serverApplicationName: vscodeServerConfig.serverApplicationName,
 		serverDataFolderName: vscodeServerConfig.serverDataFolderName,
-		serverDownloadUrlTemplate: serverDownloadUrlTemplate ?? vscodeServerConfig.serverDownloadUrlTemplate ?? DEFAULT_DOWNLOAD_URL_TEMPLATE,
-	};
+		serverDownloadUrlTemplate:
+			serverDownloadUrlTemplate ??
+			vscodeServerConfig.serverDownloadUrlTemplate ??
+			DEFAULT_DOWNLOAD_URL_TEMPLATE,
+	}
 
-	let commandOutput: { stdout: string; stderr: string };
+	let commandOutput: { stdout: string; stderr: string }
 	if (platform === 'windows') {
-		const installServerScript = generatePowerShellInstallScript(installOptions);
+		const installServerScript = generatePowerShellInstallScript(installOptions)
 
-		logger.trace('Server install command:', installServerScript);
+		logger.trace('Server install command:', installServerScript)
 
-		const installDir = `$HOME\\${vscodeServerConfig.serverDataFolderName}\\install`;
-		const installScript = `${installDir}\\${vscodeServerConfig.commit}.ps1`;
-		const endRegex = new RegExp(`${scriptId}: end`);
+		const installDir = `$HOME\\${vscodeServerConfig.serverDataFolderName}\\install`
+		const installScript = `${installDir}\\${vscodeServerConfig.commit}.ps1`
+		const endRegex = new RegExp(`${scriptId}: end`)
 		// investigate if it's possible to use `-EncodedCommand` flag
 		// https://devblogs.microsoft.com/powershell/invoking-powershell-with-complex-expressions-using-scriptblocks/
-		let command = '';
+		let command = ''
 		if (shell === 'powershell') {
-			command = `md -Force ${installDir}; echo @'\n${installServerScript}\n'@ | Set-Content ${installScript}; powershell -ExecutionPolicy ByPass -File "${installScript}"`;
+			command = `md -Force ${installDir}; echo @'\n${installServerScript}\n'@ | Set-Content ${installScript}; powershell -ExecutionPolicy ByPass -File "${installScript}"`
 		} else if (shell === 'bash') {
-			command = `mkdir -p ${installDir.replace(/\\/g, '/')} && echo '\n${installServerScript.replace(/'/g, '\'"\'"\'')}\n' > ${installScript.replace(/\\/g, '/')} && powershell -ExecutionPolicy ByPass -File "${installScript}"`;
+			command = `mkdir -p ${installDir.replace(/\\/g, '/')} && echo '\n${installServerScript.replace(/'/g, "'\"'\"'")}\n' > ${installScript.replace(/\\/g, '/')} && powershell -ExecutionPolicy ByPass -File "${installScript}"`
 		} else if (shell === 'cmd') {
-			const script = installServerScript.trim()
+			const script = installServerScript
+				.trim()
 				// remove comments
 				.replace(/^#.*$/gm, '')
 				// remove empty lines
@@ -119,49 +132,53 @@ export async function installCodeServer(conn: SSHConnection, serverDownloadUrlTe
 				// escape redirect (from cmd)
 				.replace(/>/g, `^>`)
 				// escape new lines (from powershell/cmd)
-				.replace(/\n/g, '\'`n\'');
+				.replace(/\n/g, "'`n'")
 
-			command = `powershell "md -Force ${installDir}" && powershell "echo '${script}'" > ${installScript.replace('$HOME', '%USERPROFILE%')} && powershell -ExecutionPolicy ByPass -File "${installScript.replace('$HOME', '%USERPROFILE%')}"`;
+			command = `powershell "md -Force ${installDir}" && powershell "echo '${script}'" > ${installScript.replace('$HOME', '%USERPROFILE%')} && powershell -ExecutionPolicy ByPass -File "${installScript.replace('$HOME', '%USERPROFILE%')}"`
 
-			logger.trace('Command length (8191 max):', command.length);
+			logger.trace('Command length (8191 max):', command.length)
 
 			if (command.length > 8191) {
-				throw new ServerInstallError(`Command line too long`);
+				throw new ServerInstallError(`Command line too long`)
 			}
 		} else {
-			throw new ServerInstallError(`Not supported shell: ${shell}`);
+			throw new ServerInstallError(`Not supported shell: ${shell}`)
 		}
 
-		commandOutput = await conn.execPartial(command, (stdout: string) => endRegex.test(stdout));
+		commandOutput = await conn.execPartial(command, (stdout: string) => endRegex.test(stdout))
 	} else {
-		const installServerScript = generateBashInstallScript(installOptions);
+		const installServerScript = generateBashInstallScript(installOptions)
 
-		logger.trace('Server install command:', installServerScript);
+		logger.trace('Server install command:', installServerScript)
 		// Fish shell does not support heredoc so let's workaround it using -c option,
 		// also replace single quotes (') within the script with ('\'') as there's no quoting within single quotes, see https://unix.stackexchange.com/a/24676
-		commandOutput = await conn.exec(`bash -c '${installServerScript.replace(/'/g, `'\\''`)}'`);
+		commandOutput = await conn.exec(`bash -c '${installServerScript.replace(/'/g, `'\\''`)}'`)
 	}
 
 	if (commandOutput.stderr) {
-		logger.trace('Server install command stderr:', commandOutput.stderr);
+		logger.trace('Server install command stderr:', commandOutput.stderr)
 	}
-	logger.trace('Server install command stdout:', commandOutput.stdout);
+	logger.trace('Server install command stdout:', commandOutput.stdout)
 
-	const resultMap = parseServerInstallOutput(commandOutput.stdout, scriptId);
+	const resultMap = parseServerInstallOutput(commandOutput.stdout, scriptId)
 	if (!resultMap) {
-		throw new ServerInstallError(`Failed parsing install script output`);
+		throw new ServerInstallError(`Failed parsing install script output`)
 	}
 
-	const exitCode = parseInt(resultMap.exitCode, 10);
+	const exitCode = parseInt(resultMap.exitCode, 10)
 	if (exitCode !== 0) {
-		throw new ServerInstallError(`Couldn't install vscode server on remote server, install script returned non-zero exit status`);
+		throw new ServerInstallError(
+			`Couldn't install vscode server on remote server, install script returned non-zero exit status`,
+		)
 	}
 
 	const listeningOn = resultMap.listeningOn.match(/^\d+$/)
 		? parseInt(resultMap.listeningOn, 10)
-		: resultMap.listeningOn;
+		: resultMap.listeningOn
 
-	const remoteEnvVars = Object.fromEntries(Object.entries(resultMap).filter(([key,]) => envVariables.includes(key)));
+	const remoteEnvVars = Object.fromEntries(
+		Object.entries(resultMap).filter(([key]) => envVariables.includes(key)),
+	)
 
 	return {
 		exitCode,
@@ -172,38 +189,53 @@ export async function installCodeServer(conn: SSHConnection, serverDownloadUrlTe
 		arch: resultMap.arch,
 		platform: resultMap.platform,
 		tmpDir: resultMap.tmpDir,
-		...remoteEnvVars
-	};
+		...remoteEnvVars,
+	}
 }
 
-function parseServerInstallOutput(str: string, scriptId: string): { [k: string]: string } | undefined {
-	const startResultStr = `${scriptId}: start`;
-	const endResultStr = `${scriptId}: end`;
+function parseServerInstallOutput(
+	str: string,
+	scriptId: string,
+): { [k: string]: string } | undefined {
+	const startResultStr = `${scriptId}: start`
+	const endResultStr = `${scriptId}: end`
 
-	const startResultIdx = str.indexOf(startResultStr);
+	const startResultIdx = str.indexOf(startResultStr)
 	if (startResultIdx < 0) {
-		return undefined;
+		return undefined
 	}
 
-	const endResultIdx = str.indexOf(endResultStr, startResultIdx + startResultStr.length);
+	const endResultIdx = str.indexOf(endResultStr, startResultIdx + startResultStr.length)
 	if (endResultIdx < 0) {
-		return undefined;
+		return undefined
 	}
 
-	const installResult = str.substring(startResultIdx + startResultStr.length, endResultIdx);
+	const installResult = str.substring(startResultIdx + startResultStr.length, endResultIdx)
 
-	const resultMap: { [k: string]: string } = {};
-	const resultArr = installResult.split(/\r?\n/);
+	const resultMap: { [k: string]: string } = {}
+	const resultArr = installResult.split(/\r?\n/)
 	for (const line of resultArr) {
-		const [key, value] = line.split('==');
-		resultMap[key] = value;
+		const [key, value] = line.split('==')
+		resultMap[key] = value
 	}
 
-	return resultMap;
+	return resultMap
 }
 
-function generateBashInstallScript({ id, quality, version, commit, release, extensionIds, envVariables, useSocketPath, serverApplicationName, serverDataFolderName, serverDownloadUrlTemplate }: ServerInstallOptions) {
-	const extensions = extensionIds.map(id => '--install-extension ' + id).join(' ');
+function generateBashInstallScript({
+	id,
+	quality,
+	version,
+	commit,
+	release,
+	extensionIds,
+	envVariables,
+	useSocketPath,
+	serverApplicationName,
+	serverDataFolderName,
+	serverDownloadUrlTemplate,
+}: ServerInstallOptions) {
+	const extensions = extensionIds.map((id) => '--install-extension ' + id).join(' ')
 	return `
 # Server installation script
 
@@ -243,7 +275,7 @@ print_install_results_and_exit() {
     echo "arch==$ARCH=="
     echo "platform==$PLATFORM=="
     echo "tmpDir==$TMP_DIR=="
-    ${envVariables.map(envVar => `echo "${envVar}==$${envVar}=="`).join('\n')}
+    ${envVariables.map((envVar) => `echo "${envVar}==$${envVar}=="`).join('\n')}
     echo "${id}: end"
     exit 0
 }
@@ -423,18 +455,30 @@ fi
 
 # Finish server setup
 print_install_results_and_exit 0
-`;
+`
 }
 
-function generatePowerShellInstallScript({ id, quality, version, commit, release, extensionIds, envVariables, useSocketPath, serverApplicationName, serverDataFolderName, serverDownloadUrlTemplate }: ServerInstallOptions) {
-	const extensions = extensionIds.map(id => '--install-extension ' + id).join(' ');
+function generatePowerShellInstallScript({
+	id,
+	quality,
+	version,
+	commit,
+	release,
+	extensionIds,
+	envVariables,
+	useSocketPath,
+	serverApplicationName,
+	serverDataFolderName,
+	serverDownloadUrlTemplate,
+}: ServerInstallOptions) {
+	const extensions = extensionIds.map((id) => '--install-extension ' + id).join(' ')
 	const downloadUrl = serverDownloadUrlTemplate
 		.replace(/\$\{quality\}/g, quality)
 		.replace(/\$\{version\}/g, version)
 		.replace(/\$\{commit\}/g, commit)
 		.replace(/\$\{os\}/g, 'win32')
 		.replace(/\$\{arch\}/g, 'x64')
-		.replace(/\$\{release\}/g, release ?? '');
+		.replace(/\$\{release\}/g, release ?? '')
 
 	return `
 # Server installation script
@@ -475,7 +519,7 @@ function printInstallResults($code) {
     "arch==$ARCH=="
     "platform==$PLATFORM=="
     "tmpDir==$TMP_DIR=="
-    ${envVariables.map(envVar => `"${envVar}==$${envVar}=="`).join('\n')}
+    ${envVariables.map((envVar) => `"${envVar}==$${envVar}=="`).join('\n')}
     "${id}: end"
 }
 
@@ -622,5 +666,5 @@ if($SERVER_ID) {
         sleep 30
     }
 }
-`;
+`
 }

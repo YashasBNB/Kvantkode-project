@@ -1,20 +1,20 @@
 const completionSpec: Fig.Spec = {
-	name: "tail",
-	description: "Display the last part of a file",
+	name: 'tail',
+	description: 'Display the last part of a file',
 	args: {
 		isVariadic: true,
-		template: "filepaths",
+		template: 'filepaths',
 	},
 	options: [
 		{
-			name: "-f",
-			description: "Wait for additional data to be appended",
+			name: '-f',
+			description: 'Wait for additional data to be appended',
 		},
 		{
-			name: "-r",
-			description: "Display in reverse order",
+			name: '-r',
+			description: 'Display in reverse order',
 		},
 	],
-};
+}
 
-export default completionSpec;
+export default completionSpec

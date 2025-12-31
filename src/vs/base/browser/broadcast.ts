@@ -3,55 +3,59 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { mainWindow } from './window.js';
-import { getErrorMessage } from '../common/errors.js';
-import { Emitter } from '../common/event.js';
-import { Disposable, toDisposable } from '../common/lifecycle.js';
+import { mainWindow } from './window.js'
+import { getErrorMessage } from '../common/errors.js'
+import { Emitter } from '../common/event.js'
+import { Disposable, toDisposable } from '../common/lifecycle.js'
 
 export class BroadcastDataChannel<T> extends Disposable {
+	private broadcastChannel: BroadcastChannel | undefined
 
-	private broadcastChannel: BroadcastChannel | undefined;
-
-	private readonly _onDidReceiveData = this._register(new Emitter<T>());
-	readonly onDidReceiveData = this._onDidReceiveData.event;
+	private readonly _onDidReceiveData = this._register(new Emitter<T>())
+	readonly onDidReceiveData = this._onDidReceiveData.event
 
 	constructor(private readonly channelName: string) {
-		super();
+		super()
 
 		// Use BroadcastChannel
 		if ('BroadcastChannel' in mainWindow) {
 			try {
-				this.broadcastChannel = new BroadcastChannel(channelName);
+				this.broadcastChannel = new BroadcastChannel(channelName)
 				const listener = (event: MessageEvent) => {
-					this._onDidReceiveData.fire(event.data);
-				};
-				this.broadcastChannel.addEventListener('message', listener);
-				this._register(toDisposable(() => {
-					if (this.broadcastChannel) {
-						this.broadcastChannel.removeEventListener('message', listener);
-						this.broadcastChannel.close();
-					}
-				}));
+					this._onDidReceiveData.fire(event.data)
+				}
+				this.broadcastChannel.addEventListener('message', listener)
+				this._register(
+					toDisposable(() => {
+						if (this.broadcastChannel) {
+							this.broadcastChannel.removeEventListener('message', listener)
+							this.broadcastChannel.close()
+						}
+					}),
+				)
 			} catch (error) {
-				console.warn('Error while creating broadcast channel. Falling back to localStorage.', getErrorMessage(error));
+				console.warn(
+					'Error while creating broadcast channel. Falling back to localStorage.',
+					getErrorMessage(error),
+				)
 			}
 		}
 
 		// BroadcastChannel is not supported. Use storage.
 		if (!this.broadcastChannel) {
-			this.channelName = `BroadcastDataChannel.${channelName}`;
-			this.createBroadcastChannel();
+			this.channelName = `BroadcastDataChannel.${channelName}`
+			this.createBroadcastChannel()
 		}
 	}
 
 	private createBroadcastChannel(): void {
 		const listener = (event: StorageEvent) => {
 			if (event.key === this.channelName && event.newValue) {
-				this._onDidReceiveData.fire(JSON.parse(event.newValue));
+				this._onDidReceiveData.fire(JSON.parse(event.newValue))
 			}
-		};
-		mainWindow.addEventListener('storage', listener);
-		this._register(toDisposable(() => mainWindow.removeEventListener('storage', listener)));
+		}
+		mainWindow.addEventListener('storage', listener)
+		this._register(toDisposable(() => mainWindow.removeEventListener('storage', listener)))
 	}
 
 	/**
@@ -60,11 +64,11 @@ export class BroadcastDataChannel<T> extends Disposable {
 	 */
 	postData(data: T): void {
 		if (this.broadcastChannel) {
-			this.broadcastChannel.postMessage(data);
+			this.broadcastChannel.postMessage(data)
 		} else {
 			// remove previous changes so that event is triggered even if new changes are same as old changes
-			localStorage.removeItem(this.channelName);
-			localStorage.setItem(this.channelName, JSON.stringify(data));
+			localStorage.removeItem(this.channelName)
+			localStorage.setItem(this.channelName, JSON.stringify(data))
 		}
 	}
 }

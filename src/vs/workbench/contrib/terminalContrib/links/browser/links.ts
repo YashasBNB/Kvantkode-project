@@ -3,33 +3,42 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { IBufferLine, IBufferRange, Terminal } from '@xterm/xterm';
-import { URI } from '../../../../../base/common/uri.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ITerminalProcessManager } from '../../../terminal/common/terminal.js';
-import { IParsedLink } from './terminalLinkParsing.js';
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { ITerminalExternalLinkProvider } from '../../../terminal/browser/terminal.js';
-import { Event } from '../../../../../base/common/event.js';
-import { ITerminalBackend } from '../../../../../platform/terminal/common/terminal.js';
-import { ITextEditorSelection } from '../../../../../platform/editor/common/editor.js';
-import type { IHoverAction } from '../../../../../base/browser/ui/hover/hover.js';
+import type { IBufferLine, IBufferRange, Terminal } from '@xterm/xterm'
+import { URI } from '../../../../../base/common/uri.js'
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js'
+import { ITerminalProcessManager } from '../../../terminal/common/terminal.js'
+import { IParsedLink } from './terminalLinkParsing.js'
+import { IDisposable } from '../../../../../base/common/lifecycle.js'
+import { ITerminalExternalLinkProvider } from '../../../terminal/browser/terminal.js'
+import { Event } from '../../../../../base/common/event.js'
+import { ITerminalBackend } from '../../../../../platform/terminal/common/terminal.js'
+import { ITextEditorSelection } from '../../../../../platform/editor/common/editor.js'
+import type { IHoverAction } from '../../../../../base/browser/ui/hover/hover.js'
 
-export const ITerminalLinkProviderService = createDecorator<ITerminalLinkProviderService>('terminalLinkProviderService');
+export const ITerminalLinkProviderService = createDecorator<ITerminalLinkProviderService>(
+	'terminalLinkProviderService',
+)
 export interface ITerminalLinkProviderService {
-	readonly _serviceBrand: undefined;
+	readonly _serviceBrand: undefined
 
-	readonly linkProviders: ReadonlySet<ITerminalExternalLinkProvider>;
+	readonly linkProviders: ReadonlySet<ITerminalExternalLinkProvider>
 
-	readonly onDidAddLinkProvider: Event<ITerminalExternalLinkProvider>;
-	readonly onDidRemoveLinkProvider: Event<ITerminalExternalLinkProvider>;
+	readonly onDidAddLinkProvider: Event<ITerminalExternalLinkProvider>
+	readonly onDidRemoveLinkProvider: Event<ITerminalExternalLinkProvider>
 
 	// TODO: Currently only a single link provider is supported; the one registered by the ext host
-	registerLinkProvider(provider: ITerminalExternalLinkProvider): IDisposable;
+	registerLinkProvider(provider: ITerminalExternalLinkProvider): IDisposable
 }
 
 export interface ITerminalLinkResolver {
-	resolveLink(processManager: Pick<ITerminalProcessManager, 'initialCwd' | 'os' | 'remoteAuthority' | 'userHome'> & { backend?: Pick<ITerminalBackend, 'getWslPath'> }, link: string, uri?: URI): Promise<ResolvedLink>;
+	resolveLink(
+		processManager: Pick<
+			ITerminalProcessManager,
+			'initialCwd' | 'os' | 'remoteAuthority' | 'userHome'
+		> & { backend?: Pick<ITerminalBackend, 'getWslPath'> },
+		link: string,
+		uri?: URI,
+	): Promise<ResolvedLink>
 }
 
 /**
@@ -40,13 +49,13 @@ export interface ITerminalLinkDetector {
 	/**
 	 * The xterm.js instance this detector belongs to.
 	 */
-	readonly xterm: Terminal;
+	readonly xterm: Terminal
 
 	/**
 	 * The maximum link length possible for this detector, this puts a cap on how much of a wrapped
 	 * line to consider to prevent performance problems.
 	 */
-	readonly maxLinkLength: number;
+	readonly maxLinkLength: number
 
 	/**
 	 * Detects links within the _wrapped_ line range provided and returns them as an array.
@@ -57,65 +66,69 @@ export interface ITerminalLinkDetector {
 	 * @param endLine The end of the wrapped line.  This _will not_ be validated that it is indeed
 	 * the end of a wrapped line.
 	 */
-	detect(lines: IBufferLine[], startLine: number, endLine: number): ITerminalSimpleLink[] | Promise<ITerminalSimpleLink[]>;
+	detect(
+		lines: IBufferLine[],
+		startLine: number,
+		endLine: number,
+	): ITerminalSimpleLink[] | Promise<ITerminalSimpleLink[]>
 }
 
 export interface ITerminalSimpleLink {
 	/**
 	 * The text of the link.
 	 */
-	text: string;
+	text: string
 
-	parsedLink?: IParsedLink;
+	parsedLink?: IParsedLink
 
 	/**
 	 * The buffer range of the link.
 	 */
-	readonly bufferRange: IBufferRange;
+	readonly bufferRange: IBufferRange
 
 	/**
 	 * The type of link, which determines how it is handled when activated.
 	 */
-	readonly type: TerminalLinkType;
+	readonly type: TerminalLinkType
 
 	/**
 	 * The URI of the link if it has been resolved.
 	 */
-	uri?: URI;
+	uri?: URI
 
 	/**
 	 * An optional full line to be used for context when resolving.
 	 */
-	contextLine?: string;
+	contextLine?: string
 
 	/**
 	 * The location or selection range of the link.
 	 */
-	selection?: ITextEditorSelection;
+	selection?: ITextEditorSelection
 
 	/**
 	 * Whether to trim a trailing colon at the end of a path.
 	 */
-	disableTrimColon?: boolean;
+	disableTrimColon?: boolean
 
 	/**
 	 * A hover label to override the default for the type.
 	 */
-	label?: string;
+	label?: string
 
 	/**
 	 * An optional set of actions to show in the hover's status bar.
 	 */
-	actions?: IHoverAction[];
+	actions?: IHoverAction[]
 
 	/**
 	 * An optional method to call when the link is activated. This should be used when there is are
 	 * no registered opener for this link type.
 	 */
-	activate?(text: string): void;
+	activate?(text: string): void
 }
 
-export type TerminalLinkType = TerminalBuiltinLinkType | ITerminalExternalLinkType;
+export type TerminalLinkType = TerminalBuiltinLinkType | ITerminalExternalLinkType
 
 export const enum TerminalBuiltinLinkType {
 	/**
@@ -144,23 +157,25 @@ export const enum TerminalBuiltinLinkType {
 	/**
 	 * A link whose text is a valid URI.
 	 */
-	Url = 'Url'
+	Url = 'Url',
 }
 
 export interface ITerminalExternalLinkType {
-	id: string;
+	id: string
 }
 
 export interface ITerminalLinkOpener {
-	open(link: ITerminalSimpleLink): Promise<void>;
+	open(link: ITerminalSimpleLink): Promise<void>
 }
 
-export type ResolvedLink = IResolvedValidLink | null;
+export type ResolvedLink = IResolvedValidLink | null
 
 export interface IResolvedValidLink {
-	uri: URI;
-	link: string;
-	isDirectory: boolean;
+	uri: URI
+	link: string
+	isDirectory: boolean
 }
 
-export type OmitFirstArg<F> = F extends (x: any, ...args: infer P) => infer R ? (...args: P) => R : never;
+export type OmitFirstArg<F> = F extends (x: any, ...args: infer P) => infer R
+	? (...args: P) => R
+	: never

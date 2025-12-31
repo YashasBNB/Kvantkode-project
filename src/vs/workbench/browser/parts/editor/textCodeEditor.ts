@@ -3,111 +3,123 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../nls.js';
-import { URI } from '../../../../base/common/uri.js';
-import { assertIsDefined } from '../../../../base/common/types.js';
-import { ITextEditorPane } from '../../../common/editor.js';
-import { applyTextEditorOptions } from '../../../common/editor/editorOptions.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { ITextEditorOptions } from '../../../../platform/editor/common/editor.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { IEditorOptions as ICodeEditorOptions } from '../../../../editor/common/config/editorOptions.js';
-import { CodeEditorWidget, ICodeEditorWidgetOptions } from '../../../../editor/browser/widget/codeEditor/codeEditorWidget.js';
-import { IEditorViewState, ScrollType } from '../../../../editor/common/editorCommon.js';
-import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { AbstractTextEditor } from './textEditor.js';
-import { Dimension } from '../../../../base/browser/dom.js';
+import { localize } from '../../../../nls.js'
+import { URI } from '../../../../base/common/uri.js'
+import { assertIsDefined } from '../../../../base/common/types.js'
+import { ITextEditorPane } from '../../../common/editor.js'
+import { applyTextEditorOptions } from '../../../common/editor/editorOptions.js'
+import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js'
+import { ITextEditorOptions } from '../../../../platform/editor/common/editor.js'
+import { isEqual } from '../../../../base/common/resources.js'
+import { IEditorOptions as ICodeEditorOptions } from '../../../../editor/common/config/editorOptions.js'
+import {
+	CodeEditorWidget,
+	ICodeEditorWidgetOptions,
+} from '../../../../editor/browser/widget/codeEditor/codeEditorWidget.js'
+import { IEditorViewState, ScrollType } from '../../../../editor/common/editorCommon.js'
+import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js'
+import { AbstractTextEditor } from './textEditor.js'
+import { Dimension } from '../../../../base/browser/dom.js'
 
 /**
  * A text editor using the code editor widget.
  */
-export abstract class AbstractTextCodeEditor<T extends IEditorViewState> extends AbstractTextEditor<T> implements ITextEditorPane {
-
-	protected editorControl: ICodeEditor | undefined = undefined;
+export abstract class AbstractTextCodeEditor<T extends IEditorViewState>
+	extends AbstractTextEditor<T>
+	implements ITextEditorPane
+{
+	protected editorControl: ICodeEditor | undefined = undefined
 
 	override get scopedContextKeyService(): IContextKeyService | undefined {
-		return this.editorControl?.invokeWithinContext(accessor => accessor.get(IContextKeyService));
+		return this.editorControl?.invokeWithinContext((accessor) => accessor.get(IContextKeyService))
 	}
 
 	override getTitle(): string {
 		if (this.input) {
-			return this.input.getName();
+			return this.input.getName()
 		}
 
-		return localize('textEditor', "Text Editor");
+		return localize('textEditor', 'Text Editor')
 	}
 
 	protected createEditorControl(parent: HTMLElement, initialOptions: ICodeEditorOptions): void {
-		this.editorControl = this._register(this.instantiationService.createInstance(CodeEditorWidget, parent, initialOptions, this.getCodeEditorWidgetOptions()));
+		this.editorControl = this._register(
+			this.instantiationService.createInstance(
+				CodeEditorWidget,
+				parent,
+				initialOptions,
+				this.getCodeEditorWidgetOptions(),
+			),
+		)
 	}
 
 	protected getCodeEditorWidgetOptions(): ICodeEditorWidgetOptions {
-		return Object.create(null);
+		return Object.create(null)
 	}
 
 	protected updateEditorControlOptions(options: ICodeEditorOptions): void {
-		this.editorControl?.updateOptions(options);
+		this.editorControl?.updateOptions(options)
 	}
 
 	protected getMainControl(): ICodeEditor | undefined {
-		return this.editorControl;
+		return this.editorControl
 	}
 
 	override getControl(): ICodeEditor | undefined {
-		return this.editorControl;
+		return this.editorControl
 	}
 
 	protected override computeEditorViewState(resource: URI): T | undefined {
 		if (!this.editorControl) {
-			return undefined;
+			return undefined
 		}
 
-		const model = this.editorControl.getModel();
+		const model = this.editorControl.getModel()
 		if (!model) {
-			return undefined; // view state always needs a model
+			return undefined // view state always needs a model
 		}
 
-		const modelUri = model.uri;
+		const modelUri = model.uri
 		if (!modelUri) {
-			return undefined; // model URI is needed to make sure we save the view state correctly
+			return undefined // model URI is needed to make sure we save the view state correctly
 		}
 
 		if (!isEqual(modelUri, resource)) {
-			return undefined; // prevent saving view state for a model that is not the expected one
+			return undefined // prevent saving view state for a model that is not the expected one
 		}
 
-		return this.editorControl.saveViewState() as unknown as T ?? undefined;
+		return (this.editorControl.saveViewState() as unknown as T) ?? undefined
 	}
 
 	override setOptions(options: ITextEditorOptions | undefined): void {
-		super.setOptions(options);
+		super.setOptions(options)
 
 		if (options) {
-			applyTextEditorOptions(options, assertIsDefined(this.editorControl), ScrollType.Smooth);
+			applyTextEditorOptions(options, assertIsDefined(this.editorControl), ScrollType.Smooth)
 		}
 	}
 
 	override focus(): void {
-		super.focus();
+		super.focus()
 
-		this.editorControl?.focus();
+		this.editorControl?.focus()
 	}
 
 	override hasFocus(): boolean {
-		return this.editorControl?.hasTextFocus() || super.hasFocus();
+		return this.editorControl?.hasTextFocus() || super.hasFocus()
 	}
 
 	protected override setEditorVisible(visible: boolean): void {
-		super.setEditorVisible(visible);
+		super.setEditorVisible(visible)
 
 		if (visible) {
-			this.editorControl?.onVisible();
+			this.editorControl?.onVisible()
 		} else {
-			this.editorControl?.onHide();
+			this.editorControl?.onHide()
 		}
 	}
 
 	override layout(dimension: Dimension): void {
-		this.editorControl?.layout(dimension);
+		this.editorControl?.layout(dimension)
 	}
 }

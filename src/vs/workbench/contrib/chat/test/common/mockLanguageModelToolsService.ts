@@ -3,52 +3,62 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { Event } from '../../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { CountTokensCallback, ILanguageModelToolsService, IToolData, IToolImpl, IToolInvocation, IToolResult } from '../../common/languageModelToolsService.js';
+import { CancellationToken } from '../../../../../base/common/cancellation.js'
+import { Event } from '../../../../../base/common/event.js'
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js'
+import {
+	CountTokensCallback,
+	ILanguageModelToolsService,
+	IToolData,
+	IToolImpl,
+	IToolInvocation,
+	IToolResult,
+} from '../../common/languageModelToolsService.js'
 
 export class MockLanguageModelToolsService implements ILanguageModelToolsService {
-	_serviceBrand: undefined;
+	_serviceBrand: undefined
 
-	constructor() { }
+	constructor() {}
 
-	cancelToolCallsForRequest(requestId: string): void {
-	}
+	cancelToolCallsForRequest(requestId: string): void {}
 
-	onDidChangeTools: Event<void> = Event.None;
+	onDidChangeTools: Event<void> = Event.None
 
 	registerToolData(toolData: IToolData): IDisposable {
-		return Disposable.None;
+		return Disposable.None
 	}
 
-	resetToolAutoConfirmation(): void {
+	resetToolAutoConfirmation(): void {}
 
-	}
-
-	setToolAutoConfirmation(toolId: string, scope: 'workspace' | 'profile', autoConfirm?: boolean): void {
-
-	}
+	setToolAutoConfirmation(
+		toolId: string,
+		scope: 'workspace' | 'profile',
+		autoConfirm?: boolean,
+	): void {}
 
 	registerToolImplementation(name: string, tool: IToolImpl): IDisposable {
-		return Disposable.None;
+		return Disposable.None
 	}
 
 	getTools(): Iterable<Readonly<IToolData>> {
-		return [];
+		return []
 	}
 
 	getTool(id: string): IToolData | undefined {
-		return undefined;
+		return undefined
 	}
 
 	getToolByName(name: string): IToolData | undefined {
-		return undefined;
+		return undefined
 	}
 
-	async invokeTool(dto: IToolInvocation, countTokens: CountTokensCallback, token: CancellationToken): Promise<IToolResult> {
+	async invokeTool(
+		dto: IToolInvocation,
+		countTokens: CountTokensCallback,
+		token: CancellationToken,
+	): Promise<IToolResult> {
 		return {
-			content: [{ kind: 'text', value: 'result' }]
-		};
+			content: [{ kind: 'text', value: 'result' }],
+		}
 	}
 }

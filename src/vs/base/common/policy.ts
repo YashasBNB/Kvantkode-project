@@ -3,32 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export type PolicyName = string;
+export type PolicyName = string
 
 export interface IPolicy {
-
 	/**
 	 * The policy name.
 	 */
-	readonly name: PolicyName;
+	readonly name: PolicyName
 
 	/**
 	 * The Code version in which this policy was introduced.
-	*/
-	readonly minimumVersion: `${number}.${number}`;
+	 */
+	readonly minimumVersion: `${number}.${number}`
 
 	/**
 	 * The policy description (optional).
 	 */
-	readonly description?: string;
+	readonly description?: string
 
 	/**
 	 * Is preview feature
 	 */
-	readonly previewFeature?: boolean;
+	readonly previewFeature?: boolean
 
 	/**
 	 * Default value when enabled. Default is `false`.
 	 */
-	readonly defaultValue?: string | number | boolean;
+	readonly defaultValue?: string | number | boolean
 }

@@ -4,29 +4,28 @@
  *--------------------------------------------------------------------------------------------*/
 
 export class Point {
-
 	static equals(a: Point, b: Point): boolean {
-		return a.x === b.x && a.y === b.y;
+		return a.x === b.x && a.y === b.y
 	}
 
 	constructor(
 		public readonly x: number,
-		public readonly y: number
-	) { }
+		public readonly y: number,
+	) {}
 
 	public add(other: Point): Point {
-		return new Point(this.x + other.x, this.y + other.y);
+		return new Point(this.x + other.x, this.y + other.y)
 	}
 
 	public deltaX(delta: number): Point {
-		return new Point(this.x + delta, this.y);
+		return new Point(this.x + delta, this.y)
 	}
 
 	public deltaY(delta: number): Point {
-		return new Point(this.x, this.y + delta);
+		return new Point(this.x, this.y + delta)
 	}
 
 	public toString() {
-		return `(${this.x},${this.y})`;
+		return `(${this.x},${this.y})`
 	}
 }

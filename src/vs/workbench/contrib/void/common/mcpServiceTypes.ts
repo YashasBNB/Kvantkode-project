@@ -18,7 +18,6 @@
  * @modelcontextprotocol/inspector‑cli responses.
  */
 
-
 /* -------------------------------------------------- */
 /* Core JSON‑RPC envelope                              */
 /* -------------------------------------------------- */
@@ -47,13 +46,13 @@
 
 export interface MCPTool {
 	/** Unique tool identifier */
-	name: string;
+	name: string
 	/** Human‑readable description */
-	description?: string;
+	description?: string
 	/** JSON schema describing expected arguments */
-	inputSchema?: Record<string, unknown>;
+	inputSchema?: Record<string, unknown>
 	/** Free‑form annotations describing behaviour, security, etc. */
-	annotations?: Record<string, unknown>;
+	annotations?: Record<string, unknown>
 }
 
 // export interface ToolsListResult extends Paginated {
@@ -118,53 +117,53 @@ export interface MCPTool {
 
 export interface MCPConfigFileEntryJSON {
 	// Command-based server properties
-	command?: string;
-	args?: string[];
-	env?: Record<string, string>;
+	command?: string
+	args?: string[]
+	env?: Record<string, string>
 
 	// URL-based server properties
-	url?: URL;
-	headers?: Record<string, string>;
+	url?: URL
+	headers?: Record<string, string>
 }
 
 export interface MCPConfigFileJSON {
-	mcpServers: Record<string, MCPConfigFileEntryJSON>;
+	mcpServers: Record<string, MCPConfigFileEntryJSON>
 }
-
 
 // SERVER EVENT TYPES ------------------------------------------
 
-export type MCPServer = {
-	// Command-based server properties
-	tools: MCPTool[],
-	status: 'loading' | 'success' | 'offline',
-	command?: string,
-	error?: string,
-} | {
-	tools?: undefined,
-	status: 'error',
-	command?: string,
-	error: string,
-}
+export type MCPServer =
+	| {
+			// Command-based server properties
+			tools: MCPTool[]
+			status: 'loading' | 'success' | 'offline'
+			command?: string
+			error?: string
+	  }
+	| {
+			tools?: undefined
+			status: 'error'
+			command?: string
+			error: string
+	  }
 
 export interface MCPServerOfName {
-	[serverName: string]: MCPServer;
+	[serverName: string]: MCPServer
 }
 
 export type MCPServerEvent = {
-	name: string;
-	prevServer?: MCPServer;
-	newServer?: MCPServer;
+	name: string
+	prevServer?: MCPServer
+	newServer?: MCPServer
 }
 export type MCPServerEventResponse = { response: MCPServerEvent }
 
 export interface MCPConfigFileParseErrorResponse {
 	response: {
-		type: 'config-file-error';
-		error: string | null;
+		type: 'config-file-error'
+		error: string | null
 	}
 }
-
 
 // export type MCPServerResponse = MCPAddResponse | MCPUpdateResponse | MCPDeleteResponse | MCPLoadingResponse;
 
@@ -179,63 +178,78 @@ export interface MCPConfigFileParseErrorResponse {
 
 // TOOL CALL EVENT TYPES ------------------------------------------
 
-type MCPToolResponseType = 'text' | 'image' | 'audio' | 'resource' | 'error';
+type MCPToolResponseType = 'text' | 'image' | 'audio' | 'resource' | 'error'
 
-type ResponseImageTypes = 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp' | 'image/svg+xml' | 'image/bmp' | 'image/tiff' | 'image/vnd.microsoft.icon';
+type ResponseImageTypes =
+	| 'image/png'
+	| 'image/jpeg'
+	| 'image/gif'
+	| 'image/webp'
+	| 'image/svg+xml'
+	| 'image/bmp'
+	| 'image/tiff'
+	| 'image/vnd.microsoft.icon'
 
 interface ImageData {
-	data: string;
-	mimeType: ResponseImageTypes;
+	data: string
+	mimeType: ResponseImageTypes
 }
 
 interface MCPToolResponseBase {
-	toolName: string;
-	serverName?: string;
-	event: MCPToolResponseType;
-	text?: string;
-	image?: ImageData;
+	toolName: string
+	serverName?: string
+	event: MCPToolResponseType
+	text?: string
+	image?: ImageData
 }
 
 type MCPToolResponseConstraints = {
-	'text': {
-		image?: never;
-		text: string;
-	};
-	'error': {
-		image?: never;
-		text: string;
-	};
-	'image': {
-		text?: never;
-		image: ImageData;
-	};
-	'audio': {
-		text?: never;
-		image?: never;
-	};
-	'resource': {
-		text?: never;
-		image?: never;
+	text: {
+		image?: never
+		text: string
+	}
+	error: {
+		image?: never
+		text: string
+	}
+	image: {
+		text?: never
+		image: ImageData
+	}
+	audio: {
+		text?: never
+		image?: never
+	}
+	resource: {
+		text?: never
+		image?: never
 	}
 }
 
-type MCPToolEventResponse<T extends MCPToolResponseType> = Omit<MCPToolResponseBase, 'event' | keyof MCPToolResponseConstraints> & MCPToolResponseConstraints[T] & { event: T };
+type MCPToolEventResponse<T extends MCPToolResponseType> = Omit<
+	MCPToolResponseBase,
+	'event' | keyof MCPToolResponseConstraints
+> &
+	MCPToolResponseConstraints[T] & { event: T }
 
 // Response types
-export type MCPToolTextResponse = MCPToolEventResponse<'text'>;
-export type MCPToolErrorResponse = MCPToolEventResponse<'error'>;
-export type MCPToolImageResponse = MCPToolEventResponse<'image'>;
-export type MCPToolAudioResponse = MCPToolEventResponse<'audio'>;
-export type MCPToolResourceResponse = MCPToolEventResponse<'resource'>;
-export type RawMCPToolCall = MCPToolTextResponse | MCPToolErrorResponse | MCPToolImageResponse | MCPToolAudioResponse | MCPToolResourceResponse;
+export type MCPToolTextResponse = MCPToolEventResponse<'text'>
+export type MCPToolErrorResponse = MCPToolEventResponse<'error'>
+export type MCPToolImageResponse = MCPToolEventResponse<'image'>
+export type MCPToolAudioResponse = MCPToolEventResponse<'audio'>
+export type MCPToolResourceResponse = MCPToolEventResponse<'resource'>
+export type RawMCPToolCall =
+	| MCPToolTextResponse
+	| MCPToolErrorResponse
+	| MCPToolImageResponse
+	| MCPToolAudioResponse
+	| MCPToolResourceResponse
 
 export interface MCPToolCallParams {
-	serverName: string;
-	toolName: string;
-	params: Record<string, unknown>;
+	serverName: string
+	toolName: string
+	params: Record<string, unknown>
 }
-
-
 
 export const removeMCPToolNamePrefix = (name: string) => {
 	return name.split('_').slice(1).join('_')

@@ -79,10 +79,7 @@
 		},
 		{
 			"name": "Comments",
-			"scope": [
-				"comment",
-				"punctuation.definition.comment"
-			],
+			"scope": ["comment", "punctuation.definition.comment"],
 			"settings": {
 				"foreground": "#a57a4c"
 			}
@@ -139,11 +136,7 @@
 		},
 		{
 			"name": "Functions",
-			"scope": [
-				"entity.name.function",
-				"meta.require",
-				"support.function.any-method"
-			],
+			"scope": ["entity.name.function", "meta.require", "support.function.any-method"],
 			"settings": {
 				"foreground": "#8ab1b0"
 			}
@@ -238,10 +231,7 @@
 		},
 		{
 			"name": "Attribute IDs",
-			"scope": [
-				"entity.other.attribute-name.id",
-				"punctuation.definition.entity"
-			],
+			"scope": ["entity.other.attribute-name.id", "punctuation.definition.entity"],
 			"settings": {
 				"foreground": "#8ab1b0"
 			}
@@ -282,10 +272,7 @@
 		},
 		{
 			"name": "Bold",
-			"scope": [
-				"markup.bold",
-				"punctuation.definition.bold"
-			],
+			"scope": ["markup.bold", "punctuation.definition.bold"],
 			"settings": {
 				"fontStyle": "bold",
 				"foreground": "#f06431"
@@ -293,10 +280,7 @@
 		},
 		{
 			"name": "Italic",
-			"scope": [
-				"markup.italic",
-				"punctuation.definition.italic"
-			],
+			"scope": ["markup.italic", "punctuation.definition.italic"],
 			"settings": {
 				"fontStyle": "italic",
 				"foreground": "#98676a"
@@ -394,10 +378,7 @@
 		},
 		{
 			"name": "Embedded",
-			"scope": [
-				"punctuation.section.embedded",
-				"variable.interpolation"
-			],
+			"scope": ["punctuation.section.embedded", "variable.interpolation"],
 			"settings": {
 				"foreground": "#088649"
 			}

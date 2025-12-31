@@ -12,8 +12,6 @@
 	"openCellOutput.title": "Open Cell Output in Text Editor",
 	"markdownAttachmentRenderer.displayName": {
 		"message": "Markdown-It ipynb Cell Attachment renderer",
-		"comment": [
-			"Markdown-It is a product name and should not be translated"
-		]
+		"comment": ["Markdown-It is a product name and should not be translated"]
 	}
 }

@@ -1,23 +1,23 @@
 const environmentVariableGenerator: Fig.Generator = {
 	custom: async (tokens, _, context) => {
-		if (tokens.length < 3 || tokens[tokens.length - 1].startsWith("$")) {
+		if (tokens.length < 3 || tokens[tokens.length - 1].startsWith('$')) {
 			return Object.keys(context.environmentVariables).map((suggestion) => ({
 				name: `$${suggestion}`,
-				type: "arg",
-				description: "Environment Variable",
-			}));
+				type: 'arg',
+				description: 'Environment Variable',
+			}))
 		} else {
-			return [];
+			return []
 		}
 	},
-	trigger: "$",
-};
+	trigger: '$',
+}
 
 const completionSpec: Fig.Spec = {
-	name: "echo",
-	description: "Write arguments to the standard output",
+	name: 'echo',
+	description: 'Write arguments to the standard output',
 	args: {
-		name: "string",
+		name: 'string',
 		isVariadic: true,
 		optionsCanBreakVariadicArg: false,
 		suggestCurrentToken: true,
@@ -25,18 +25,18 @@ const completionSpec: Fig.Spec = {
 	},
 	options: [
 		{
-			name: "-n",
-			description: "Do not print the trailing newline character",
+			name: '-n',
+			description: 'Do not print the trailing newline character',
 		},
 		{
-			name: "-e",
-			description: "Interpret escape sequences",
+			name: '-e',
+			description: 'Interpret escape sequences',
 		},
 		{
-			name: "-E",
-			description: "Disable escape sequences",
+			name: '-E',
+			description: 'Disable escape sequences',
 		},
 	],
-};
+}
 
-export default completionSpec;
+export default completionSpec

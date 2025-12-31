@@ -3,15 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { MouseWheelClassifier } from '../../../../browser/ui/scrollbar/scrollableElement.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../common/utils.js';
+import assert from 'assert'
+import { MouseWheelClassifier } from '../../../../browser/ui/scrollbar/scrollableElement.js'
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../common/utils.js'
 
-export type IMouseWheelEvent = [number, number, number];
+export type IMouseWheelEvent = [number, number, number]
 
 suite('MouseWheelClassifier', () => {
-
-	ensureNoDisposablesAreLeakedInTestSuite();
+	ensureNoDisposablesAreLeakedInTestSuite()
 
 	test('OSX - Apple Magic Mouse', () => {
 		const testData: IMouseWheelEvent[] = [
@@ -48,17 +47,17 @@ suite('MouseWheelClassifier', () => {
 			[1503409623415, -0.025, 0],
 			[1503409623443, -0.05, 0],
 			[1503409623452, -0.025, 0],
-		];
+		]
 
-		const classifier = new MouseWheelClassifier();
+		const classifier = new MouseWheelClassifier()
 		for (let i = 0, len = testData.length; i < len; i++) {
-			const [timestamp, deltaY, deltaX] = testData[i];
-			classifier.accept(timestamp, deltaX, deltaY);
+			const [timestamp, deltaY, deltaX] = testData[i]
+			classifier.accept(timestamp, deltaX, deltaY)
 
-			const actual = classifier.isPhysicalMouseWheel();
-			assert.strictEqual(actual, false, `i = ${i}`);
+			const actual = classifier.isPhysicalMouseWheel()
+			assert.strictEqual(actual, false, `i = ${i}`)
 		}
-	});
+	})
 
 	test('OSX - Apple Touch Pad', () => {
 		const testData: IMouseWheelEvent[] = [
@@ -137,17 +136,17 @@ suite('MouseWheelClassifier', () => {
 			[1503409781996, 0.025, 0],
 			[1503409782015, 0.025, 0],
 			[1503409782045, 0.025, 0],
-		];
+		]
 
-		const classifier = new MouseWheelClassifier();
+		const classifier = new MouseWheelClassifier()
 		for (let i = 0, len = testData.length; i < len; i++) {
-			const [timestamp, deltaY, deltaX] = testData[i];
-			classifier.accept(timestamp, deltaX, deltaY);
+			const [timestamp, deltaY, deltaX] = testData[i]
+			classifier.accept(timestamp, deltaX, deltaY)
 
-			const actual = classifier.isPhysicalMouseWheel();
-			assert.strictEqual(actual, false, `i = ${i}`);
+			const actual = classifier.isPhysicalMouseWheel()
+			assert.strictEqual(actual, false, `i = ${i}`)
 		}
-	});
+	})
 
 	test('OSX - Razer Physical Mouse Wheel', () => {
 		const testData: IMouseWheelEvent[] = [
@@ -197,18 +196,17 @@ suite('MouseWheelClassifier', () => {
 			[1503409885733, -2, 0],
 			[1503409885784, -4, 0],
 			[1503409885916, -3, 0],
-		];
+		]
 
-		const classifier = new MouseWheelClassifier();
+		const classifier = new MouseWheelClassifier()
 		for (let i = 0, len = testData.length; i < len; i++) {
-			const [timestamp, deltaY, deltaX] = testData[i];
-			classifier.accept(timestamp, deltaX, deltaY);
+			const [timestamp, deltaY, deltaX] = testData[i]
+			classifier.accept(timestamp, deltaX, deltaY)
 
-			const actual = classifier.isPhysicalMouseWheel();
-			assert.strictEqual(actual, true, `i = ${i}`);
-
+			const actual = classifier.isPhysicalMouseWheel()
+			assert.strictEqual(actual, true, `i = ${i}`)
 		}
-	});
+	})
 
 	test('Windows - Microsoft Arc Touch', () => {
 		const testData: IMouseWheelEvent[] = [
@@ -237,18 +235,17 @@ suite('MouseWheelClassifier', () => {
 			[1503418318134, -2, 0],
 			[1503418318267, -2, 0],
 			[1503418318411, -2, 0],
-		];
+		]
 
-		const classifier = new MouseWheelClassifier();
+		const classifier = new MouseWheelClassifier()
 		for (let i = 0, len = testData.length; i < len; i++) {
-			const [timestamp, deltaY, deltaX] = testData[i];
-			classifier.accept(timestamp, deltaX, deltaY);
+			const [timestamp, deltaY, deltaX] = testData[i]
+			classifier.accept(timestamp, deltaX, deltaY)
 
-			const actual = classifier.isPhysicalMouseWheel();
-			assert.strictEqual(actual, true, `i = ${i}`);
-
+			const actual = classifier.isPhysicalMouseWheel()
+			assert.strictEqual(actual, true, `i = ${i}`)
 		}
-	});
+	})
 
 	test('Windows - SurfaceBook TouchPad', () => {
 		const testData: IMouseWheelEvent[] = [
@@ -282,17 +279,17 @@ suite('MouseWheelClassifier', () => {
 			[1503418499674, -0.15, 0],
 			[1503418499676, -0.03333333333333333, 0],
 			[1503418499691, -0.016666666666666666, 0],
-		];
+		]
 
-		const classifier = new MouseWheelClassifier();
+		const classifier = new MouseWheelClassifier()
 		for (let i = 0, len = testData.length; i < len; i++) {
-			const [timestamp, deltaY, deltaX] = testData[i];
-			classifier.accept(timestamp, deltaX, deltaY);
+			const [timestamp, deltaY, deltaX] = testData[i]
+			classifier.accept(timestamp, deltaX, deltaY)
 
-			const actual = classifier.isPhysicalMouseWheel();
-			assert.strictEqual(actual, false, `i = ${i}`);
+			const actual = classifier.isPhysicalMouseWheel()
+			assert.strictEqual(actual, false, `i = ${i}`)
 		}
-	});
+	})
 
 	test('Windows - Razer physical wheel', () => {
 		const testData: IMouseWheelEvent[] = [
@@ -371,18 +368,17 @@ suite('MouseWheelClassifier', () => {
 			[1503418642814, -4, 0],
 			[1503418642816, -2, 0],
 			[1503418642857, -2, 0],
-		];
+		]
 
-		const classifier = new MouseWheelClassifier();
+		const classifier = new MouseWheelClassifier()
 		for (let i = 0, len = testData.length; i < len; i++) {
-			const [timestamp, deltaY, deltaX] = testData[i];
-			classifier.accept(timestamp, deltaX, deltaY);
+			const [timestamp, deltaY, deltaX] = testData[i]
+			classifier.accept(timestamp, deltaX, deltaY)
 
-			const actual = classifier.isPhysicalMouseWheel();
-			assert.strictEqual(actual, true, `i = ${i}`);
-
+			const actual = classifier.isPhysicalMouseWheel()
+			assert.strictEqual(actual, true, `i = ${i}`)
 		}
-	});
+	})
 
 	test('Windows - Logitech physical wheel', () => {
 		const testData: IMouseWheelEvent[] = [
@@ -462,18 +458,17 @@ suite('MouseWheelClassifier', () => {
 			[1503418878133, -2, 0],
 			[1503418878137, -4, 0],
 			[1503418878181, -2, 0],
-		];
+		]
 
-		const classifier = new MouseWheelClassifier();
+		const classifier = new MouseWheelClassifier()
 		for (let i = 0, len = testData.length; i < len; i++) {
-			const [timestamp, deltaY, deltaX] = testData[i];
-			classifier.accept(timestamp, deltaX, deltaY);
+			const [timestamp, deltaY, deltaX] = testData[i]
+			classifier.accept(timestamp, deltaX, deltaY)
 
-			const actual = classifier.isPhysicalMouseWheel();
-			assert.strictEqual(actual, true, `i = ${i}`);
-
+			const actual = classifier.isPhysicalMouseWheel()
+			assert.strictEqual(actual, true, `i = ${i}`)
 		}
-	});
+	})
 
 	test('Windows - Microsoft basic v2 physical wheel', () => {
 		const testData: IMouseWheelEvent[] = [
@@ -517,17 +512,17 @@ suite('MouseWheelClassifier', () => {
 			[1503418997807, -2, 0],
 			[1503418997813, -2, 0],
 			[1503418997850, -2, 0],
-		];
+		]
 
-		const classifier = new MouseWheelClassifier();
+		const classifier = new MouseWheelClassifier()
 		for (let i = 0, len = testData.length; i < len; i++) {
-			const [timestamp, deltaY, deltaX] = testData[i];
-			classifier.accept(timestamp, deltaX, deltaY);
+			const [timestamp, deltaY, deltaX] = testData[i]
+			classifier.accept(timestamp, deltaX, deltaY)
 
-			const actual = classifier.isPhysicalMouseWheel();
-			assert.strictEqual(actual, true, `i = ${i}`);
+			const actual = classifier.isPhysicalMouseWheel()
+			assert.strictEqual(actual, true, `i = ${i}`)
 		}
-	});
+	})
 
 	test('Linux Wayland - Logitech G Pro Wireless', () => {
 		const testData: IMouseWheelEvent[] = [
@@ -712,21 +707,20 @@ suite('MouseWheelClassifier', () => {
 			[1707837465129, 1.5, 0],
 			[1707837465136, 1.5, 0],
 			[1707837465157, 1.5, 0],
-		];
+		]
 
-		const classifier = new MouseWheelClassifier();
+		const classifier = new MouseWheelClassifier()
 		for (let i = 0, len = testData.length; i < len; i++) {
-			const [timestamp, deltaY, deltaX] = testData[i];
-			classifier.accept(timestamp, deltaX, deltaY);
+			const [timestamp, deltaY, deltaX] = testData[i]
+			classifier.accept(timestamp, deltaX, deltaY)
 
-			const actual = classifier.isPhysicalMouseWheel();
+			const actual = classifier.isPhysicalMouseWheel()
 
 			// Linux Wayland implementation depends on looking at the
 			// previous event.
 			if (i > 0) {
-				assert.strictEqual(actual, true, `i = ${i}`);
+				assert.strictEqual(actual, true, `i = ${i}`)
 			}
 		}
-	});
-
-});
+	})
+})

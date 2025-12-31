@@ -8,29 +8,29 @@
  */
 
 export interface AXProperty {
-	name: string;
-	value: AXValue;
+	name: string
+	value: AXValue
 }
 
 export interface AXValue {
-	type: string;
-	value: any;
+	type: string
+	value: any
 }
 
 export interface AXNode {
-	nodeId: string;
-	ignored?: boolean;
-	ignoredReasons?: AXProperty[];
-	role?: AXValue;
-	chromeRole?: AXValue;
-	name?: AXValue;
-	description?: AXValue;
-	value?: AXValue;
-	properties?: AXProperty[];
-	parentId?: string;
-	childIds?: string[];
-	backendDOMNodeId?: number;
-	frameId?: string;
+	nodeId: string
+	ignored?: boolean
+	ignoredReasons?: AXProperty[]
+	role?: AXValue
+	chromeRole?: AXValue
+	name?: AXValue
+	description?: AXValue
+	value?: AXValue
+	properties?: AXProperty[]
+	parentId?: string
+	childIds?: string[]
+	backendDOMNodeId?: number
+	frameId?: string
 }
 
 /**
@@ -44,18 +44,18 @@ export interface AXNode {
  */
 export function convertToReadibleFormat(axNodes: AXNode[]): string {
 	if (!axNodes.length) {
-		return '';
+		return ''
 	}
 
-	const nodeMap = new Map<string, AXNode>();
-	const processedNodes = new Set<string>();
-	const rootNodes: AXNode[] = [];
+	const nodeMap = new Map<string, AXNode>()
+	const processedNodes = new Set<string>()
+	const rootNodes: AXNode[] = []
 
 	// Build node map and identify root nodes
 	for (const node of axNodes) {
-		nodeMap.set(node.nodeId, node);
-		if (!node.parentId || !axNodes.some(n => n.nodeId === node.parentId)) {
-			rootNodes.push(node);
+		nodeMap.set(node.nodeId, node)
+		if (!node.parentId || !axNodes.some((n) => n.nodeId === node.parentId)) {
+			rootNodes.push(node)
 		}
 	}
 
@@ -69,8 +69,8 @@ export function convertToReadibleFormat(axNodes: AXNode[]): string {
 			'menu',
 			'menuitem',
 			'tab',
-			'tablist'
-		];
+			'tablist',
+		]
 		const skipTexts = [
 			'Skip to main content',
 			'Toggle navigation',
@@ -81,109 +81,122 @@ export function convertToReadibleFormat(axNodes: AXNode[]): string {
 			'On this page',
 			'Edit this page',
 			'Search',
-			'Command+K'
-		];
+			'Command+K',
+		]
 
-		const text = getNodeText(node);
-		const role = node.role?.value?.toString().toLowerCase() || '';
+		const text = getNodeText(node)
+		const role = node.role?.value?.toString().toLowerCase() || ''
 		// allow-any-unicode-next-line
-		return skipRoles.includes(role) ||
-			skipTexts.some(skipText => text.includes(skipText)) ||
+		return (
+			skipRoles.includes(role) ||
+			skipTexts.some((skipText) => text.includes(skipText)) ||
 			text.startsWith('Direct link to') ||
 			text.startsWith('\xAB ') || // Left-pointing double angle quotation mark
 			text.endsWith(' \xBB') || // Right-pointing double angle quotation mark
 			/^#\s*$/.test(text) || // Skip standalone # characters
-			text === '\u200B'; // Zero-width space character
+			text === '\u200B'
+		) // Zero-width space character
 	}
 
 	function getNodeText(node: AXNode): string {
-		const parts: string[] = [];
+		const parts: string[] = []
 
 		// Add name if available
 		if (node.name?.value) {
-			parts.push(String(node.name.value));
+			parts.push(String(node.name.value))
 		}
 
 		// Add value if available and different from name
 		if (node.value?.value && node.value.value !== node.name?.value) {
-			parts.push(String(node.value.value));
+			parts.push(String(node.value.value))
 		}
 
 		// Add description if available and different from name and value
-		if (node.description?.value &&
+		if (
+			node.description?.value &&
 			node.description.value !== node.name?.value &&
-			node.description.value !== node.value?.value) {
-			parts.push(String(node.description.value));
+			node.description.value !== node.value?.value
+		) {
+			parts.push(String(node.description.value))
 		}
 
-		return parts.join(' ').trim();
+		return parts.join(' ').trim()
 	}
 
 	function isCodeBlock(node: AXNode): boolean {
-		return node.role?.value === 'code' ||
-			(node.properties || []).some(p => p.name === 'code-block' || p.name === 'pre');
+		return (
+			node.role?.value === 'code' ||
+			(node.properties || []).some((p) => p.name === 'code-block' || p.name === 'pre')
+		)
 	}
 
-	function processNode(node: AXNode, depth: number = 0, parentContext: { inCodeBlock: boolean; codeText: string[] } = { inCodeBlock: false, codeText: [] }): string[] {
+	function processNode(
+		node: AXNode,
+		depth: number = 0,
+		parentContext: { inCodeBlock: boolean; codeText: string[] } = {
+			inCodeBlock: false,
+			codeText: [],
+		},
+	): string[] {
 		if (!node || node.ignored || processedNodes.has(node.nodeId)) {
-			return [];
+			return []
 		}
 
 		if (isNavigationElement(node)) {
-			return [];
+			return []
 		}
 
-		processedNodes.add(node.nodeId);
-		const lines: string[] = [];
-		const text = getNodeText(node);
-		const currentIsCode = isCodeBlock(node);
-		const context = currentIsCode ? { inCodeBlock: true, codeText: [] } : parentContext;
+		processedNodes.add(node.nodeId)
+		const lines: string[] = []
+		const text = getNodeText(node)
+		const currentIsCode = isCodeBlock(node)
+		const context = currentIsCode ? { inCodeBlock: true, codeText: [] } : parentContext
 
 		if (text) {
-			const indent = '  '.repeat(depth);
+			const indent = '  '.repeat(depth)
 			if (currentIsCode || context.inCodeBlock) {
 				// For code blocks, collect text without adding newlines
-				context.codeText.push(text.trim());
+				context.codeText.push(text.trim())
 			} else {
-				lines.push(indent + text);
+				lines.push(indent + text)
 			}
 		}
 
 		// Process children
 		if (node.childIds) {
 			for (const childId of node.childIds) {
-				const child = nodeMap.get(childId);
+				const child = nodeMap.get(childId)
 				if (child) {
-					const childLines = processNode(child, depth + 1, context);
-					lines.push(...childLines);
+					const childLines = processNode(child, depth + 1, context)
+					lines.push(...childLines)
 				}
 			}
 		}
 
 		// If this is the root code block node, join all collected code text
 		if (currentIsCode && context.codeText.length > 0) {
-			const indent = '  '.repeat(depth);
-			lines.push(indent + context.codeText.join(' '));
+			const indent = '  '.repeat(depth)
+			lines.push(indent + context.codeText.join(' '))
 		}
 
-		return lines;
+		return lines
 	}
 
 	// Process all nodes starting from roots
-	const allLines: string[] = [];
+	const allLines: string[] = []
 	for (const node of rootNodes) {
-		const nodeLines = processNode(node);
+		const nodeLines = processNode(node)
 		if (nodeLines.length > 0) {
-			allLines.push(...nodeLines);
+			allLines.push(...nodeLines)
 		}
 	}
 
 	// Process any remaining unprocessed nodes
 	for (const node of axNodes) {
 		if (!processedNodes.has(node.nodeId)) {
-			const nodeLines = processNode(node);
+			const nodeLines = processNode(node)
 			if (nodeLines.length > 0) {
-				allLines.push(...nodeLines);
+				allLines.push(...nodeLines)
 			}
 		}
 	}
@@ -192,8 +205,8 @@ export function convertToReadibleFormat(axNodes: AXNode[]): string {
 	return allLines
 		.filter((line, index, array) => {
 			// Keep the line if it's not empty or if it's not adjacent to another empty line
-			return line.trim() || (index > 0 && array[index - 1].trim());
+			return line.trim() || (index > 0 && array[index - 1].trim())
 		})
 		.join('\n')
-		.trim();
+		.trim()
 }

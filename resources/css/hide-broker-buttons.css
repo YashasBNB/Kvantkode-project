@@ -1,0 +1,9 @@
+/* Hide broker panel Start/Manage buttons */
+button[title*='Start'],
+button[title*='Manage'],
+button[aria-label*='Start'],
+button[aria-label*='Manage'],
+div[class*='broker'] button,
+.void-broker-panel button {
+	display: none !important;
+}

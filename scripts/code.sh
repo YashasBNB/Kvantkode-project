@@ -19,6 +19,15 @@ function code() {
 	if [[ "$OSTYPE" == "darwin"* ]]; then
 		NAME=`node -p "require('./product.json').nameLong"`
 		CODE="./.build/electron/$NAME.app/Contents/MacOS/Electron"
+		# Fallback if renamed nameLong doesn't match built app bundle name
+		if [[ ! -f "$CODE" ]]; then
+			if [[ -d "./.build/electron" ]]; then
+				FIRST_APP=$(ls -1 "./.build/electron" | grep -E "\.app$" | head -n 1)
+				if [[ -n "$FIRST_APP" ]] && [[ -f "./.build/electron/$FIRST_APP/Contents/MacOS/Electron" ]]; then
+					CODE="./.build/electron/$FIRST_APP/Contents/MacOS/Electron"
+				fi
+			fi
+		fi
 	else
 		NAME=`node -p "require('./product.json').applicationName"`
 		CODE=".build/electron/$NAME"
@@ -28,6 +37,8 @@ function code() {
 	if [[ -z "${VSCODE_SKIP_PRELAUNCH}" ]]; then
 		node build/lib/preLaunch.js
 	fi
+
+	# macOS: Do not patch Info.plist here; changing CFBundleName/DisplayName can break Electron helper lookup.
 
 	# Manage built-in extensions
 	if [[ "$1" == "--builtin" ]]; then
@@ -48,6 +59,7 @@ function code() {
 	fi
 
 	# Launch Code
+	echo "Launching Electron bundle: $CODE"
 	exec "$CODE" . $DISABLE_TEST_EXTENSION "$@"
 }
 

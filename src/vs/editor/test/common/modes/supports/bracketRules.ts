@@ -3,38 +3,38 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharacterPair } from '../../../../common/languages/languageConfiguration.js';
+import { CharacterPair } from '../../../../common/languages/languageConfiguration.js'
 
 const standardBracketRules: CharacterPair[] = [
 	['{', '}'],
 	['[', ']'],
-	['(', ')']
-];
+	['(', ')'],
+]
 
-export const rubyBracketRules = standardBracketRules;
+export const rubyBracketRules = standardBracketRules
 
-export const cppBracketRules = standardBracketRules;
+export const cppBracketRules = standardBracketRules
 
-export const goBracketRules = standardBracketRules;
+export const goBracketRules = standardBracketRules
 
-export const phpBracketRules = standardBracketRules;
+export const phpBracketRules = standardBracketRules
 
-export const vbBracketRules = standardBracketRules;
+export const vbBracketRules = standardBracketRules
 
-export const luaBracketRules = standardBracketRules;
+export const luaBracketRules = standardBracketRules
 
 export const htmlBracketRules: CharacterPair[] = [
 	['<!--', '-->'],
 	['{', '}'],
-	['(', ')']
-];
+	['(', ')'],
+]
 
 export const typescriptBracketRules: CharacterPair[] = [
 	['${', '}'],
 	['{', '}'],
 	['[', ']'],
-	['(', ')']
-];
+	['(', ')'],
+]
 
 export const latexBracketRules: CharacterPair[] = [
 	['{', '}'],
@@ -101,6 +101,5 @@ export const latexBracketRules: CharacterPair[] = [
 	['\\Biggl\\vert', '\\Biggr\\vert'],
 	['\\Biggl\\|', '\\Biggr\\|'],
 	['\\Biggl\\lVert', '\\Biggr\\rVert'],
-	['\\Biggl\\Vert', '\\Biggr\\Vert']
-];
-
+	['\\Biggl\\Vert', '\\Biggr\\Vert'],
+]

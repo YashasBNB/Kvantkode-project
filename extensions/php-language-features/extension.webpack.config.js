@@ -5,9 +5,9 @@
 
 //@ts-check
 
-'use strict';
+'use strict'
 
-const withDefaults = require('../shared.webpack.config');
+const withDefaults = require('../shared.webpack.config')
 
 module.exports = withDefaults({
 	context: __dirname,
@@ -15,6 +15,6 @@ module.exports = withDefaults({
 		extension: './src/phpMain.ts',
 	},
 	output: {
-		filename: 'phpMain.js'
-	}
-});
+		filename: 'phpMain.js',
+	},
+})

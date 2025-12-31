@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BugIndicatingError, onUnexpectedError } from './errors.js';
+import { BugIndicatingError, onUnexpectedError } from './errors.js'
 
 /**
  * Throws an error with the provided message if the provided value does not evaluate to a true Javascript value.
@@ -21,12 +21,12 @@ import { BugIndicatingError, onUnexpectedError } from './errors.js';
  */
 export function ok(value?: unknown, message?: string) {
 	if (!value) {
-		throw new Error(message ? `Assertion failed (${message})` : 'Assertion Failed');
+		throw new Error(message ? `Assertion failed (${message})` : 'Assertion Failed')
 	}
 }
 
 export function assertNever(value: never, message = 'Unreachable'): never {
-	throw new Error(message);
+	throw new Error(message)
 }
 
 /**
@@ -43,11 +43,12 @@ export function assert(
 ): asserts condition {
 	if (!condition) {
 		// if error instance is provided, use it, otherwise create a new one
-		const errorToThrow = typeof messageOrError === 'string'
-			? new BugIndicatingError(`Assertion Failed: ${messageOrError}`)
-			: messageOrError;
+		const errorToThrow =
+			typeof messageOrError === 'string'
+				? new BugIndicatingError(`Assertion Failed: ${messageOrError}`)
+				: messageOrError
 
-		throw errorToThrow;
+		throw errorToThrow
 	}
 }
 
@@ -56,7 +57,7 @@ export function assert(
  */
 export function softAssert(condition: boolean, message = 'Soft Assertion Failed'): void {
 	if (!condition) {
-		onUnexpectedError(new BugIndicatingError(message));
+		onUnexpectedError(new BugIndicatingError(message))
 	}
 }
 
@@ -66,22 +67,25 @@ export function softAssert(condition: boolean, message = 'Soft Assertion Failed'
 export function assertFn(condition: () => boolean): void {
 	if (!condition()) {
 		// eslint-disable-next-line no-debugger
-		debugger;
+		debugger
 		// Reevaluate `condition` again to make debugging easier
-		condition();
-		onUnexpectedError(new BugIndicatingError('Assertion Failed'));
+		condition()
+		onUnexpectedError(new BugIndicatingError('Assertion Failed'))
 	}
 }
 
-export function checkAdjacentItems<T>(items: readonly T[], predicate: (item1: T, item2: T) => boolean): boolean {
-	let i = 0;
+export function checkAdjacentItems<T>(
+	items: readonly T[],
+	predicate: (item1: T, item2: T) => boolean,
+): boolean {
+	let i = 0
 	while (i < items.length - 1) {
-		const a = items[i];
-		const b = items[i + 1];
+		const a = items[i]
+		const b = items[i + 1]
 		if (!predicate(a, b)) {
-			return false;
+			return false
 		}
-		i++;
+		i++
 	}
-	return true;
+	return true
 }

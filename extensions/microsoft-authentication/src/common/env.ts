@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Uri } from 'vscode';
+import { Uri } from 'vscode'
 
 const VALID_DESKTOP_CALLBACK_SCHEMES = [
 	'vscode',
@@ -12,8 +12,8 @@ const VALID_DESKTOP_CALLBACK_SCHEMES = [
 	// list until we can figure out a way to fix this behavior in browsers.
 	// 'code-oss',
 	'vscode-wsl',
-	'vscode-exploration'
-];
+	'vscode-exploration',
+]
 
 export function isSupportedClient(uri: Uri): boolean {
 	return (
@@ -26,5 +26,5 @@ export function isSupportedClient(uri: Uri): boolean {
 		/^localhost:\d+$/.test(uri.authority) ||
 		// 127.0.0.1
 		/^127\.0\.0\.1:\d+$/.test(uri.authority)
-	);
+	)
 }

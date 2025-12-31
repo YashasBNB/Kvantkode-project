@@ -3,43 +3,54 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IContextKeyService, IScopedContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IEditorOptions } from '../../../../platform/editor/common/editor.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ServiceCollection } from '../../../../platform/instantiation/common/serviceCollection.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { editorBackground, editorForeground, inputBackground } from '../../../../platform/theme/common/colorRegistry.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { EditorPane } from '../../../browser/parts/editor/editorPane.js';
-import { IEditorOpenContext } from '../../../common/editor.js';
-import { Memento } from '../../../common/memento.js';
-import { EDITOR_DRAG_AND_DROP_BACKGROUND } from '../../../common/theme.js';
-import { IEditorGroup } from '../../../services/editor/common/editorGroupsService.js';
-import { IChatModel, IExportableChatData, ISerializableChatData } from '../common/chatModel.js';
-import { CHAT_PROVIDER_ID } from '../common/chatParticipantContribTypes.js';
-import { IChatService } from '../common/chatService.js';
-import { ChatAgentLocation, ChatMode } from '../common/constants.js';
-import { clearChatEditor } from './actions/chatClear.js';
-import { ChatEditorInput } from './chatEditorInput.js';
-import { ChatWidget, IChatViewState } from './chatWidget.js';
+import * as dom from '../../../../base/browser/dom.js'
+import { CancellationToken } from '../../../../base/common/cancellation.js'
+import {
+	IContextKeyService,
+	IScopedContextKeyService,
+} from '../../../../platform/contextkey/common/contextkey.js'
+import { IEditorOptions } from '../../../../platform/editor/common/editor.js'
+import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js'
+import { ServiceCollection } from '../../../../platform/instantiation/common/serviceCollection.js'
+import {
+	IStorageService,
+	StorageScope,
+	StorageTarget,
+} from '../../../../platform/storage/common/storage.js'
+import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js'
+import {
+	editorBackground,
+	editorForeground,
+	inputBackground,
+} from '../../../../platform/theme/common/colorRegistry.js'
+import { IThemeService } from '../../../../platform/theme/common/themeService.js'
+import { EditorPane } from '../../../browser/parts/editor/editorPane.js'
+import { IEditorOpenContext } from '../../../common/editor.js'
+import { Memento } from '../../../common/memento.js'
+import { EDITOR_DRAG_AND_DROP_BACKGROUND } from '../../../common/theme.js'
+import { IEditorGroup } from '../../../services/editor/common/editorGroupsService.js'
+import { IChatModel, IExportableChatData, ISerializableChatData } from '../common/chatModel.js'
+import { CHAT_PROVIDER_ID } from '../common/chatParticipantContribTypes.js'
+import { IChatService } from '../common/chatService.js'
+import { ChatAgentLocation, ChatMode } from '../common/constants.js'
+import { clearChatEditor } from './actions/chatClear.js'
+import { ChatEditorInput } from './chatEditorInput.js'
+import { ChatWidget, IChatViewState } from './chatWidget.js'
 
 export interface IChatEditorOptions extends IEditorOptions {
-	target?: { sessionId: string } | { data: IExportableChatData | ISerializableChatData };
+	target?: { sessionId: string } | { data: IExportableChatData | ISerializableChatData }
 }
 
 export class ChatEditor extends EditorPane {
-	private widget!: ChatWidget;
+	private widget!: ChatWidget
 
-	private _scopedContextKeyService!: IScopedContextKeyService;
+	private _scopedContextKeyService!: IScopedContextKeyService
 	override get scopedContextKeyService() {
-		return this._scopedContextKeyService;
+		return this._scopedContextKeyService
 	}
 
-	private _memento: Memento | undefined;
-	private _viewState: IChatViewState | undefined;
+	private _memento: Memento | undefined
+	private _viewState: IChatViewState | undefined
 
 	constructor(
 		group: IEditorGroup,
@@ -50,18 +61,25 @@ export class ChatEditor extends EditorPane {
 		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 		@IChatService private readonly chatService: IChatService,
 	) {
-		super(ChatEditorInput.EditorID, group, telemetryService, themeService, storageService);
+		super(ChatEditorInput.EditorID, group, telemetryService, themeService, storageService)
 	}
 
 	private async clear() {
 		if (this.input) {
-			return this.instantiationService.invokeFunction(clearChatEditor, this.input as ChatEditorInput);
+			return this.instantiationService.invokeFunction(
+				clearChatEditor,
+				this.input as ChatEditorInput,
+			)
 		}
 	}
 
 	protected override createEditor(parent: HTMLElement): void {
-		this._scopedContextKeyService = this._register(this.contextKeyService.createScoped(parent));
-		const scopedInstantiationService = this._register(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, this.scopedContextKeyService])));
+		this._scopedContextKeyService = this._register(this.contextKeyService.createScoped(parent))
+		const scopedInstantiationService = this._register(
+			this.instantiationService.createChild(
+				new ServiceCollection([IContextKeyService, this.scopedContextKeyService]),
+			),
+		)
 
 		this.widget = this._register(
 			scopedInstantiationService.createInstance(
@@ -69,19 +87,23 @@ export class ChatEditor extends EditorPane {
 				ChatAgentLocation.Panel,
 				undefined,
 				{
-					autoScroll: mode => mode !== ChatMode.Ask,
+					autoScroll: (mode) => mode !== ChatMode.Ask,
 					renderFollowups: true,
 					supportsFileReferences: true,
 					supportsAdditionalParticipants: true,
 					rendererOptions: {
 						renderTextEditsAsSummary: (uri) => {
-							return this.chatService.isEditingLocation(ChatAgentLocation.Panel);
+							return this.chatService.isEditingLocation(ChatAgentLocation.Panel)
 						},
-						referencesExpandedWhenEmptyResponse: !this.chatService.isEditingLocation(ChatAgentLocation.Panel),
-						progressMessageAtBottomOfResponse: mode => mode !== ChatMode.Ask,
+						referencesExpandedWhenEmptyResponse: !this.chatService.isEditingLocation(
+							ChatAgentLocation.Panel,
+						),
+						progressMessageAtBottomOfResponse: (mode) => mode !== ChatMode.Ask,
 					},
 					enableImplicitContext: true,
-					enableWorkingSet: this.chatService.isEditingLocation(ChatAgentLocation.Panel) ? 'explicit' : undefined,
+					enableWorkingSet: this.chatService.isEditingLocation(ChatAgentLocation.Panel)
+						? 'explicit'
+						: undefined,
 					supportsChangingModes: this.chatService.isEditingLocation(ChatAgentLocation.Panel),
 				},
 				{
@@ -89,71 +111,83 @@ export class ChatEditor extends EditorPane {
 					listBackground: editorBackground,
 					overlayBackground: EDITOR_DRAG_AND_DROP_BACKGROUND,
 					inputEditorBackground: inputBackground,
-					resultEditorBackground: editorBackground
-				}));
-		this._register(this.widget.onDidClear(() => this.clear()));
-		this.widget.render(parent);
-		this.widget.setVisible(true);
+					resultEditorBackground: editorBackground,
+				},
+			),
+		)
+		this._register(this.widget.onDidClear(() => this.clear()))
+		this.widget.render(parent)
+		this.widget.setVisible(true)
 	}
 
 	protected override setEditorVisible(visible: boolean): void {
-		super.setEditorVisible(visible);
+		super.setEditorVisible(visible)
 
-		this.widget?.setVisible(visible);
+		this.widget?.setVisible(visible)
 	}
 
 	public override focus(): void {
-		super.focus();
+		super.focus()
 
-		this.widget?.focusInput();
+		this.widget?.focusInput()
 	}
 
 	override clearInput(): void {
-		this.saveState();
-		super.clearInput();
+		this.saveState()
+		super.clearInput()
 	}
 
-	override async setInput(input: ChatEditorInput, options: IChatEditorOptions | undefined, context: IEditorOpenContext, token: CancellationToken): Promise<void> {
-		super.setInput(input, options, context, token);
+	override async setInput(
+		input: ChatEditorInput,
+		options: IChatEditorOptions | undefined,
+		context: IEditorOpenContext,
+		token: CancellationToken,
+	): Promise<void> {
+		super.setInput(input, options, context, token)
 
-		const editorModel = await input.resolve();
+		const editorModel = await input.resolve()
 		if (!editorModel) {
-			throw new Error(`Failed to get model for chat editor. id: ${input.sessionId}`);
+			throw new Error(`Failed to get model for chat editor. id: ${input.sessionId}`)
 		}
 
 		if (!this.widget) {
-			throw new Error('ChatEditor lifecycle issue: no editor widget');
+			throw new Error('ChatEditor lifecycle issue: no editor widget')
 		}
 
-		this.updateModel(editorModel.model, options?.viewState ?? input.options.viewState);
+		this.updateModel(editorModel.model, options?.viewState ?? input.options.viewState)
 	}
 
 	private updateModel(model: IChatModel, viewState?: IChatViewState): void {
-		this._memento = new Memento('interactive-session-editor-' + CHAT_PROVIDER_ID, this.storageService);
-		this._viewState = viewState ?? this._memento.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE) as IChatViewState;
-		this.widget.setModel(model, { ...this._viewState });
+		this._memento = new Memento(
+			'interactive-session-editor-' + CHAT_PROVIDER_ID,
+			this.storageService,
+		)
+		this._viewState =
+			viewState ??
+			(this._memento.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE) as IChatViewState)
+		this.widget.setModel(model, { ...this._viewState })
 	}
 
 	protected override saveState(): void {
-		this.widget?.saveState();
+		this.widget?.saveState()
 
 		if (this._memento && this._viewState) {
-			const widgetViewState = this.widget.getViewState();
+			const widgetViewState = this.widget.getViewState()
 
 			// Need to set props individually on the memento
-			this._viewState.inputValue = widgetViewState.inputValue;
-			this._viewState.inputState = widgetViewState.inputState;
-			this._memento.saveMemento();
+			this._viewState.inputValue = widgetViewState.inputValue
+			this._viewState.inputState = widgetViewState.inputState
+			this._memento.saveMemento()
 		}
 	}
 
 	override getViewState(): object | undefined {
-		return { ...this._viewState };
+		return { ...this._viewState }
 	}
 
 	override layout(dimension: dom.Dimension, position?: dom.IDomPosition | undefined): void {
 		if (this.widget) {
-			this.widget.layout(dimension.height, dimension.width);
+			this.widget.layout(dimension.height, dimension.width)
 		}
 	}
 }

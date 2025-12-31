@@ -3,50 +3,80 @@
  *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { registerSingleton, InstantiationType } from '../../../../platform/instantiation/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
+import { Disposable } from '../../../../base/common/lifecycle.js'
+import {
+	registerSingleton,
+	InstantiationType,
+} from '../../../../platform/instantiation/common/extensions.js'
+import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js'
+import {
+	IStorageService,
+	StorageScope,
+	StorageTarget,
+} from '../../../../platform/storage/common/storage.js'
 
-import { URI } from '../../../../base/common/uri.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { ILLMMessageService } from '../common/sendLLMMessageService.js';
-import { chat_userMessageContent, isABuiltinToolName } from '../common/prompt/prompts.js';
-import { AnthropicReasoning, getErrorMessage, RawToolCallObj, RawToolParamsObj } from '../common/sendLLMMessageTypes.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { FeatureName, ModelSelection, ModelSelectionOptions } from '../common/voidSettingsTypes.js';
-import { IVoidSettingsService } from '../common/voidSettingsService.js';
-import { approvalTypeOfBuiltinToolName, BuiltinToolCallParams, ToolCallParams, ToolName, ToolResult } from '../common/toolsServiceTypes.js';
-import { IToolsService } from './toolsService.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { ILanguageFeaturesService } from '../../../../editor/common/services/languageFeatures.js';
-import { ChatMessage, CheckpointEntry, CodespanLocationLink, StagingSelectionItem, ToolMessage } from '../common/chatThreadServiceTypes.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { IMetricsService } from '../common/metricsService.js';
-import { shorten } from '../../../../base/common/labels.js';
-import { IVoidModelService } from '../common/voidModelService.js';
-import { findLast, findLastIdx } from '../../../../base/common/arraysFind.js';
-import { IEditCodeService } from './editCodeServiceInterface.js';
-import { VoidFileSnapshot } from '../common/editCodeServiceTypes.js';
-import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
-import { truncate } from '../../../../base/common/strings.js';
-import { THREAD_STORAGE_KEY } from '../common/storageKeys.js';
-import { IConvertToLLMMessageService } from './convertToLLMMessageService.js';
-import { timeout } from '../../../../base/common/async.js';
-import { deepClone } from '../../../../base/common/objects.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { IDirectoryStrService } from '../common/directoryStrService.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { IMCPService } from '../common/mcpService.js';
-import { RawMCPToolCall } from '../common/mcpServiceTypes.js';
-
+import { URI } from '../../../../base/common/uri.js'
+import { Emitter, Event } from '../../../../base/common/event.js'
+import { ILLMMessageService } from '../common/sendLLMMessageService.js'
+import { chat_userMessageContent, isABuiltinToolName } from '../common/prompt/prompts.js'
+import {
+	AnthropicReasoning,
+	getErrorMessage,
+	RawToolCallObj,
+	RawToolParamsObj,
+} from '../common/sendLLMMessageTypes.js'
+import { generateUuid } from '../../../../base/common/uuid.js'
+import { FeatureName, ModelSelection, ModelSelectionOptions } from '../common/voidSettingsTypes.js'
+import { IVoidSettingsService } from '../common/voidSettingsService.js'
+import {
+	approvalTypeOfBuiltinToolName,
+	BuiltinToolCallParams,
+	ToolCallParams,
+	ToolName,
+	ToolResult,
+} from '../common/toolsServiceTypes.js'
+import { IToolsService } from './toolsService.js'
+import { CancellationToken } from '../../../../base/common/cancellation.js'
+import { ILanguageFeaturesService } from '../../../../editor/common/services/languageFeatures.js'
+import {
+	ChatMessage,
+	CheckpointEntry,
+	CodespanLocationLink,
+	StagingSelectionItem,
+	ToolMessage,
+} from '../common/chatThreadServiceTypes.js'
+import { Position } from '../../../../editor/common/core/position.js'
+import { IMetricsService } from '../common/metricsService.js'
+import { shorten } from '../../../../base/common/labels.js'
+import { IVoidModelService } from '../common/voidModelService.js'
+import { findLast, findLastIdx } from '../../../../base/common/arraysFind.js'
+import { IEditCodeService } from './editCodeServiceInterface.js'
+import { VoidFileSnapshot } from '../common/editCodeServiceTypes.js'
+import {
+	INotificationService,
+	Severity,
+} from '../../../../platform/notification/common/notification.js'
+import { ICommandService } from '../../../../platform/commands/common/commands.js'
+import { truncate } from '../../../../base/common/strings.js'
+import { THREAD_STORAGE_KEY } from '../common/storageKeys.js'
+import { IConvertToLLMMessageService } from './convertToLLMMessageService.js'
+import { timeout } from '../../../../base/common/async.js'
+import { deepClone } from '../../../../base/common/objects.js'
+import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js'
+import { IDirectoryStrService } from '../common/directoryStrService.js'
+import { IFileService } from '../../../../platform/files/common/files.js'
+import { IMCPService } from '../common/mcpService.js'
+import { RawMCPToolCall } from '../common/mcpServiceTypes.js'
+import { IContinueChatClient } from './continueChatClient.js'
 
 // related to retrying when LLM message has error
 const CHAT_RETRIES = 3
 const RETRY_DELAY = 2500
 
-
-const findStagingSelectionIndex = (currentSelections: StagingSelectionItem[] | undefined, newSelection: StagingSelectionItem): number | null => {
+const findStagingSelectionIndex = (
+	currentSelections: StagingSelectionItem[] | undefined,
+	newSelection: StagingSelectionItem,
+): number | null => {
 	if (!currentSelections) return null
 
 	for (let i = 0; i < currentSelections.length; i += 1) {
@@ -72,7 +102,6 @@ const findStagingSelectionIndex = (currentSelections: StagingSelectionItem[] | u
 	return null
 }
 
-
 /*
 
 Store a checkpoint of all "before" files on each x.
@@ -94,7 +123,6 @@ INVARIANT:
 A checkpoint appears before every LLM message, and before every user message (before user really means directly after LLM is done).
 */
 
-
 type UserMessageType = ChatMessage & { role: 'user' }
 type UserMessageState = UserMessageType['state']
 const defaultMessageState: UserMessageState = {
@@ -105,52 +133,47 @@ const defaultMessageState: UserMessageState = {
 // a 'thread' means a chat message history
 
 type WhenMounted = {
-	textAreaRef: { current: HTMLTextAreaElement | null }; // the textarea that this thread has, gets set in SidebarChat
-	scrollToBottom: () => void;
+	textAreaRef: { current: HTMLTextAreaElement | null } // the textarea that this thread has, gets set in SidebarChat
+	scrollToBottom: () => void
 }
 
-
-
 export type ThreadType = {
-	id: string; // store the id here too
-	createdAt: string; // ISO string
-	lastModified: string; // ISO string
+	id: string // store the id here too
+	createdAt: string // ISO string
+	lastModified: string // ISO string
 
-	messages: ChatMessage[];
-	filesWithUserChanges: Set<string>;
+	messages: ChatMessage[]
+	filesWithUserChanges: Set<string>
 
 	// this doesn't need to go in a state object, but feels right
 	state: {
-		currCheckpointIdx: number | null; // the latest checkpoint we're at (null if not at a particular checkpoint, like if the chat is streaming, or chat just finished and we haven't clicked on a checkpt)
+		currCheckpointIdx: number | null // the latest checkpoint we're at (null if not at a particular checkpoint, like if the chat is streaming, or chat just finished and we haven't clicked on a checkpt)
 
-		stagingSelections: StagingSelectionItem[];
-		focusedMessageIdx: number | undefined; // index of the user message that is being edited (undefined if none)
+		stagingSelections: StagingSelectionItem[]
+		focusedMessageIdx: number | undefined // index of the user message that is being edited (undefined if none)
 
-		linksOfMessageIdx: { // eg. link = linksOfMessageIdx[4]['RangeFunction']
+		linksOfMessageIdx: {
+			// eg. link = linksOfMessageIdx[4]['RangeFunction']
 			[messageIdx: number]: {
 				[codespanName: string]: CodespanLocationLink
 			}
 		}
 
-
 		mountedInfo?: {
 			whenMounted: Promise<WhenMounted>
 			_whenMountedResolver: (res: WhenMounted) => void
-			mountedIsResolvedRef: { current: boolean };
+			mountedIsResolvedRef: { current: boolean }
 		}
-
-
-	};
+	}
 }
 
 type ChatThreads = {
-	[id: string]: undefined | ThreadType;
+	[id: string]: undefined | ThreadType
 }
 
-
 export type ThreadsState = {
-	allThreads: ChatThreads;
-	currentThreadId: string; // intended for internal use only
+	allThreads: ChatThreads
+	currentThreadId: string // intended for internal use only
 }
 
 export type IsRunningType =
@@ -161,48 +184,56 @@ export type IsRunningType =
 	| undefined
 
 export type ThreadStreamState = {
-	[threadId: string]: undefined | {
-		isRunning: undefined;
-		error?: { message: string, fullError: Error | null, };
-		llmInfo?: undefined;
-		toolInfo?: undefined;
-		interrupt?: undefined;
-	} | { // an assistant message is being written
-		isRunning: 'LLM';
-		error?: undefined;
-		llmInfo: {
-			displayContentSoFar: string;
-			reasoningSoFar: string;
-			toolCallSoFar: RawToolCallObj | null;
-		};
-		toolInfo?: undefined;
-		interrupt: Promise<() => void>; // calling this should have no effect on state - would be too confusing. it just cancels the tool
-	} | { // a tool is being run
-		isRunning: 'tool';
-		error?: undefined;
-		llmInfo?: undefined;
-		toolInfo: {
-			toolName: ToolName;
-			toolParams: ToolCallParams<ToolName>;
-			id: string;
-			content: string;
-			rawParams: RawToolParamsObj;
-			mcpServerName: string | undefined;
-		};
-		interrupt: Promise<() => void>;
-	} | {
-		isRunning: 'awaiting_user';
-		error?: undefined;
-		llmInfo?: undefined;
-		toolInfo?: undefined;
-		interrupt?: undefined;
-	} | {
-		isRunning: 'idle';
-		error?: undefined;
-		llmInfo?: undefined;
-		toolInfo?: undefined;
-		interrupt: 'not_needed' | Promise<() => void>; // calling this should have no effect on state - would be too confusing. it just cancels the tool
-	}
+	[threadId: string]:
+		| undefined
+		| {
+				isRunning: undefined
+				error?: { message: string; fullError: Error | null }
+				llmInfo?: undefined
+				toolInfo?: undefined
+				interrupt?: undefined
+		  }
+		| {
+				// an assistant message is being written
+				isRunning: 'LLM'
+				error?: undefined
+				llmInfo: {
+					displayContentSoFar: string
+					reasoningSoFar: string
+					toolCallSoFar: RawToolCallObj | null
+				}
+				toolInfo?: undefined
+				interrupt: Promise<() => void> // calling this should have no effect on state - would be too confusing. it just cancels the tool
+		  }
+		| {
+				// a tool is being run
+				isRunning: 'tool'
+				error?: undefined
+				llmInfo?: undefined
+				toolInfo: {
+					toolName: ToolName
+					toolParams: ToolCallParams<ToolName>
+					id: string
+					content: string
+					rawParams: RawToolParamsObj
+					mcpServerName: string | undefined
+				}
+				interrupt: Promise<() => void>
+		  }
+		| {
+				isRunning: 'awaiting_user'
+				error?: undefined
+				llmInfo?: undefined
+				toolInfo?: undefined
+				interrupt?: undefined
+		  }
+		| {
+				isRunning: 'idle'
+				error?: undefined
+				llmInfo?: undefined
+				toolInfo?: undefined
+				interrupt: 'not_needed' | Promise<() => void> // calling this should have no effect on state - would be too confusing. it just cancels the tool
+		  }
 }
 
 const newThreadObject = () => {
@@ -218,31 +249,26 @@ const newThreadObject = () => {
 			focusedMessageIdx: undefined,
 			linksOfMessageIdx: {},
 		},
-		filesWithUserChanges: new Set()
+		filesWithUserChanges: new Set(),
 	} satisfies ThreadType
 }
 
-
-
-
-
-
 export interface IChatThreadService {
-	readonly _serviceBrand: undefined;
+	readonly _serviceBrand: undefined
 
-	readonly state: ThreadsState;
-	readonly streamState: ThreadStreamState; // not persistent
+	readonly state: ThreadsState
+	readonly streamState: ThreadStreamState // not persistent
 
-	onDidChangeCurrentThread: Event<void>;
+	onDidChangeCurrentThread: Event<void>
 	onDidChangeStreamState: Event<{ threadId: string }>
 
-	getCurrentThread(): ThreadType;
-	openNewThread(): void;
-	switchToThread(threadId: string): void;
+	getCurrentThread(): ThreadType
+	openNewThread(): void
+	switchToThread(threadId: string): void
 
 	// thread selector
-	deleteThread(threadId: string): void;
-	duplicateThread(threadId: string): void;
+	deleteThread(threadId: string): void
+	duplicateThread(threadId: string): void
 
 	// exposed getters/setters
 	// these all apply to current thread
@@ -252,65 +278,93 @@ export interface IChatThreadService {
 	setCurrentThreadState: (newState: Partial<ThreadType['state']>) => void
 
 	// you can edit multiple messages - the one you're currently editing is "focused", and we add items to that one when you press cmd+L.
-	getCurrentFocusedMessageIdx(): number | undefined;
-	isCurrentlyFocusingMessage(): boolean;
-	setCurrentlyFocusedMessageIdx(messageIdx: number | undefined): void;
+	getCurrentFocusedMessageIdx(): number | undefined
+	isCurrentlyFocusingMessage(): boolean
+	setCurrentlyFocusedMessageIdx(messageIdx: number | undefined): void
 
-	popStagingSelections(numPops?: number): void;
-	addNewStagingSelection(newSelection: StagingSelectionItem): void;
+	popStagingSelections(numPops?: number): void
+	addNewStagingSelection(newSelection: StagingSelectionItem): void
 
-	dangerousSetState: (newState: ThreadsState) => void;
-	resetState: () => void;
+	dangerousSetState: (newState: ThreadsState) => void
+	resetState: () => void
 
 	// // current thread's staging selections
 	// closeCurrentStagingSelectionsInMessage(opts: { messageIdx: number }): void;
 	// closeCurrentStagingSelectionsInThread(): void;
 
 	// codespan links (link to symbols in the markdown)
-	getCodespanLink(opts: { codespanStr: string, messageIdx: number, threadId: string }): CodespanLocationLink | undefined;
-	addCodespanLink(opts: { newLinkText: string, newLinkLocation: CodespanLocationLink, messageIdx: number, threadId: string }): void;
-	generateCodespanLink(opts: { codespanStr: string, threadId: string }): Promise<CodespanLocationLink>;
+	getCodespanLink(opts: {
+		codespanStr: string
+		messageIdx: number
+		threadId: string
+	}): CodespanLocationLink | undefined
+	addCodespanLink(opts: {
+		newLinkText: string
+		newLinkLocation: CodespanLocationLink
+		messageIdx: number
+		threadId: string
+	}): void
+	generateCodespanLink(opts: {
+		codespanStr: string
+		threadId: string
+	}): Promise<CodespanLocationLink>
 	getRelativeStr(uri: URI): string | undefined
 
 	// entry pts
-	abortRunning(threadId: string): Promise<void>;
-	dismissStreamError(threadId: string): void;
+	abortRunning(threadId: string): Promise<void>
+	dismissStreamError(threadId: string): void
 
 	// call to edit a message
-	editUserMessageAndStreamResponse({ userMessage, messageIdx, threadId }: { userMessage: string, messageIdx: number, threadId: string }): Promise<void>;
+	editUserMessageAndStreamResponse({
+		userMessage,
+		messageIdx,
+		threadId,
+	}: {
+		userMessage: string
+		messageIdx: number
+		threadId: string
+	}): Promise<void>
 
 	// call to add a message
-	addUserMessageAndStreamResponse({ userMessage, threadId }: { userMessage: string, threadId: string }): Promise<void>;
+	addUserMessageAndStreamResponse({
+		userMessage,
+		threadId,
+	}: {
+		userMessage: string
+		threadId: string
+	}): Promise<void>
 
 	// approve/reject
-	approveLatestToolRequest(threadId: string): void;
-	rejectLatestToolRequest(threadId: string): void;
+	approveLatestToolRequest(threadId: string): void
+	rejectLatestToolRequest(threadId: string): void
 
 	// jump to history
-	jumpToCheckpointBeforeMessageIdx(opts: { threadId: string, messageIdx: number, jumpToUserModified: boolean }): void;
+	jumpToCheckpointBeforeMessageIdx(opts: {
+		threadId: string
+		messageIdx: number
+		jumpToUserModified: boolean
+	}): void
 
 	focusCurrentChat: () => Promise<void>
 	blurCurrentChat: () => Promise<void>
 }
 
-export const IChatThreadService = createDecorator<IChatThreadService>('voidChatThreadService');
+export const IChatThreadService = createDecorator<IChatThreadService>('voidChatThreadService')
 class ChatThreadService extends Disposable implements IChatThreadService {
-	_serviceBrand: undefined;
+	_serviceBrand: undefined
 
 	// this fires when the current thread changes at all (a switch of currentThread, or a message added to it, etc)
-	private readonly _onDidChangeCurrentThread = new Emitter<void>();
-	readonly onDidChangeCurrentThread: Event<void> = this._onDidChangeCurrentThread.event;
+	private readonly _onDidChangeCurrentThread = new Emitter<void>()
+	readonly onDidChangeCurrentThread: Event<void> = this._onDidChangeCurrentThread.event
 
-	private readonly _onDidChangeStreamState = new Emitter<{ threadId: string }>();
-	readonly onDidChangeStreamState: Event<{ threadId: string }> = this._onDidChangeStreamState.event;
+	private readonly _onDidChangeStreamState = new Emitter<{ threadId: string }>()
+	readonly onDidChangeStreamState: Event<{ threadId: string }> = this._onDidChangeStreamState.event
 
 	readonly streamState: ThreadStreamState = {}
 	state: ThreadsState // allThreads is persisted, currentThread is not
 
 	// used in checkpointing
 	// private readonly _userModifiedFilesToCheckInCheckpoints = new LRUCache<string, null>(50)
-
-
 
 	constructor(
 		@IStorageService private readonly _storageService: IStorageService,
@@ -322,11 +376,14 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		@IMetricsService private readonly _metricsService: IMetricsService,
 		@IEditCodeService private readonly _editCodeService: IEditCodeService,
 		@INotificationService private readonly _notificationService: INotificationService,
-		@IConvertToLLMMessageService private readonly _convertToLLMMessagesService: IConvertToLLMMessageService,
+		@IConvertToLLMMessageService
+		private readonly _convertToLLMMessagesService: IConvertToLLMMessageService,
 		@IWorkspaceContextService private readonly _workspaceContextService: IWorkspaceContextService,
 		@IDirectoryStrService private readonly _directoryStringService: IDirectoryStrService,
 		@IFileService private readonly _fileService: IFileService,
 		@IMCPService private readonly _mcpService: IMCPService,
+		@ICommandService private readonly _commandService: ICommandService,
+		@IContinueChatClient private readonly _continueChatClient: IContinueChatClient,
 	) {
 		super()
 		this.state = { allThreads: {}, currentThreadId: null as unknown as string } // default state
@@ -342,7 +399,6 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		// always be in a thread
 		this.openNewThread()
 
-
 		// keep track of user-modified files
 		// const disposablesOfModelId: { [modelId: string]: IDisposable[] } = {}
 		// this._register(
@@ -357,7 +413,6 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		// 	if (!(e.id in disposablesOfModelId)) return
 		// 	disposablesOfModelId[e.id].forEach(d => d.dispose())
 		// }))
-
 	}
 
 	async focusCurrentChat() {
@@ -379,8 +434,6 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		}
 	}
 
-
-
 	dangerousSetState = (newState: ThreadsState) => {
 		this.state = newState
 		this._onDidChangeCurrentThread.fire()
@@ -395,111 +448,118 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 	// should probably re-use code from void/src/vs/base/common/marshalling.ts instead. but this is simple enough
 	private _convertThreadDataFromStorage(threadsStr: string): ChatThreads {
 		return JSON.parse(threadsStr, (key, value) => {
-			if (value && typeof value === 'object' && value.$mid === 1) { // $mid is the MarshalledId. $mid === 1 means it is a URI
-				return URI.from(value); // TODO URI.revive instead of this?
+			if (value && typeof value === 'object' && value.$mid === 1) {
+				// $mid is the MarshalledId. $mid === 1 means it is a URI
+				return URI.from(value) // TODO URI.revive instead of this?
 			}
-			return value;
-		});
+			return value
+		})
 	}
 
 	private _readAllThreads(): ChatThreads | null {
-		const threadsStr = this._storageService.get(THREAD_STORAGE_KEY, StorageScope.APPLICATION);
+		const threadsStr = this._storageService.get(THREAD_STORAGE_KEY, StorageScope.APPLICATION)
 		if (!threadsStr) {
 			return null
 		}
-		const threads = this._convertThreadDataFromStorage(threadsStr);
+		const threads = this._convertThreadDataFromStorage(threadsStr)
 
 		return threads
 	}
 
 	private _storeAllThreads(threads: ChatThreads) {
-		const serializedThreads = JSON.stringify(threads);
+		const serializedThreads = JSON.stringify(threads)
 		this._storageService.store(
 			THREAD_STORAGE_KEY,
 			serializedThreads,
 			StorageScope.APPLICATION,
-			StorageTarget.USER
-		);
+			StorageTarget.USER,
+		)
 	}
-
 
 	// this should be the only place this.state = ... appears besides constructor
 	private _setState(state: Partial<ThreadsState>, doNotRefreshMountInfo?: boolean) {
 		const newState = {
 			...this.state,
-			...state
+			...state,
 		}
 
 		this.state = newState
 
 		this._onDidChangeCurrentThread.fire()
 
-
 		// if we just switched to a thread, update its current stream state if it's not streaming to possibly streaming
 		const threadId = newState.currentThreadId
 		const streamState = this.streamState[threadId]
 		if (streamState?.isRunning === undefined && !streamState?.error) {
-
 			// set streamState
 			const messages = newState.allThreads[threadId]?.messages
 			const lastMessage = messages && messages[messages.length - 1]
 			// if awaiting user but stream state doesn't indicate it (happens if restart Void)
 			if (lastMessage && lastMessage.role === 'tool' && lastMessage.type === 'tool_request')
-				this._setStreamState(threadId, { isRunning: 'awaiting_user', })
+				this._setStreamState(threadId, { isRunning: 'awaiting_user' })
 
 			// if running now but stream state doesn't indicate it (happens if restart Void), cancel that last tool
 			if (lastMessage && lastMessage.role === 'tool' && lastMessage.type === 'running_now') {
-
-				this._updateLatestTool(threadId, { role: 'tool', type: 'rejected', content: lastMessage.content, id: lastMessage.id, rawParams: lastMessage.rawParams, result: null, name: lastMessage.name, params: lastMessage.params, mcpServerName: lastMessage.mcpServerName })
+				this._updateLatestTool(threadId, {
+					role: 'tool',
+					type: 'rejected',
+					content: lastMessage.content,
+					id: lastMessage.id,
+					rawParams: lastMessage.rawParams,
+					result: null,
+					name: lastMessage.name,
+					params: lastMessage.params,
+					mcpServerName: lastMessage.mcpServerName,
+				})
 			}
-
 		}
-
 
 		// if we did not just set the state to true, set mount info
 		if (doNotRefreshMountInfo) return
 
 		let whenMountedResolver: (w: WhenMounted) => void
-		const whenMountedPromise = new Promise<WhenMounted>((res) => whenMountedResolver = res)
+		const whenMountedPromise = new Promise<WhenMounted>((res) => (whenMountedResolver = res))
 
-		this._setThreadState(threadId, {
-			mountedInfo: {
-				whenMounted: whenMountedPromise,
-				mountedIsResolvedRef: { current: false },
-				_whenMountedResolver: (w: WhenMounted) => {
-					whenMountedResolver(w)
-					const mountInfo = this.state.allThreads[threadId]?.state.mountedInfo
-					if (mountInfo) mountInfo.mountedIsResolvedRef.current = true
+		this._setThreadState(
+			threadId,
+			{
+				mountedInfo: {
+					whenMounted: whenMountedPromise,
+					mountedIsResolvedRef: { current: false },
+					_whenMountedResolver: (w: WhenMounted) => {
+						whenMountedResolver(w)
+						const mountInfo = this.state.allThreads[threadId]?.state.mountedInfo
+						if (mountInfo) mountInfo.mountedIsResolvedRef.current = true
+					},
 				},
-			}
-		}, true) // do not trigger an update
-
-
-
+			},
+			true,
+		) // do not trigger an update
 	}
-
 
 	private _setStreamState(threadId: string, state: ThreadStreamState[string]) {
 		this.streamState[threadId] = state
 		this._onDidChangeStreamState.fire({ threadId })
 	}
 
-
 	// ---------- streaming ----------
-
-
 
 	private _currentModelSelectionProps = () => {
 		// these settings should not change throughout the loop (eg anthropic breaks if you change its thinking mode and it's using tools)
 		const featureName: FeatureName = 'Chat'
 		const modelSelection = this._settingsService.state.modelSelectionOfFeature[featureName]
-		const modelSelectionOptions = modelSelection ? this._settingsService.state.optionsOfModelSelection[featureName][modelSelection.providerName]?.[modelSelection.modelName] : undefined
+		const modelSelectionOptions = modelSelection
+			? this._settingsService.state.optionsOfModelSelection[featureName][
+					modelSelection.providerName
+				]?.[modelSelection.modelName]
+			: undefined
 		return { modelSelection, modelSelectionOptions }
 	}
 
-
-
-	private _swapOutLatestStreamingToolWithResult = (threadId: string, tool: ChatMessage & { role: 'tool' }) => {
+	private _swapOutLatestStreamingToolWithResult = (
+		threadId: string,
+		tool: ChatMessage & { role: 'tool' },
+	) => {
 		const messages = this.state.allThreads[threadId]?.messages
 		if (!messages) return false
 		const lastMsg = messages[messages.length - 1]
@@ -527,8 +587,8 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		const callThisToolFirst: ToolMessage<ToolName> = lastMsg
 
 		this._wrapRunAgentToNotify(
-			this._runChatAgent({ callThisToolFirst, threadId, ...this._currentModelSelectionProps() })
-			, threadId
+			this._runChatAgent({ callThisToolFirst, threadId, ...this._currentModelSelectionProps() }),
+			threadId,
 		)
 	}
 	rejectLatestToolRequest(threadId: string) {
@@ -540,18 +600,27 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		let params: ToolCallParams<ToolName>
 		if (lastMsg.role === 'tool' && lastMsg.type !== 'invalid_params') {
 			params = lastMsg.params
-		}
-		else return
+		} else return
 
 		const { name, id, rawParams, mcpServerName } = lastMsg
 
 		const errorMessage = this.toolErrMsgs.rejected
-		this._updateLatestTool(threadId, { role: 'tool', type: 'rejected', params: params, name: name, content: errorMessage, result: null, id, rawParams, mcpServerName })
+		this._updateLatestTool(threadId, {
+			role: 'tool',
+			type: 'rejected',
+			params: params,
+			name: name,
+			content: errorMessage,
+			result: null,
+			id,
+			rawParams,
+			mcpServerName,
+		})
 		this._setStreamState(threadId, undefined)
 	}
 
 	private _computeMCPServerOfToolName = (toolName: string) => {
-		return this._mcpService.getMCPTools()?.find(t => t.name === toolName)?.mcpServerName
+		return this._mcpService.getMCPTools()?.find((t) => t.name === toolName)?.mcpServerName
 	}
 
 	async abortRunning(threadId: string) {
@@ -560,21 +629,48 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 
 		// add assistant message
 		if (this.streamState[threadId]?.isRunning === 'LLM') {
-			const { displayContentSoFar, reasoningSoFar, toolCallSoFar } = this.streamState[threadId].llmInfo
-			this._addMessageToThread(threadId, { role: 'assistant', displayContent: displayContentSoFar, reasoning: reasoningSoFar, anthropicReasoning: null })
-			if (toolCallSoFar) this._addMessageToThread(threadId, { role: 'interrupted_streaming_tool', name: toolCallSoFar.name, mcpServerName: this._computeMCPServerOfToolName(toolCallSoFar.name) })
+			const { displayContentSoFar, reasoningSoFar, toolCallSoFar } =
+				this.streamState[threadId].llmInfo
+			this._addMessageToThread(threadId, {
+				role: 'assistant',
+				displayContent: displayContentSoFar,
+				reasoning: reasoningSoFar,
+				anthropicReasoning: null,
+			})
+			if (toolCallSoFar)
+				this._addMessageToThread(threadId, {
+					role: 'interrupted_streaming_tool',
+					name: toolCallSoFar.name,
+					mcpServerName: this._computeMCPServerOfToolName(toolCallSoFar.name),
+				})
 		}
 		// add tool that's running
 		else if (this.streamState[threadId]?.isRunning === 'tool') {
-			const { toolName, toolParams, id, content: content_, rawParams, mcpServerName } = this.streamState[threadId].toolInfo
+			const {
+				toolName,
+				toolParams,
+				id,
+				content: content_,
+				rawParams,
+				mcpServerName,
+			} = this.streamState[threadId].toolInfo
 			const content = content_ || this.toolErrMsgs.interrupted
-			this._updateLatestTool(threadId, { role: 'tool', name: toolName, params: toolParams, id, content, rawParams, type: 'rejected', result: null, mcpServerName })
+			this._updateLatestTool(threadId, {
+				role: 'tool',
+				name: toolName,
+				params: toolParams,
+				id,
+				content,
+				rawParams,
+				type: 'rejected',
+				result: null,
+				mcpServerName,
+			})
 		}
 		// reject the tool for the user if relevant
 		else if (this.streamState[threadId]?.isRunning === 'awaiting_user') {
 			this.rejectLatestToolRequest(threadId)
-		}
-		else if (this.streamState[threadId]?.isRunning === 'idle') {
+		} else if (this.streamState[threadId]?.isRunning === 'idle') {
 			// do nothing
 		}
 
@@ -582,24 +678,19 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 
 		// interrupt any effects
 		const interrupt = await this.streamState[threadId]?.interrupt
-		if (typeof interrupt === 'function')
-			interrupt()
-
+		if (typeof interrupt === 'function') interrupt()
 
 		this._setStreamState(threadId, undefined)
 	}
 
-
-
 	private readonly toolErrMsgs = {
 		rejected: 'Tool call was rejected by the user.',
 		interrupted: 'Tool call was interrupted by the user.',
-		errWhenStringifying: (error: any) => `Tool call succeeded, but there was an error stringifying the output.\n${getErrorMessage(error)}`
+		errWhenStringifying: (error: any) =>
+			`Tool call succeeded, but there was an error stringifying the output.\n${getErrorMessage(error)}`,
 	}
 
-
 	// private readonly _currentlyRunningToolInterruptor: { [threadId: string]: (() => void) | undefined } = {}
-
 
 	// returns true when the tool call is waiting for user approval
 	private _runToolCall = async (
@@ -607,9 +698,14 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		toolName: ToolName,
 		toolId: string,
 		mcpServerName: string | undefined,
-		opts: { preapproved: true, unvalidatedToolParams: RawToolParamsObj, validatedParams: ToolCallParams<ToolName> } | { preapproved: false, unvalidatedToolParams: RawToolParamsObj },
-	): Promise<{ awaitingUserApproval?: boolean, interrupted?: boolean }> => {
-
+		opts:
+			| {
+					preapproved: true
+					unvalidatedToolParams: RawToolParamsObj
+					validatedParams: ToolCallParams<ToolName>
+			  }
+			| { preapproved: false; unvalidatedToolParams: RawToolParamsObj },
+	): Promise<{ awaitingUserApproval?: boolean; interrupted?: boolean }> => {
 		// compute these below
 		let toolParams: ToolCallParams<ToolName>
 		let toolResult: ToolResult<ToolName>
@@ -618,26 +714,76 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		// Check if it's a built-in tool
 		const isBuiltInTool = isABuiltinToolName(toolName)
 
-
-		if (!opts.preapproved) { // skip this if pre-approved
+		if (!opts.preapproved) {
+			// skip this if pre-approved
 			// 1. validate tool params
 			try {
 				if (isBuiltInTool) {
 					const params = this._toolsService.validateParams[toolName](opts.unvalidatedToolParams)
 					toolParams = params
-				}
-				else {
+				} else {
 					toolParams = opts.unvalidatedToolParams
 				}
-			}
-			catch (error) {
+			} catch (error) {
 				const errorMessage = getErrorMessage(error)
-				this._addMessageToThread(threadId, { role: 'tool', type: 'invalid_params', rawParams: opts.unvalidatedToolParams, result: null, name: toolName, content: errorMessage, id: toolId, mcpServerName })
+				// Validation-stage fallback: if edit_file is missing search/replace blocks, try rewrite_file with latest assistant code block
+				const looksLikeMissingSR =
+					toolName === 'edit_file' &&
+					/searchReplaceBlocks\s+must\s+be\s+a\s+string|No\s+Search\/?Replace\s+blocks/i.test(
+						errorMessage,
+					)
+				if (looksLikeMissingSR) {
+					const messages = this.state.allThreads[threadId]?.messages ?? []
+					const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant')
+					const extractFirstCodeBlock = (md: string): string | null => {
+						const regex = /```[\w+-]*\n([\s\S]*?)```/m
+						const m = regex.exec(md || '')
+						if (!m) return null
+						const code = m[1] ?? ''
+						return code.trim() ? code : null
+					}
+					const newContent = extractFirstCodeBlock((lastAssistant as any)?.displayContent || '')
+					const lastUser = [...messages].reverse().find((m) => m.role === 'user') as
+						| (ChatMessage & { role: 'user' })
+						| undefined
+					const sels = (lastUser?.selections ?? []).filter(
+						(s) => s.type === 'File' || s.type === 'CodeSelection',
+					)
+					const uniqueFs = Array.from(new Set(sels.map((s) => s.uri.fsPath)))
+					if (newContent && uniqueFs.length === 1) {
+						const uri = sels.find((s) => s.uri.fsPath === uniqueFs[0])!.uri
+						const syntheticToolId = generateUuid()
+						return await this._runToolCall(threadId, 'rewrite_file', syntheticToolId, undefined, {
+							preapproved: false,
+							unvalidatedToolParams: { uri: uri.fsPath, new_content: newContent },
+						})
+					}
+				}
+				this._addMessageToThread(threadId, {
+					role: 'tool',
+					type: 'invalid_params',
+					rawParams: opts.unvalidatedToolParams,
+					result: null,
+					name: toolName,
+					content: errorMessage,
+					id: toolId,
+					mcpServerName,
+				})
 				return {}
 			}
 			// once validated, add checkpoint for edit
-			if (toolName === 'edit_file') { this._addToolEditCheckpoint({ threadId, uri: (toolParams as BuiltinToolCallParams['edit_file']).uri }) }
-			if (toolName === 'rewrite_file') { this._addToolEditCheckpoint({ threadId, uri: (toolParams as BuiltinToolCallParams['rewrite_file']).uri }) }
+			if (toolName === 'edit_file') {
+				this._addToolEditCheckpoint({
+					threadId,
+					uri: (toolParams as BuiltinToolCallParams['edit_file']).uri,
+				})
+			}
+			if (toolName === 'rewrite_file') {
+				this._addToolEditCheckpoint({
+					threadId,
+					uri: (toolParams as BuiltinToolCallParams['rewrite_file']).uri,
+				})
+			}
 
 			// 2. if tool requires approval, break from the loop, awaiting approval
 
@@ -645,71 +791,163 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 			if (approvalType) {
 				const autoApprove = this._settingsService.state.globalSettings.autoApprove[approvalType]
 				// add a tool_request because we use it for UI if a tool is loading (this should be improved in the future)
-				this._addMessageToThread(threadId, { role: 'tool', type: 'tool_request', content: '(Awaiting user permission...)', result: null, name: toolName, params: toolParams, id: toolId, rawParams: opts.unvalidatedToolParams, mcpServerName })
+				this._addMessageToThread(threadId, {
+					role: 'tool',
+					type: 'tool_request',
+					content: '(Awaiting user permission...)',
+					result: null,
+					name: toolName,
+					params: toolParams,
+					id: toolId,
+					rawParams: opts.unvalidatedToolParams,
+					mcpServerName,
+				})
 				if (!autoApprove) {
 					return { awaitingUserApproval: true }
 				}
 			}
-		}
-		else {
+		} else {
 			toolParams = opts.validatedParams
 		}
 
-
-
-
-
+		// unified raw params for logging/tool message fields
+		const rawParamsForLog: RawToolParamsObj = !opts.preapproved
+			? opts.unvalidatedToolParams
+			: (toolParams as unknown as RawToolParamsObj)
 
 		// 3. call the tool
 		// this._setStreamState(threadId, { isRunning: 'tool' }, 'merge')
-		const runningTool = { role: 'tool', type: 'running_now', name: toolName, params: toolParams, content: '(value not received yet...)', result: null, id: toolId, rawParams: opts.unvalidatedToolParams, mcpServerName } as const
+		const runningTool = {
+			role: 'tool',
+			type: 'running_now',
+			name: toolName,
+			params: toolParams,
+			content: '(value not received yet...)',
+			result: null,
+			id: toolId,
+			rawParams: rawParamsForLog,
+			mcpServerName,
+		} as const
 		this._updateLatestTool(threadId, runningTool)
 
-
 		let interrupted = false
-		let resolveInterruptor: (r: () => void) => void = () => { }
-		const interruptorPromise = new Promise<() => void>(res => { resolveInterruptor = res })
+		let resolveInterruptor: (r: () => void) => void = () => {}
+		const interruptorPromise = new Promise<() => void>((res) => {
+			resolveInterruptor = res
+		})
 		try {
-
 			// set stream state
-			this._setStreamState(threadId, { isRunning: 'tool', interrupt: interruptorPromise, toolInfo: { toolName, toolParams, id: toolId, content: 'interrupted...', rawParams: opts.unvalidatedToolParams, mcpServerName } })
+			this._setStreamState(threadId, {
+				isRunning: 'tool',
+				interrupt: interruptorPromise,
+				toolInfo: {
+					toolName,
+					toolParams,
+					id: toolId,
+					content: 'interrupted...',
+					rawParams: rawParamsForLog,
+					mcpServerName,
+				},
+			})
 
 			if (isBuiltInTool) {
-				const { result, interruptTool } = await this._toolsService.callTool[toolName](toolParams as any)
-				const interruptor = () => { interrupted = true; interruptTool?.() }
+				const { result, interruptTool } = await this._toolsService.callTool[toolName](
+					toolParams as any,
+				)
+				const interruptor = () => {
+					interrupted = true
+					interruptTool?.()
+				}
 				resolveInterruptor(interruptor)
 
 				toolResult = await result
-			}
-			else {
+			} else {
 				const mcpTools = this._mcpService.getMCPTools()
-				const mcpTool = mcpTools?.find(t => t.name === toolName)
-				if (!mcpTool) { throw new Error(`MCP tool ${toolName} not found`) }
+				const mcpTool = mcpTools?.find((t) => t.name === toolName)
+				if (!mcpTool) {
+					throw new Error(`MCP tool ${toolName} not found`)
+				}
 
-				resolveInterruptor(() => { })
+				resolveInterruptor(() => {})
 
-				toolResult = (await this._mcpService.callMCPTool({
-					serverName: mcpTool.mcpServerName ?? 'unknown_mcp_server',
-					toolName: toolName,
-					params: toolParams
-				})).result
+				toolResult = (
+					await this._mcpService.callMCPTool({
+						serverName: mcpTool.mcpServerName ?? 'unknown_mcp_server',
+						toolName: toolName,
+						params: toolParams,
+					})
+				).result
 			}
 
-			if (interrupted) { return { interrupted: true } } // the tool result is added where we interrupt, not here
-		}
-		catch (error) {
-			resolveInterruptor(() => { }) // resolve for the sake of it
-			if (interrupted) { return { interrupted: true } } // the tool result is added where we interrupt, not here
+			if (interrupted) {
+				return { interrupted: true }
+			} // the tool result is added where we interrupt, not here
+		} catch (error) {
+			resolveInterruptor(() => {}) // resolve for the sake of it
+			if (interrupted) {
+				return { interrupted: true }
+			} // the tool result is added where we interrupt, not here
 
 			const errorMessage = getErrorMessage(error)
-			this._updateLatestTool(threadId, { role: 'tool', type: 'tool_error', params: toolParams, result: errorMessage, name: toolName, content: errorMessage, id: toolId, rawParams: opts.unvalidatedToolParams, mcpServerName })
+
+			// Fallback: if edit_file received no search/replace blocks, try rewrite_file using latest assistant code block
+			const looksLikeNoSRBlocks =
+				toolName === 'edit_file' && /No\s+Search\/?Replace blocks were received/i.test(errorMessage)
+			if (looksLikeNoSRBlocks) {
+				// extract latest assistant code block
+				const messages = this.state.allThreads[threadId]?.messages ?? []
+				const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant')
+				const extractFirstCodeBlock = (md: string): string | null => {
+					const regex = /```[\w+-]*\n([\s\S]*?)```/m
+					const m = regex.exec(md || '')
+					if (!m) return null
+					const code = m[1] ?? ''
+					return code.trim() ? code : null
+				}
+				const newContent = extractFirstCodeBlock(lastAssistant?.displayContent || '')
+
+				// pick a single unique file from latest user message selections
+				const lastUser = [...messages].reverse().find((m) => m.role === 'user') as
+					| (ChatMessage & { role: 'user' })
+					| undefined
+				const sels = (lastUser?.selections ?? []).filter(
+					(s) => s.type === 'File' || s.type === 'CodeSelection',
+				)
+				const uniqueFs = Array.from(new Set(sels.map((s) => s.uri.fsPath)))
+
+				if (newContent && uniqueFs.length === 1) {
+					const uri = sels.find((s) => s.uri.fsPath === uniqueFs[0])!.uri
+
+					// Replace the failed edit with a rewrite_file call
+					const syntheticToolId = generateUuid()
+					return await this._runToolCall(threadId, 'rewrite_file', syntheticToolId, undefined, {
+						preapproved: false,
+						unvalidatedToolParams: { uri: uri.fsPath, new_content: newContent },
+					})
+				}
+			}
+
+			this._updateLatestTool(threadId, {
+				role: 'tool',
+				type: 'tool_error',
+				params: toolParams,
+				result: errorMessage,
+				name: toolName,
+				content: errorMessage,
+				id: toolId,
+				rawParams: rawParamsForLog,
+				mcpServerName,
+			})
 			return {}
 		}
 
 		// 4. stringify the result to give to the LLM
 		try {
 			if (isBuiltInTool) {
-				toolResultStr = this._toolsService.stringOfResult[toolName](toolParams as any, toolResult as any)
+				toolResultStr = this._toolsService.stringOfResult[toolName](
+					toolParams as any,
+					toolResult as any,
+				)
 			}
 			// For MCP tools, handle the result based on its type
 			else {
@@ -717,17 +955,46 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 			}
 		} catch (error) {
 			const errorMessage = this.toolErrMsgs.errWhenStringifying(error)
-			this._updateLatestTool(threadId, { role: 'tool', type: 'tool_error', params: toolParams, result: errorMessage, name: toolName, content: errorMessage, id: toolId, rawParams: opts.unvalidatedToolParams, mcpServerName })
+			this._updateLatestTool(threadId, {
+				role: 'tool',
+				type: 'tool_error',
+				params: toolParams,
+				result: errorMessage,
+				name: toolName,
+				content: errorMessage,
+				id: toolId,
+				rawParams: rawParamsForLog,
+				mcpServerName,
+			})
 			return {}
 		}
 
 		// 5. add to history and keep going
-		this._updateLatestTool(threadId, { role: 'tool', type: 'success', params: toolParams, result: toolResult, name: toolName, content: toolResultStr, id: toolId, rawParams: opts.unvalidatedToolParams, mcpServerName })
+		this._updateLatestTool(threadId, {
+			role: 'tool',
+			type: 'success',
+			params: toolParams,
+			result: toolResult,
+			name: toolName,
+			content: toolResultStr,
+			id: toolId,
+			rawParams: rawParamsForLog,
+			mcpServerName,
+		})
+
+		// Auto-open edited file in editor for edit_file / rewrite_file
+		try {
+			if (isBuiltInTool && (toolName === 'edit_file' || toolName === 'rewrite_file')) {
+				const uri = (
+					toolParams as BuiltinToolCallParams['edit_file'] | BuiltinToolCallParams['rewrite_file']
+				).uri
+				if (uri) {
+					await this._commandService.executeCommand('vscode.open', uri)
+				}
+			}
+		} catch {}
 		return {}
-	};
-
-
-
+	}
 
 	private async _runChatAgent({
 		threadId,
@@ -735,16 +1002,16 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		modelSelectionOptions,
 		callThisToolFirst,
 	}: {
-		threadId: string,
-		modelSelection: ModelSelection | null,
-		modelSelectionOptions: ModelSelectionOptions | undefined,
+		threadId: string
+		modelSelection: ModelSelection | null
+		modelSelectionOptions: ModelSelectionOptions | undefined
 
 		callThisToolFirst?: ToolMessage<ToolName> & { type: 'tool_request' }
 	}) {
-
-
 		let interruptedWhenIdle = false
-		const idleInterruptor = Promise.resolve(() => { interruptedWhenIdle = true })
+		const idleInterruptor = Promise.resolve(() => {
+			interruptedWhenIdle = true
+		})
 		// _runToolCall does not need setStreamState({idle}) before it, but it needs it after it. (handles its own setStreamState)
 
 		// above just defines helpers, below starts the actual function
@@ -757,15 +1024,23 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 
 		// before enter loop, call tool
 		if (callThisToolFirst) {
-			const { interrupted } = await this._runToolCall(threadId, callThisToolFirst.name, callThisToolFirst.id, callThisToolFirst.mcpServerName, { preapproved: true, unvalidatedToolParams: callThisToolFirst.rawParams, validatedParams: callThisToolFirst.params })
+			const { interrupted } = await this._runToolCall(
+				threadId,
+				callThisToolFirst.name,
+				callThisToolFirst.id,
+				callThisToolFirst.mcpServerName,
+				{
+					preapproved: true,
+					unvalidatedToolParams: callThisToolFirst.rawParams,
+					validatedParams: callThisToolFirst.params,
+				},
+			)
 			if (interrupted) {
 				this._setStreamState(threadId, undefined)
 				this._addUserCheckpoint({ threadId })
-
 			}
 		}
-		this._setStreamState(threadId, { isRunning: 'idle', interrupt: 'not_needed' })  // just decorative, for clarity
-
+		this._setStreamState(threadId, { isRunning: 'idle', interrupt: 'not_needed' }) // just decorative, for clarity
 
 		// tool use loop
 		while (shouldSendAnotherMessage) {
@@ -777,11 +1052,12 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 			this._setStreamState(threadId, { isRunning: 'idle', interrupt: idleInterruptor })
 
 			const chatMessages = this.state.allThreads[threadId]?.messages ?? []
-			const { messages, separateSystemMessage } = await this._convertToLLMMessagesService.prepareLLMChatMessages({
-				chatMessages,
-				modelSelection,
-				chatMode
-			})
+			const { messages, separateSystemMessage } =
+				await this._convertToLLMMessagesService.prepareLLMChatMessages({
+					chatMessages,
+					modelSelection,
+					chatMode,
+				})
 
 			if (interruptedWhenIdle) {
 				this._setStreamState(threadId, undefined)
@@ -795,12 +1071,22 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 				nAttempts += 1
 
 				type ResTypes =
-					| { type: 'llmDone', toolCall?: RawToolCallObj, info: { fullText: string, fullReasoning: string, anthropicReasoning: AnthropicReasoning[] | null } }
-					| { type: 'llmError', error?: { message: string; fullError: Error | null; } }
+					| {
+							type: 'llmDone'
+							toolCall?: RawToolCallObj
+							info: {
+								fullText: string
+								fullReasoning: string
+								anthropicReasoning: AnthropicReasoning[] | null
+							}
+					  }
+					| { type: 'llmError'; error?: { message: string; fullError: Error | null } }
 					| { type: 'llmAborted' }
 
 				let resMessageIsDonePromise: (res: ResTypes) => void // resolves when user approves this tool use (or if tool doesn't require approval)
-				const messageIsDonePromise = new Promise<ResTypes>((res, rej) => { resMessageIsDonePromise = res })
+				const messageIsDonePromise = new Promise<ResTypes>((res, rej) => {
+					resMessageIsDonePromise = res
+				})
 
 				const llmCancelToken = this._llmMessageService.sendLLMMessage({
 					messagesType: 'chatMessages',
@@ -809,13 +1095,30 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 					modelSelection,
 					modelSelectionOptions,
 					overridesOfModel,
-					logging: { loggingName: `Chat - ${chatMode}`, loggingExtras: { threadId, nMessagesSent, chatMode } },
+					logging: {
+						loggingName: `Chat - ${chatMode}`,
+						loggingExtras: { threadId, nMessagesSent, chatMode },
+					},
 					separateSystemMessage: separateSystemMessage,
 					onText: ({ fullText, fullReasoning, toolCall }) => {
-						this._setStreamState(threadId, { isRunning: 'LLM', llmInfo: { displayContentSoFar: fullText, reasoningSoFar: fullReasoning, toolCallSoFar: toolCall ?? null }, interrupt: Promise.resolve(() => { if (llmCancelToken) this._llmMessageService.abort(llmCancelToken) }) })
+						this._setStreamState(threadId, {
+							isRunning: 'LLM',
+							llmInfo: {
+								displayContentSoFar: fullText,
+								reasoningSoFar: fullReasoning,
+								toolCallSoFar: toolCall ?? null,
+							},
+							interrupt: Promise.resolve(() => {
+								if (llmCancelToken) this._llmMessageService.abort(llmCancelToken)
+							}),
+						})
 					},
-					onFinalMessage: async ({ fullText, fullReasoning, toolCall, anthropicReasoning, }) => {
-						resMessageIsDonePromise({ type: 'llmDone', toolCall, info: { fullText, fullReasoning, anthropicReasoning } }) // resolve with tool calls
+					onFinalMessage: async ({ fullText, fullReasoning, toolCall, anthropicReasoning }) => {
+						resMessageIsDonePromise({
+							type: 'llmDone',
+							toolCall,
+							info: { fullText, fullReasoning, anthropicReasoning },
+						}) // resolve with tool calls
 					},
 					onError: async (error) => {
 						resMessageIsDonePromise({ type: 'llmError', error: error })
@@ -829,11 +1132,21 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 
 				// mark as streaming
 				if (!llmCancelToken) {
-					this._setStreamState(threadId, { isRunning: undefined, error: { message: 'There was an unexpected error when sending your chat message.', fullError: null } })
+					this._setStreamState(threadId, {
+						isRunning: undefined,
+						error: {
+							message: 'There was an unexpected error when sending your chat message.',
+							fullError: null,
+						},
+					})
 					break
 				}
 
-				this._setStreamState(threadId, { isRunning: 'LLM', llmInfo: { displayContentSoFar: '', reasoningSoFar: '', toolCallSoFar: null }, interrupt: Promise.resolve(() => this._llmMessageService.abort(llmCancelToken)) })
+				this._setStreamState(threadId, {
+					isRunning: 'LLM',
+					llmInfo: { displayContentSoFar: '', reasoningSoFar: '', toolCallSoFar: null },
+					interrupt: Promise.resolve(() => this._llmMessageService.abort(llmCancelToken)),
+				})
 				const llmRes = await messageIsDonePromise // wait for message to complete
 
 				// if something else started running in the meantime
@@ -857,16 +1170,25 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 						if (interruptedWhenIdle) {
 							this._setStreamState(threadId, undefined)
 							return
-						}
-						else
-							continue // retry
+						} else continue // retry
 					}
 					// error, but too many attempts
 					else {
 						const { error } = llmRes
-						const { displayContentSoFar, reasoningSoFar, toolCallSoFar } = this.streamState[threadId].llmInfo
-						this._addMessageToThread(threadId, { role: 'assistant', displayContent: displayContentSoFar, reasoning: reasoningSoFar, anthropicReasoning: null })
-						if (toolCallSoFar) this._addMessageToThread(threadId, { role: 'interrupted_streaming_tool', name: toolCallSoFar.name, mcpServerName: this._computeMCPServerOfToolName(toolCallSoFar.name) })
+						const { displayContentSoFar, reasoningSoFar, toolCallSoFar } =
+							this.streamState[threadId].llmInfo
+						this._addMessageToThread(threadId, {
+							role: 'assistant',
+							displayContent: displayContentSoFar,
+							reasoning: reasoningSoFar,
+							anthropicReasoning: null,
+						})
+						if (toolCallSoFar)
+							this._addMessageToThread(threadId, {
+								role: 'interrupted_streaming_tool',
+								name: toolCallSoFar.name,
+								mcpServerName: this._computeMCPServerOfToolName(toolCallSoFar.name),
+							})
 
 						this._setStreamState(threadId, { isRunning: undefined, error })
 						this._addUserCheckpoint({ threadId })
@@ -877,26 +1199,86 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 				// llm res success
 				const { toolCall, info } = llmRes
 
-				this._addMessageToThread(threadId, { role: 'assistant', displayContent: info.fullText, reasoning: info.fullReasoning, anthropicReasoning: info.anthropicReasoning })
+				this._addMessageToThread(threadId, {
+					role: 'assistant',
+					displayContent: info.fullText,
+					reasoning: info.fullReasoning,
+					anthropicReasoning: info.anthropicReasoning,
+				})
 
 				this._setStreamState(threadId, { isRunning: 'idle', interrupt: 'not_needed' }) // just decorative for clarity
 
 				// call tool if there is one
 				if (toolCall) {
 					const mcpTools = this._mcpService.getMCPTools()
-					const mcpTool = mcpTools?.find(t => t.name === toolCall.name)
+					const mcpTool = mcpTools?.find((t) => t.name === toolCall.name)
 
-					const { awaitingUserApproval, interrupted } = await this._runToolCall(threadId, toolCall.name, toolCall.id, mcpTool?.mcpServerName, { preapproved: false, unvalidatedToolParams: toolCall.rawParams })
+					const { awaitingUserApproval, interrupted } = await this._runToolCall(
+						threadId,
+						toolCall.name,
+						toolCall.id,
+						mcpTool?.mcpServerName,
+						{ preapproved: false, unvalidatedToolParams: toolCall.rawParams },
+					)
 					if (interrupted) {
 						this._setStreamState(threadId, undefined)
 						return
 					}
-					if (awaitingUserApproval) { isRunningWhenEnd = 'awaiting_user' }
-					else { shouldSendAnotherMessage = true }
+					if (awaitingUserApproval) {
+						isRunningWhenEnd = 'awaiting_user'
+					} else {
+						shouldSendAnotherMessage = true
+					}
 
 					this._setStreamState(threadId, { isRunning: 'idle', interrupt: 'not_needed' }) // just decorative, for clarity
 				}
+				// Fallback: if there is NO tool call but the assistant returned a code block,
+				// and the latest user message has exactly one staged File selection, automatically
+				// convert the code block into a rewrite_file tool call.
+				else {
+					// helper to extract first code block
+					const extractFirstCodeBlock = (md: string): string | null => {
+						const regex = /```[\w+-]*\n([\s\S]*?)```/m
+						const m = regex.exec(md)
+						if (!m) return null
+						const code = m[1] ?? ''
+						return code.trim() ? code : null
+					}
 
+					const codeBlock = extractFirstCodeBlock(info.fullText || '')
+					if (codeBlock) {
+						const thread = this.state.allThreads[threadId]
+						const lastUserMsg = thread?.messages
+							.slice()
+							.reverse()
+							.find((m) => m.role === 'user')
+						const sels = (lastUserMsg?.selections ?? []).filter((s) => s.type === 'File')
+						if (sels.length === 1) {
+							const uri = sels[0].uri
+							// synthesize a rewrite_file tool call
+							const syntheticToolId = generateUuid()
+							const rawParams = { uri: uri.fsPath, new_content: codeBlock }
+							const { awaitingUserApproval, interrupted } = await this._runToolCall(
+								threadId,
+								'rewrite_file',
+								syntheticToolId,
+								undefined,
+								{ preapproved: false, unvalidatedToolParams: rawParams },
+							)
+							if (interrupted) {
+								this._setStreamState(threadId, undefined)
+								return
+							}
+							if (awaitingUserApproval) {
+								isRunningWhenEnd = 'awaiting_user'
+							} else {
+								shouldSendAnotherMessage = true
+							}
+
+							this._setStreamState(threadId, { isRunning: 'idle', interrupt: 'not_needed' })
+						}
+					}
+				}
 			} // end while (attempts)
 		} // end while (send message)
 
@@ -910,7 +1292,6 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		this._metricsService.capture('Agent Loop Done', { nMessagesSent, chatMode })
 	}
 
-
 	private _addCheckpoint(threadId: string, checkpoint: CheckpointEntry) {
 		this._addMessageToThread(threadId, checkpoint)
 		// // update latest checkpoint idx to the one we just added
@@ -920,9 +1301,7 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		// this._setThreadState(threadId, { currCheckpointIdx: currCheckpointIdx })
 	}
 
-
-
-	private _editMessageInThread(threadId: string, messageIdx: number, newMessage: ChatMessage,) {
+	private _editMessageInThread(threadId: string, messageIdx: number, newMessage: ChatMessage) {
 		const { allThreads } = this.state
 		const oldThread = allThreads[threadId]
 		if (!oldThread) return // should never happen
@@ -937,19 +1316,29 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 					newMessage,
 					...oldThread.messages.slice(messageIdx + 1, Infinity),
 				],
-			}
+			},
 		}
 		this._storeAllThreads(newThreads)
 		this._setState({ allThreads: newThreads }) // the current thread just changed (it had a message added to it)
 	}
 
+	private _getCheckpointInfo = (
+		checkpointMessage: ChatMessage & { role: 'checkpoint' },
+		fsPath: string,
+		opts: { includeUserModifiedChanges: boolean },
+	) => {
+		const voidFileSnapshot = checkpointMessage.voidFileSnapshotOfURI
+			? (checkpointMessage.voidFileSnapshotOfURI[fsPath] ?? null)
+			: null
+		if (!opts.includeUserModifiedChanges) {
+			return { voidFileSnapshot }
+		}
 
-	private _getCheckpointInfo = (checkpointMessage: ChatMessage & { role: 'checkpoint' }, fsPath: string, opts: { includeUserModifiedChanges: boolean }) => {
-		const voidFileSnapshot = checkpointMessage.voidFileSnapshotOfURI ? checkpointMessage.voidFileSnapshotOfURI[fsPath] ?? null : null
-		if (!opts.includeUserModifiedChanges) { return { voidFileSnapshot, } }
-
-		const userModifiedVoidFileSnapshot = fsPath in checkpointMessage.userModifications.voidFileSnapshotOfURI ? checkpointMessage.userModifications.voidFileSnapshotOfURI[fsPath] ?? null : null
-		return { voidFileSnapshot: userModifiedVoidFileSnapshot ?? voidFileSnapshot, }
+		const userModifiedVoidFileSnapshot =
+			fsPath in checkpointMessage.userModifications.voidFileSnapshotOfURI
+				? (checkpointMessage.userModifications.voidFileSnapshotOfURI[fsPath] ?? null)
+				: null
+		return { voidFileSnapshot: userModifiedVoidFileSnapshot ?? voidFileSnapshot }
 	}
 
 	private _computeNewCheckpointInfo({ threadId }: { threadId: string }) {
@@ -962,14 +1351,17 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		const voidFileSnapshotOfURI: { [fsPath: string]: VoidFileSnapshot | undefined } = {}
 
 		// add a change for all the URIs in the checkpoint history
-		const { lastIdxOfURI } = this._getCheckpointsBetween({ threadId, loIdx: 0, hiIdx: lastCheckpointIdx, }) ?? {}
+		const { lastIdxOfURI } =
+			this._getCheckpointsBetween({ threadId, loIdx: 0, hiIdx: lastCheckpointIdx }) ?? {}
 		for (const fsPath in lastIdxOfURI ?? {}) {
 			const { model } = this._voidModelService.getModelFromFsPath(fsPath)
 			if (!model) continue
 			const checkpoint2 = thread.messages[lastIdxOfURI[fsPath]] || null
 			if (!checkpoint2) continue
 			if (checkpoint2.role !== 'checkpoint') continue
-			const res = this._getCheckpointInfo(checkpoint2, fsPath, { includeUserModifiedChanges: false })
+			const res = this._getCheckpointInfo(checkpoint2, fsPath, {
+				includeUserModifiedChanges: false,
+			})
 			if (!res) continue
 			const { voidFileSnapshot: oldVoidFileSnapshot } = res
 
@@ -990,18 +1382,17 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		return { voidFileSnapshotOfURI }
 	}
 
-
 	private _addUserCheckpoint({ threadId }: { threadId: string }) {
 		const { voidFileSnapshotOfURI } = this._computeNewCheckpointInfo({ threadId }) ?? {}
 		this._addCheckpoint(threadId, {
 			role: 'checkpoint',
 			type: 'user_edit',
 			voidFileSnapshotOfURI: voidFileSnapshotOfURI ?? {},
-			userModifications: { voidFileSnapshotOfURI: {}, },
+			userModifications: { voidFileSnapshotOfURI: {} },
 		})
 	}
 	// call this right after LLM edits a file
-	private _addToolEditCheckpoint({ threadId, uri, }: { threadId: string, uri: URI }) {
+	private _addToolEditCheckpoint({ threadId, uri }: { threadId: string; uri: URI }) {
 		const thread = this.state.allThreads[threadId]
 		if (!thread) return
 		const { model } = this._voidModelService.getModel(uri)
@@ -1015,8 +1406,13 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		})
 	}
 
-
-	private _getCheckpointBeforeMessage = ({ threadId, messageIdx }: { threadId: string, messageIdx: number }): [CheckpointEntry, number] | undefined => {
+	private _getCheckpointBeforeMessage = ({
+		threadId,
+		messageIdx,
+	}: {
+		threadId: string
+		messageIdx: number
+	}): [CheckpointEntry, number] | undefined => {
 		const thread = this.state.allThreads[threadId]
 		if (!thread) return undefined
 		for (let i = messageIdx; i >= 0; i--) {
@@ -1028,14 +1424,23 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		return undefined
 	}
 
-	private _getCheckpointsBetween({ threadId, loIdx, hiIdx }: { threadId: string, loIdx: number, hiIdx: number }) {
+	private _getCheckpointsBetween({
+		threadId,
+		loIdx,
+		hiIdx,
+	}: {
+		threadId: string
+		loIdx: number
+		hiIdx: number
+	}) {
 		const thread = this.state.allThreads[threadId]
 		if (!thread) return { lastIdxOfURI: {} } // should never happen
 		const lastIdxOfURI: { [fsPath: string]: number } = {}
 		for (let i = loIdx; i <= hiIdx; i += 1) {
 			const message = thread.messages[i]
 			if (message?.role !== 'checkpoint') continue
-			for (const fsPath in message.voidFileSnapshotOfURI) { // do not include userModified.beforeStrOfURI here, jumping should not include those changes
+			for (const fsPath in message.voidFileSnapshotOfURI) {
+				// do not include userModified.beforeStrOfURI here, jumping should not include those changes
 				lastIdxOfURI[fsPath] = i
 			}
 		}
@@ -1061,24 +1466,29 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		const [checkpoint, checkpointIdx] = res
 		this._editMessageInThread(threadId, checkpointIdx, {
 			...checkpoint,
-			userModifications: { voidFileSnapshotOfURI: voidFileSnapshotOfURI ?? {}, },
+			userModifications: { voidFileSnapshotOfURI: voidFileSnapshotOfURI ?? {} },
 		})
 	}
-
 
 	private _makeUsStandOnCheckpoint({ threadId }: { threadId: string }) {
 		const thread = this.state.allThreads[threadId]
 		if (!thread) return
 		if (thread.state.currCheckpointIdx === null) {
 			const lastMsg = thread.messages[thread.messages.length - 1]
-			if (lastMsg?.role !== 'checkpoint')
-				this._addUserCheckpoint({ threadId })
+			if (lastMsg?.role !== 'checkpoint') this._addUserCheckpoint({ threadId })
 			this._setThreadState(threadId, { currCheckpointIdx: thread.messages.length - 1 })
 		}
 	}
 
-	jumpToCheckpointBeforeMessageIdx({ threadId, messageIdx, jumpToUserModified }: { threadId: string, messageIdx: number, jumpToUserModified: boolean }) {
-
+	jumpToCheckpointBeforeMessageIdx({
+		threadId,
+		messageIdx,
+		jumpToUserModified,
+	}: {
+		threadId: string
+		messageIdx: number
+		jumpToUserModified: boolean
+	}) {
 		// if null, add a new temp checkpoint so user can jump forward again
 		this._makeUsStandOnCheckpoint({ threadId })
 
@@ -1121,13 +1531,19 @@ We need to revert anything that happened between to+1 and from.
 We only need to do it for files that were edited since `to`, ie files between to+1...from.
 */
 		if (toIdx < fromIdx) {
-			const { lastIdxOfURI } = this._getCheckpointsBetween({ threadId, loIdx: toIdx + 1, hiIdx: fromIdx })
+			const { lastIdxOfURI } = this._getCheckpointsBetween({
+				threadId,
+				loIdx: toIdx + 1,
+				hiIdx: fromIdx,
+			})
 
 			const idxes = function* () {
-				for (let k = toIdx; k >= 0; k -= 1) { // first go up
+				for (let k = toIdx; k >= 0; k -= 1) {
+					// first go up
 					yield k
 				}
-				for (let k = toIdx + 1; k < thread.messages.length; k += 1) { // then go down
+				for (let k = toIdx + 1; k < thread.messages.length; k += 1) {
+					// then go down
 					yield k
 				}
 			}
@@ -1137,7 +1553,9 @@ We only need to do it for files that were edited since `to`, ie files between to
 				for (const k of idxes()) {
 					const message = thread.messages[k]
 					if (message.role !== 'checkpoint') continue
-					const res = this._getCheckpointInfo(message, fsPath, { includeUserModifiedChanges: jumpToUserModified })
+					const res = this._getCheckpointInfo(message, fsPath, {
+						includeUserModifiedChanges: jumpToUserModified,
+					})
 					if (!res) continue
 					const { voidFileSnapshot } = res
 					if (!voidFileSnapshot) continue
@@ -1165,13 +1583,19 @@ We need to apply latest change for anything that happened between from+1 and to.
 We only need to do it for files that were edited since `from`, ie files between from+1...to.
 */
 		if (toIdx > fromIdx) {
-			const { lastIdxOfURI } = this._getCheckpointsBetween({ threadId, loIdx: fromIdx + 1, hiIdx: toIdx })
+			const { lastIdxOfURI } = this._getCheckpointsBetween({
+				threadId,
+				loIdx: fromIdx + 1,
+				hiIdx: toIdx,
+			})
 			for (const fsPath in lastIdxOfURI) {
 				// apply lowest down content for each uri
 				for (let k = toIdx; k >= fromIdx + 1; k -= 1) {
 					const message = thread.messages[k]
 					if (message.role !== 'checkpoint') continue
-					const res = this._getCheckpointInfo(message, fsPath, { includeUserModifiedChanges: jumpToUserModified })
+					const res = this._getCheckpointInfo(message, fsPath, {
+						includeUserModifiedChanges: jumpToUserModified,
+					})
 					if (!res) continue
 					const { voidFileSnapshot } = res
 					if (!voidFileSnapshot) continue
@@ -1184,12 +1608,11 @@ We only need to do it for files that were edited since `from`, ie files between 
 		this._setThreadState(threadId, { currCheckpointIdx: toIdx })
 	}
 
-
 	private _wrapRunAgentToNotify(p: Promise<void>, threadId: string) {
 		const notify = ({ error }: { error: string | null }) => {
 			const thread = this.state.allThreads[threadId]
 			if (!thread) return
-			const userMsg = findLast(thread.messages, m => m.role === 'user')
+			const userMsg = findLast(thread.messages, (m) => m.role === 'user')
 			if (!userMsg) return
 			if (userMsg.role !== 'user') return
 			const messageContent = truncate(userMsg.displayContent, 50, '...')
@@ -1200,20 +1623,22 @@ We only need to do it for files that were edited since `from`, ie files between 
 				source: messageContent,
 				sticky: true,
 				actions: {
-					primary: [{
-						id: 'void.goToChat',
-						enabled: true,
-						label: `Jump to Chat`,
-						tooltip: '',
-						class: undefined,
-						run: () => {
-							this.switchToThread(threadId)
-							// scroll to bottom
-							this.state.allThreads[threadId]?.state.mountedInfo?.whenMounted.then(m => {
-								m.scrollToBottom()
-							})
-						}
-					}]
+					primary: [
+						{
+							id: 'void.goToChat',
+							enabled: true,
+							label: `Jump to Chat`,
+							tooltip: '',
+							class: undefined,
+							run: () => {
+								this.switchToThread(threadId)
+								// scroll to bottom
+								this.state.allThreads[threadId]?.state.mountedInfo?.whenMounted.then((m) => {
+									m.scrollToBottom()
+								})
+							},
+						},
+					],
 				},
 			})
 		}
@@ -1230,8 +1655,15 @@ We only need to do it for files that were edited since `from`, ie files between 
 		this._setStreamState(threadId, undefined)
 	}
 
-
-	private async _addUserMessageAndStreamResponse({ userMessage, _chatSelections, threadId }: { userMessage: string, _chatSelections?: StagingSelectionItem[], threadId: string }) {
+	private async _addUserMessageAndStreamResponse({
+		userMessage,
+		_chatSelections,
+		threadId,
+	}: {
+		userMessage: string
+		_chatSelections?: StagingSelectionItem[]
+		threadId: string
+	}) {
 		const thread = this.state.allThreads[threadId]
 		if (!thread) return // should never happen
 
@@ -1245,37 +1677,132 @@ We only need to do it for files that were edited since `from`, ie files between 
 			this._addUserCheckpoint({ threadId })
 		}
 
-
 		// add user's message to chat history
 		const instructions = userMessage
 		const currSelns: StagingSelectionItem[] = _chatSelections ?? thread.state.stagingSelections
 
-		const userMessageContent = await chat_userMessageContent(instructions, currSelns, { directoryStrService: this._directoryStringService, fileService: this._fileService }) // user message + names of files (NOT content)
-		const userHistoryElt: ChatMessage = { role: 'user', content: userMessageContent, displayContent: instructions, selections: currSelns, state: defaultMessageState }
+		const userMessageContent = await chat_userMessageContent(instructions, currSelns, {
+			directoryStrService: this._directoryStringService,
+			fileService: this._fileService,
+		}) // user message + names of files (NOT content)
+		const userHistoryElt: ChatMessage = {
+			role: 'user',
+			content: userMessageContent,
+			displayContent: instructions,
+			selections: currSelns,
+			state: defaultMessageState,
+		}
 		this._addMessageToThread(threadId, userHistoryElt)
 
 		this._setThreadState(threadId, { currCheckpointIdx: null }) // no longer at a checkpoint because started streaming
 
-		this._wrapRunAgentToNotify(
-			this._runChatAgent({ threadId, ...this._currentModelSelectionProps(), }),
-			threadId,
-		)
+		const assistantMessage: ChatMessage = {
+			role: 'assistant',
+			displayContent: '',
+			reasoning: '',
+			anthropicReasoning: null,
+		}
+		this._addMessageToThread(threadId, assistantMessage)
+		const threadAfterAdd = this.state.allThreads[threadId]
+		const assistantIdx = (threadAfterAdd?.messages.length ?? 1) - 1
+
+		this._setStreamState(threadId, {
+			isRunning: 'LLM',
+			llmInfo: {
+				displayContentSoFar: '',
+				reasoningSoFar: '',
+				toolCallSoFar: null,
+			},
+			interrupt: Promise.resolve(() => {}),
+		})
+
+		const { abort } = this._continueChatClient.streamResponse({
+			messages: this.state.allThreads[threadId]?.messages ?? [],
+			onChunk: ({ content, reasoning }) => {
+				const stream = this.streamState[threadId]
+				if (!stream || stream.isRunning !== 'LLM' || !stream.llmInfo) return
+
+				if (content) {
+					stream.llmInfo.displayContentSoFar += content
+				}
+				if (reasoning) {
+					stream.llmInfo.reasoningSoFar += reasoning
+				}
+
+				const currThread = this.state.allThreads[threadId]
+				const currMessages = currThread?.messages
+				if (!currThread || !currMessages || !currMessages[assistantIdx]) return
+
+				const updatedAssistant = {
+					...currMessages[assistantIdx],
+					displayContent: stream.llmInfo.displayContentSoFar,
+					reasoning: stream.llmInfo.reasoningSoFar,
+				} as ChatMessage
+				this._editMessageInThread(threadId, assistantIdx, updatedAssistant)
+			},
+			onDone: ({ content, reasoning }) => {
+				const stream = this.streamState[threadId]
+				if (!stream || !stream.llmInfo) return
+
+				stream.llmInfo.displayContentSoFar = content
+				stream.llmInfo.reasoningSoFar = reasoning ?? ''
+
+				const currThread = this.state.allThreads[threadId]
+				const currMessages = currThread?.messages
+				if (!currThread || !currMessages || !currMessages[assistantIdx]) return
+
+				const finalAssistant = {
+					...currMessages[assistantIdx],
+					displayContent: content,
+					reasoning: reasoning ?? '',
+				} as ChatMessage
+				this._editMessageInThread(threadId, assistantIdx, finalAssistant)
+
+				this._setStreamState(threadId, {
+					isRunning: 'idle',
+					interrupt: 'not_needed',
+				})
+			},
+			onError: (error) => {
+				this._setStreamState(threadId, {
+					isRunning: undefined,
+					error: {
+						message: error.message,
+						fullError: error,
+					},
+				})
+			},
+		})
+
+		const currentStream = this.streamState[threadId]
+		if (currentStream && currentStream.isRunning === 'LLM') {
+			currentStream.interrupt = Promise.resolve(() => {
+				abort()
+			})
+		}
 
 		// scroll to bottom
-		this.state.allThreads[threadId]?.state.mountedInfo?.whenMounted.then(m => {
+		this.state.allThreads[threadId]?.state.mountedInfo?.whenMounted.then((m) => {
 			m.scrollToBottom()
 		})
 	}
 
-
-	async addUserMessageAndStreamResponse({ userMessage, _chatSelections, threadId }: { userMessage: string, _chatSelections?: StagingSelectionItem[], threadId: string }) {
-		const thread = this.state.allThreads[threadId];
+	async addUserMessageAndStreamResponse({
+		userMessage,
+		_chatSelections,
+		threadId,
+	}: {
+		userMessage: string
+		_chatSelections?: StagingSelectionItem[]
+		threadId: string
+	}) {
+		const thread = this.state.allThreads[threadId]
 		if (!thread) return
 
 		// if there's a current checkpoint, delete all messages after it
 		if (thread.state.currCheckpointIdx !== null) {
-			const checkpointIdx = thread.state.currCheckpointIdx;
-			const newMessages = thread.messages.slice(0, checkpointIdx + 1);
+			const checkpointIdx = thread.state.currCheckpointIdx
+			const newMessages = thread.messages.slice(0, checkpointIdx + 1)
 
 			// Update the thread with truncated messages
 			const newThreads = {
@@ -1284,44 +1811,43 @@ We only need to do it for files that were edited since `from`, ie files between 
 					...thread,
 					lastModified: new Date().toISOString(),
 					messages: newMessages,
-				}
-			};
-			this._storeAllThreads(newThreads);
-			this._setState({ allThreads: newThreads });
+				},
+			}
+			this._storeAllThreads(newThreads)
+			this._setState({ allThreads: newThreads })
 		}
 
 		// Now call the original method to add the user message and stream the response
-		await this._addUserMessageAndStreamResponse({ userMessage, _chatSelections, threadId });
-
+		await this._addUserMessageAndStreamResponse({ userMessage, _chatSelections, threadId })
 	}
 
-	editUserMessageAndStreamResponse: IChatThreadService['editUserMessageAndStreamResponse'] = async ({ userMessage, messageIdx, threadId }) => {
+	editUserMessageAndStreamResponse: IChatThreadService['editUserMessageAndStreamResponse'] =
+		async ({ userMessage, messageIdx, threadId }) => {
+			const thread = this.state.allThreads[threadId]
+			if (!thread) return // should never happen
 
-		const thread = this.state.allThreads[threadId]
-		if (!thread) return // should never happen
-
-		if (thread.messages?.[messageIdx]?.role !== 'user') {
-			throw new Error(`Error: editing a message with role !=='user'`)
-		}
-
-		// get prev and curr selections before clearing the message
-		const currSelns = thread.messages[messageIdx].state.stagingSelections || [] // staging selections for the edited message
-
-		// clear messages up to the index
-		const slicedMessages = thread.messages.slice(0, messageIdx)
-		this._setState({
-			allThreads: {
-				...this.state.allThreads,
-				[thread.id]: {
-					...thread,
-					messages: slicedMessages
-				}
+			if (thread.messages?.[messageIdx]?.role !== 'user') {
+				throw new Error(`Error: editing a message with role !=='user'`)
 			}
-		})
 
-		// re-add the message and stream it
-		this._addUserMessageAndStreamResponse({ userMessage, _chatSelections: currSelns, threadId })
-	}
+			// get prev and curr selections before clearing the message
+			const currSelns = thread.messages[messageIdx].state.stagingSelections || [] // staging selections for the edited message
+
+			// clear messages up to the index
+			const slicedMessages = thread.messages.slice(0, messageIdx)
+			this._setState({
+				allThreads: {
+					...this.state.allThreads,
+					[thread.id]: {
+						...thread,
+						messages: slicedMessages,
+					},
+				},
+			})
+
+			// re-add the message and stream it
+			this._addUserMessageAndStreamResponse({ userMessage, _chatSelections: currSelns, threadId })
+		}
 
 	// ---------- the rest ----------
 
@@ -1353,52 +1879,49 @@ We only need to do it for files that were edited since `from`, ie files between 
 		return uris
 	}
 
-
-
 	getRelativeStr = (uri: URI) => {
 		const isInside = this._workspaceContextService.isInsideWorkspace(uri)
 		if (isInside) {
-			const f = this._workspaceContextService.getWorkspace().folders.find(f => uri.fsPath.startsWith(f.uri.fsPath))
-			if (f) { return uri.fsPath.replace(f.uri.fsPath, '') }
-			else { return undefined }
-		}
-		else {
+			const f = this._workspaceContextService
+				.getWorkspace()
+				.folders.find((f) => uri.fsPath.startsWith(f.uri.fsPath))
+			if (f) {
+				return uri.fsPath.replace(f.uri.fsPath, '')
+			} else {
+				return undefined
+			}
+		} else {
 			return undefined
 		}
 	}
 
-
 	// gets the location of codespan link so the user can click on it
-	generateCodespanLink: IChatThreadService['generateCodespanLink'] = async ({ codespanStr: _codespanStr, threadId }) => {
-
+	generateCodespanLink: IChatThreadService['generateCodespanLink'] = async ({
+		codespanStr: _codespanStr,
+		threadId,
+	}) => {
 		// process codespan to understand what we are searching for
 		// TODO account for more complicated patterns eg `ITextEditorService.openEditor()`
-		const functionOrMethodPattern = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/; // `fUnCt10n_name`
-		const functionParensPattern = /^([^\s(]+)\([^)]*\)$/; // `functionName( args )`
+		const functionOrMethodPattern = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/ // `fUnCt10n_name`
+		const functionParensPattern = /^([^\s(]+)\([^)]*\)$/ // `functionName( args )`
 
 		let target = _codespanStr // the string to search for
 		let codespanType: 'file-or-folder' | 'function-or-class'
 		if (target.includes('.') || target.includes('/')) {
-
 			codespanType = 'file-or-folder'
 			target = _codespanStr
-
 		} else if (functionOrMethodPattern.test(target)) {
-
 			codespanType = 'function-or-class'
 			target = _codespanStr
-
 		} else if (functionParensPattern.test(target)) {
 			const match = target.match(functionParensPattern)
 			if (match && match[1]) {
-
 				codespanType = 'function-or-class'
 				target = match[1]
-
+			} else {
+				return null
 			}
-			else { return null }
-		}
-		else {
+		} else {
 			return null
 		}
 
@@ -1411,14 +1934,13 @@ We only need to do it for files that were edited since `from`, ie files between 
 			// check if any prevFiles are the `target`
 			for (const [idx, uri] of prevUris.entries()) {
 				if (doesUriMatchTarget(uri)) {
-
 					// shorten it
 
 					// TODO make this logic more general
-					const prevUriStrs = prevUris.map(uri => uri.fsPath)
+					const prevUriStrs = prevUris.map((uri) => uri.fsPath)
 					const shortenedUriStrs = shorten(prevUriStrs)
 					let displayText = shortenedUriStrs[idx]
-					const ellipsisIdx = displayText.lastIndexOf('…/');
+					const ellipsisIdx = displayText.lastIndexOf('…/')
 					if (ellipsisIdx >= 0) {
 						displayText = displayText.slice(ellipsisIdx + 2)
 					}
@@ -1430,7 +1952,11 @@ We only need to do it for files that were edited since `from`, ie files between 
 			// else search codebase for `target`
 			let uris: URI[] = []
 			try {
-				const { result } = await this._toolsService.callTool['search_pathnames_only']({ query: target, includePattern: null, pageNumber: 0 })
+				const { result } = await this._toolsService.callTool['search_pathnames_only']({
+					query: target,
+					includePattern: null,
+					pageNumber: 0,
+				})
 				const { uris: uris_ } = await result
 				uris = uris_
 			} catch (e) {
@@ -1439,30 +1965,23 @@ We only need to do it for files that were edited since `from`, ie files between 
 
 			for (const [idx, uri] of uris.entries()) {
 				if (doesUriMatchTarget(uri)) {
-
 					// TODO make this logic more general
-					const prevUriStrs = prevUris.map(uri => uri.fsPath)
+					const prevUriStrs = prevUris.map((uri) => uri.fsPath)
 					const shortenedUriStrs = shorten(prevUriStrs)
 					let displayText = shortenedUriStrs[idx]
-					const ellipsisIdx = displayText.lastIndexOf('…/');
+					const ellipsisIdx = displayText.lastIndexOf('…/')
 					if (ellipsisIdx >= 0) {
 						displayText = displayText.slice(ellipsisIdx + 2)
 					}
 
-
 					return { uri, displayText }
 				}
 			}
-
 		}
 
-
 		if (codespanType === 'function-or-class') {
-
-
 			// check all prevUris for the target
 			for (const uri of prevUris) {
-
 				const modelRef = await this._voidModelService.getModelSafe(uri)
 				const { model } = modelRef
 				if (!model) continue
@@ -1471,28 +1990,31 @@ We only need to do it for files that were edited since `from`, ie files between 
 					target,
 					false, // searchOnlyEditableRange
 					false, // isRegex
-					true,  // matchCase
+					true, // matchCase
 					null, //' ',   // wordSeparators
-					true   // captureMatches
-				);
+					true, // captureMatches
+				)
 
-				const firstThree = matches.slice(0, 3);
+				const firstThree = matches.slice(0, 3)
 
 				// take first 3 occurences, attempt to goto definition on them
 				for (const match of firstThree) {
-					const position = new Position(match.range.startLineNumber, match.range.startColumn);
-					const definitionProviders = this._languageFeaturesService.definitionProvider.ordered(model);
+					const position = new Position(match.range.startLineNumber, match.range.startColumn)
+					const definitionProviders =
+						this._languageFeaturesService.definitionProvider.ordered(model)
 
 					for (const provider of definitionProviders) {
+						const _definitions = await provider.provideDefinition(
+							model,
+							position,
+							CancellationToken.None,
+						)
 
-						const _definitions = await provider.provideDefinition(model, position, CancellationToken.None);
+						if (!_definitions) continue
 
-						if (!_definitions) continue;
-
-						const definitions = Array.isArray(_definitions) ? _definitions : [_definitions];
+						const definitions = Array.isArray(_definitions) ? _definitions : [_definitions]
 
 						for (const definition of definitions) {
-
 							return {
 								uri: definition.uri,
 								selection: {
@@ -1502,7 +2024,7 @@ We only need to do it for files that were edited since `from`, ie files between 
 									endColumn: definition.range.endColumn,
 								},
 								displayText: _codespanStr,
-							};
+							}
 
 							// const defModelRef = await this._textModelService.createModelReference(definition.uri);
 							// const defModel = defModelRef.object.textEditorModel;
@@ -1548,31 +2070,46 @@ We only need to do it for files that were edited since `from`, ie files between 
 			}
 
 			// unlike above do not search codebase (doesnt make sense)
-
 		}
 
 		return null
-
 	}
 
-	getCodespanLink({ codespanStr, messageIdx, threadId }: { codespanStr: string, messageIdx: number, threadId: string }): CodespanLocationLink | undefined {
+	getCodespanLink({
+		codespanStr,
+		messageIdx,
+		threadId,
+	}: {
+		codespanStr: string
+		messageIdx: number
+		threadId: string
+	}): CodespanLocationLink | undefined {
 		const thread = this.state.allThreads[threadId]
-		if (!thread) return undefined;
+		if (!thread) return undefined
 
 		const links = thread.state.linksOfMessageIdx?.[messageIdx]
-		if (!links) return undefined;
+		if (!links) return undefined
 
 		const link = links[codespanStr]
 
 		return link
 	}
 
-	async addCodespanLink({ newLinkText, newLinkLocation, messageIdx, threadId }: { newLinkText: string, newLinkLocation: CodespanLocationLink, messageIdx: number, threadId: string }) {
+	async addCodespanLink({
+		newLinkText,
+		newLinkLocation,
+		messageIdx,
+		threadId,
+	}: {
+		newLinkText: string
+		newLinkLocation: CodespanLocationLink
+		messageIdx: number
+		threadId: string
+	}) {
 		const thread = this.state.allThreads[threadId]
 		if (!thread) return
 
 		this._setState({
-
 			allThreads: {
 				...this.state.allThreads,
 				[threadId]: {
@@ -1583,16 +2120,14 @@ We only need to do it for files that were edited since `from`, ie files between 
 							...thread.state.linksOfMessageIdx,
 							[messageIdx]: {
 								...thread.state.linksOfMessageIdx?.[messageIdx],
-								[newLinkText]: newLinkLocation
-							}
-						}
-					}
-
-				}
-			}
+								[newLinkText]: newLinkLocation,
+							},
+						},
+					},
+				},
+			},
 		})
 	}
-
 
 	getCurrentThread(): ThreadType {
 		const state = this.state
@@ -1606,12 +2141,12 @@ We only need to do it for files that were edited since `from`, ie files between 
 
 		// get the focusedMessageIdx
 		const focusedMessageIdx = thread.state.focusedMessageIdx
-		if (focusedMessageIdx === undefined) return;
+		if (focusedMessageIdx === undefined) return
 
 		// check that the message is actually being edited
 		const focusedMessage = thread.messages[focusedMessageIdx]
-		if (focusedMessage.role !== 'user') return;
-		if (!focusedMessage.state) return;
+		if (focusedMessage.role !== 'user') return
+		if (!focusedMessage.state) return
 
 		return focusedMessageIdx
 	}
@@ -1623,7 +2158,6 @@ We only need to do it for files that were edited since `from`, ie files between 
 	switchToThread(threadId: string) {
 		this._setState({ currentThreadId: threadId })
 	}
-
 
 	openNewThread() {
 		// if a thread with 0 messages already exists, switch to it
@@ -1641,22 +2175,21 @@ We only need to do it for files that were edited since `from`, ie files between 
 		// update state
 		const newThreads: ChatThreads = {
 			...currentThreads,
-			[newThread.id]: newThread
+			[newThread.id]: newThread,
 		}
 		this._storeAllThreads(newThreads)
 		this._setState({ allThreads: newThreads, currentThreadId: newThread.id })
 	}
 
-
 	deleteThread(threadId: string): void {
 		const { allThreads: currentThreads } = this.state
 
 		// delete the thread
-		const newThreads = { ...currentThreads };
-		delete newThreads[threadId];
+		const newThreads = { ...currentThreads }
+		delete newThreads[threadId]
 
 		// store the updated threads
-		this._storeAllThreads(newThreads);
+		this._storeAllThreads(newThreads)
 		this._setState({ ...this.state, allThreads: newThreads })
 	}
 
@@ -1676,7 +2209,6 @@ We only need to do it for files that were edited since `from`, ie files between 
 		this._setState({ allThreads: newThreads })
 	}
 
-
 	private _addMessageToThread(threadId: string, message: ChatMessage) {
 		const { allThreads } = this.state
 		const oldThread = allThreads[threadId]
@@ -1687,11 +2219,8 @@ We only need to do it for files that were edited since `from`, ie files between 
 			[oldThread.id]: {
 				...oldThread,
 				lastModified: new Date().toISOString(),
-				messages: [
-					...oldThread.messages,
-					message
-				],
-			}
+				messages: [...oldThread.messages, message],
+			},
 		}
 		this._storeAllThreads(newThreads)
 		this._setState({ allThreads: newThreads }) // the current thread just changed (it had a message added to it)
@@ -1699,7 +2228,6 @@ We only need to do it for files that were edited since `from`, ie files between 
 
 	// sets the currently selected message (must be undefined if no message is selected)
 	setCurrentlyFocusedMessageIdx(messageIdx: number | undefined) {
-
 		const threadId = this.state.currentThreadId
 		const thread = this.state.allThreads[threadId]
 		if (!thread) return
@@ -1712,9 +2240,9 @@ We only need to do it for files that were edited since `from`, ie files between 
 					state: {
 						...thread.state,
 						focusedMessageIdx: messageIdx,
-					}
-				}
-			}
+					},
+				},
+			},
 		})
 
 		// // when change focused message idx, jump - do not jump back when click edit, too confusing.
@@ -1722,21 +2250,21 @@ We only need to do it for files that were edited since `from`, ie files between 
 		// 	this.jumpToCheckpointBeforeMessageIdx({ threadId, messageIdx, jumpToUserModified: true })
 	}
 
-
 	addNewStagingSelection(newSelection: StagingSelectionItem): void {
-
 		const focusedMessageIdx = this.getCurrentFocusedMessageIdx()
 
 		// set the selections to the proper value
 		let selections: StagingSelectionItem[] = []
-		let setSelections = (s: StagingSelectionItem[]) => { }
+		let setSelections = (s: StagingSelectionItem[]) => {}
 
 		if (focusedMessageIdx === undefined) {
 			selections = this.getCurrentThreadState().stagingSelections
-			setSelections = (s: StagingSelectionItem[]) => this.setCurrentThreadState({ stagingSelections: s })
+			setSelections = (s: StagingSelectionItem[]) =>
+				this.setCurrentThreadState({ stagingSelections: s })
 		} else {
 			selections = this.getCurrentMessageState(focusedMessageIdx).stagingSelections
-			setSelections = (s) => this.setCurrentMessageState(focusedMessageIdx, { stagingSelections: s })
+			setSelections = (s) =>
+				this.setCurrentMessageState(focusedMessageIdx, { stagingSelections: s })
 		}
 
 		// if matches with existing selection, overwrite (since text may change)
@@ -1745,7 +2273,7 @@ We only need to do it for files that were edited since `from`, ie files between 
 			setSelections([
 				...selections!.slice(0, idx),
 				newSelection,
-				...selections!.slice(idx + 1, Infinity)
+				...selections!.slice(idx + 1, Infinity),
 			])
 		}
 		// if no match, add it
@@ -1754,35 +2282,31 @@ We only need to do it for files that were edited since `from`, ie files between 
 		}
 	}
 
-
 	// Pops the staging selections from the current thread's state
 	popStagingSelections(numPops: number): void {
-
-		numPops = numPops ?? 1;
+		numPops = numPops ?? 1
 
 		const focusedMessageIdx = this.getCurrentFocusedMessageIdx()
 
 		// set the selections to the proper value
 		let selections: StagingSelectionItem[] = []
-		let setSelections = (s: StagingSelectionItem[]) => { }
+		let setSelections = (s: StagingSelectionItem[]) => {}
 
 		if (focusedMessageIdx === undefined) {
 			selections = this.getCurrentThreadState().stagingSelections
-			setSelections = (s: StagingSelectionItem[]) => this.setCurrentThreadState({ stagingSelections: s })
+			setSelections = (s: StagingSelectionItem[]) =>
+				this.setCurrentThreadState({ stagingSelections: s })
 		} else {
 			selections = this.getCurrentMessageState(focusedMessageIdx).stagingSelections
-			setSelections = (s) => this.setCurrentMessageState(focusedMessageIdx, { stagingSelections: s })
+			setSelections = (s) =>
+				this.setCurrentMessageState(focusedMessageIdx, { stagingSelections: s })
 		}
 
-		setSelections([
-			...selections.slice(0, selections.length - numPops)
-		])
-
+		setSelections([...selections.slice(0, selections.length - numPops)])
 	}
 
 	// set message.state
 	private _setCurrentMessageState(state: Partial<UserMessageState>, messageIdx: number): void {
-
 		const threadId = this.state.currentThreadId
 		const thread = this.state.allThreads[threadId]
 		if (!thread) return
@@ -1793,40 +2317,46 @@ We only need to do it for files that were edited since `from`, ie files between 
 				[threadId]: {
 					...thread,
 					messages: thread.messages.map((m, i) =>
-						i === messageIdx && m.role === 'user' ? {
-							...m,
-							state: {
-								...m.state,
-								...state
-							},
-						} : m
-					)
-				}
-			}
+						i === messageIdx && m.role === 'user'
+							? {
+									...m,
+									state: {
+										...m.state,
+										...state,
+									},
+								}
+							: m,
+					),
+				},
+			},
 		})
-
 	}
 
 	// set thread.state
-	private _setThreadState(threadId: string, state: Partial<ThreadType['state']>, doNotRefreshMountInfo?: boolean): void {
+	private _setThreadState(
+		threadId: string,
+		state: Partial<ThreadType['state']>,
+		doNotRefreshMountInfo?: boolean,
+	): void {
 		const thread = this.state.allThreads[threadId]
 		if (!thread) return
 
-		this._setState({
-			allThreads: {
-				...this.state.allThreads,
-				[thread.id]: {
-					...thread,
-					state: {
-						...thread.state,
-						...state
-					}
-				}
-			}
-		}, doNotRefreshMountInfo)
-
+		this._setState(
+			{
+				allThreads: {
+					...this.state.allThreads,
+					[thread.id]: {
+						...thread,
+						state: {
+							...thread.state,
+							...state,
+						},
+					},
+				},
+			},
+			doNotRefreshMountInfo,
+		)
 	}
-
 
 	// closeCurrentStagingSelectionsInThread = () => {
 	// 	const currThread = this.getCurrentThreadState()
@@ -1854,8 +2384,6 @@ We only need to do it for files that were edited since `from`, ie files between 
 
 	// }
 
-
-
 	getCurrentThreadState = () => {
 		const currentThread = this.getCurrentThread()
 		return currentThread.state
@@ -1876,9 +2404,6 @@ We only need to do it for files that were edited since `from`, ie files between 
 		if (!currMessage || currMessage.role !== 'user') return
 		this._setCurrentMessageState(newState, messageIdx)
 	}
-
-
-
 }
 
-registerSingleton(IChatThreadService, ChatThreadService, InstantiationType.Eager);
+registerSingleton(IChatThreadService, ChatThreadService, InstantiationType.Eager)

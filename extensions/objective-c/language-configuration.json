@@ -1,74 +1,34 @@
 {
 	"comments": {
 		"lineComment": "//",
-		"blockComment": [
-			"/*",
-			"*/"
-		]
+		"blockComment": ["/*", "*/"]
 	},
 	"brackets": [
-		[
-			"{",
-			"}"
-		],
-		[
-			"[",
-			"]"
-		],
-		[
-			"(",
-			")"
-		]
+		["{", "}"],
+		["[", "]"],
+		["(", ")"]
 	],
 	"autoClosingPairs": [
-		[
-			"{",
-			"}"
-		],
-		[
-			"[",
-			"]"
-		],
-		[
-			"(",
-			")"
-		],
+		["{", "}"],
+		["[", "]"],
+		["(", ")"],
 		{
 			"open": "\"",
 			"close": "\"",
-			"notIn": [
-				"string"
-			]
+			"notIn": ["string"]
 		},
 		{
 			"open": "'",
 			"close": "'",
-			"notIn": [
-				"string"
-			]
+			"notIn": ["string"]
 		}
 	],
 	"surroundingPairs": [
-		[
-			"{",
-			"}"
-		],
-		[
-			"[",
-			"]"
-		],
-		[
-			"(",
-			")"
-		],
-		[
-			"\"",
-			"\""
-		],
-		[
-			"'",
-			"'"
-		]
+		["{", "}"],
+		["[", "]"],
+		["(", ")"],
+		["\"", "\""],
+		["'", "'"]
 	],
 	"onEnterRules": [
 		// Add // when pressing enter from inside line comment
@@ -83,6 +43,6 @@
 				"indent": "none",
 				"appendText": "// "
 			}
-		},
+		}
 	]
 }

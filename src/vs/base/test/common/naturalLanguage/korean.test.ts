@@ -5,25 +5,25 @@
 
 // allow-any-unicode-file
 
-import { strictEqual } from 'assert';
-import { getKoreanAltChars } from '../../../common/naturalLanguage/korean.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../utils.js';
+import { strictEqual } from 'assert'
+import { getKoreanAltChars } from '../../../common/naturalLanguage/korean.js'
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../utils.js'
 
 function getKoreanAltCharsForString(text: string): string {
-	let result = '';
+	let result = ''
 	for (let i = 0; i < text.length; i++) {
-		const chars = getKoreanAltChars(text.charCodeAt(i));
+		const chars = getKoreanAltChars(text.charCodeAt(i))
 		if (chars) {
-			result += String.fromCharCode(...Array.from(chars));
+			result += String.fromCharCode(...Array.from(chars))
 		} else {
-			result += text.charAt(i);
+			result += text.charAt(i)
 		}
 	}
-	return result;
+	return result
 }
 
 suite('Korean', () => {
-	ensureNoDisposablesAreLeakedInTestSuite();
+	ensureNoDisposablesAreLeakedInTestSuite()
 
 	suite('getKoreanAltChars', () => {
 		test('Modern initial consonants', () => {
@@ -47,11 +47,15 @@ suite('Korean', () => {
 				['ᄐ', 'x'],
 				['ᄑ', 'v'],
 				['ᄒ', 'g'],
-			]);
+			])
 			for (const [hangul, alt] of cases.entries()) {
-				strictEqual(getKoreanAltCharsForString(hangul), alt, `"${hangul}" should result in "${alt}"`);
+				strictEqual(
+					getKoreanAltCharsForString(hangul),
+					alt,
+					`"${hangul}" should result in "${alt}"`,
+				)
 			}
-		});
+		})
 
 		test('Modern latter consonants', () => {
 			const cases = new Map([
@@ -82,11 +86,15 @@ suite('Korean', () => {
 				['ᇀ', 'x'],
 				['ᇁ', 'v'],
 				['ᇂ', 'g'],
-			]);
+			])
 			for (const [hangul, alt] of cases.entries()) {
-				strictEqual(getKoreanAltCharsForString(hangul), alt, `"${hangul}" (0x${hangul.charCodeAt(0).toString(16)}) should result in "${alt}"`);
+				strictEqual(
+					getKoreanAltCharsForString(hangul),
+					alt,
+					`"${hangul}" (0x${hangul.charCodeAt(0).toString(16)}) should result in "${alt}"`,
+				)
 			}
-		});
+		})
 
 		test('Modern vowels', () => {
 			const cases = new Map([
@@ -111,11 +119,15 @@ suite('Korean', () => {
 				['ᅳ', 'm'],
 				['ᅴ', 'ml'],
 				['ᅵ', 'l'],
-			]);
+			])
 			for (const [hangul, alt] of cases.entries()) {
-				strictEqual(getKoreanAltCharsForString(hangul), alt, `"${hangul}" (0x${hangul.charCodeAt(0).toString(16)}) should result in "${alt}"`);
+				strictEqual(
+					getKoreanAltCharsForString(hangul),
+					alt,
+					`"${hangul}" (0x${hangul.charCodeAt(0).toString(16)}) should result in "${alt}"`,
+				)
 			}
-		});
+		})
 
 		test('Compatibility Jamo', () => {
 			const cases = new Map([
@@ -171,11 +183,15 @@ suite('Korean', () => {
 				['ㅢ', 'ml'],
 				['ㅣ', 'l'],
 				// HF: Hangul Filler (everything after this is archaic)
-			]);
+			])
 			for (const [hangul, alt] of cases.entries()) {
-				strictEqual(getKoreanAltCharsForString(hangul), alt, `"${hangul}" (0x${hangul.charCodeAt(0).toString(16)}) should result in "${alt}"`);
+				strictEqual(
+					getKoreanAltCharsForString(hangul),
+					alt,
+					`"${hangul}" (0x${hangul.charCodeAt(0).toString(16)}) should result in "${alt}"`,
+				)
 			}
-		});
+		})
 
 		// There are too many characters to test exhaustively, so select some
 		// real world use cases from this code base (workbench contrib names)
@@ -263,16 +279,16 @@ suite('Korean', () => {
 				['ㅈ디채ㅡㄷㅉ미ㅏ소개ㅕ호', 'welcomeWalkthrough'],
 				['재가넴ㅊㄷ', 'workspace'],
 				['재가넴ㅊㄷㄴ', 'workspaces'],
-			]);
+			])
 			for (const [hangul, alt] of cases.entries()) {
 				// Compare with lower case as some cases do not have
 				// corresponding hangul inputs
 				strictEqual(
 					getKoreanAltCharsForString(hangul).toLowerCase(),
 					alt.toLowerCase(),
-					`"${hangul}" (0x${hangul.charCodeAt(0).toString(16)}) should result in "${alt}"`
-				);
+					`"${hangul}" (0x${hangul.charCodeAt(0).toString(16)}) should result in "${alt}"`,
+				)
 			}
-		});
-	});
-});
+		})
+	})
+})

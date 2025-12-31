@@ -3,81 +3,82 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Schemas } from '../../../../../base/common/network.js';
-import { OperatingSystem } from '../../../../../base/common/platform.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { ITextEditorSelection } from '../../../../../platform/editor/common/editor.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IOpenerService } from '../../../../../platform/opener/common/opener.js';
-import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
-import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { ITerminalLinkOpener, ITerminalSimpleLink } from './links.js';
-import { osPathModule, updateLinkWithRelativeCwd } from './terminalLinkHelpers.js';
-import { ITerminalCapabilityStore, TerminalCapability } from '../../../../../platform/terminal/common/capabilities/capabilities.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { IWorkbenchEnvironmentService } from '../../../../services/environment/common/environmentService.js';
-import { IHostService } from '../../../../services/host/browser/host.js';
-import { QueryBuilder } from '../../../../services/search/common/queryBuilder.js';
-import { ISearchService } from '../../../../services/search/common/search.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { detectLinks, getLinkSuffix } from './terminalLinkParsing.js';
-import { ITerminalLogService } from '../../../../../platform/terminal/common/terminal.js';
+import { Schemas } from '../../../../../base/common/network.js'
+import { OperatingSystem } from '../../../../../base/common/platform.js'
+import { URI } from '../../../../../base/common/uri.js'
+import { ICommandService } from '../../../../../platform/commands/common/commands.js'
+import { ITextEditorSelection } from '../../../../../platform/editor/common/editor.js'
+import { IFileService } from '../../../../../platform/files/common/files.js'
+import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js'
+import { IOpenerService } from '../../../../../platform/opener/common/opener.js'
+import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js'
+import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js'
+import { ITerminalLinkOpener, ITerminalSimpleLink } from './links.js'
+import { osPathModule, updateLinkWithRelativeCwd } from './terminalLinkHelpers.js'
+import {
+	ITerminalCapabilityStore,
+	TerminalCapability,
+} from '../../../../../platform/terminal/common/capabilities/capabilities.js'
+import { IEditorService } from '../../../../services/editor/common/editorService.js'
+import { IWorkbenchEnvironmentService } from '../../../../services/environment/common/environmentService.js'
+import { IHostService } from '../../../../services/host/browser/host.js'
+import { QueryBuilder } from '../../../../services/search/common/queryBuilder.js'
+import { ISearchService } from '../../../../services/search/common/search.js'
+import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js'
+import { detectLinks, getLinkSuffix } from './terminalLinkParsing.js'
+import { ITerminalLogService } from '../../../../../platform/terminal/common/terminal.js'
 
 export class TerminalLocalFileLinkOpener implements ITerminalLinkOpener {
-	constructor(
-		@IEditorService private readonly _editorService: IEditorService,
-	) {
-	}
+	constructor(@IEditorService private readonly _editorService: IEditorService) {}
 
 	async open(link: ITerminalSimpleLink): Promise<void> {
 		if (!link.uri) {
-			throw new Error('Tried to open file link without a resolved URI');
+			throw new Error('Tried to open file link without a resolved URI')
 		}
-		const linkSuffix = link.parsedLink ? link.parsedLink.suffix : getLinkSuffix(link.text);
-		let selection: ITextEditorSelection | undefined = link.selection;
+		const linkSuffix = link.parsedLink ? link.parsedLink.suffix : getLinkSuffix(link.text)
+		let selection: ITextEditorSelection | undefined = link.selection
 		if (!selection) {
-			selection = linkSuffix?.row === undefined ? undefined : {
-				startLineNumber: linkSuffix.row ?? 1,
-				startColumn: linkSuffix.col ?? 1,
-				endLineNumber: linkSuffix.rowEnd,
-				endColumn: linkSuffix.colEnd
-			};
+			selection =
+				linkSuffix?.row === undefined
+					? undefined
+					: {
+							startLineNumber: linkSuffix.row ?? 1,
+							startColumn: linkSuffix.col ?? 1,
+							endLineNumber: linkSuffix.rowEnd,
+							endColumn: linkSuffix.colEnd,
+						}
 		}
 		await this._editorService.openEditor({
 			resource: link.uri,
-			options: { pinned: true, selection, revealIfOpened: true }
-		});
+			options: { pinned: true, selection, revealIfOpened: true },
+		})
 	}
 }
 
 export class TerminalLocalFolderInWorkspaceLinkOpener implements ITerminalLinkOpener {
-	constructor(@ICommandService private readonly _commandService: ICommandService) {
-	}
+	constructor(@ICommandService private readonly _commandService: ICommandService) {}
 
 	async open(link: ITerminalSimpleLink): Promise<void> {
 		if (!link.uri) {
-			throw new Error('Tried to open folder in workspace link without a resolved URI');
+			throw new Error('Tried to open folder in workspace link without a resolved URI')
 		}
-		await this._commandService.executeCommand('revealInExplorer', link.uri);
+		await this._commandService.executeCommand('revealInExplorer', link.uri)
 	}
 }
 
 export class TerminalLocalFolderOutsideWorkspaceLinkOpener implements ITerminalLinkOpener {
-	constructor(@IHostService private readonly _hostService: IHostService) {
-	}
+	constructor(@IHostService private readonly _hostService: IHostService) {}
 
 	async open(link: ITerminalSimpleLink): Promise<void> {
 		if (!link.uri) {
-			throw new Error('Tried to open folder in workspace link without a resolved URI');
+			throw new Error('Tried to open folder in workspace link without a resolved URI')
 		}
-		this._hostService.openWindow([{ folderUri: link.uri }], { forceNewWindow: true });
+		this._hostService.openWindow([{ folderUri: link.uri }], { forceNewWindow: true })
 	}
 }
 
 export class TerminalSearchLinkOpener implements ITerminalLinkOpener {
-	protected _fileQueryBuilder: QueryBuilder;
+	protected _fileQueryBuilder: QueryBuilder
 
 	constructor(
 		private readonly _capabilities: ITerminalCapabilityStore,
@@ -90,19 +91,20 @@ export class TerminalSearchLinkOpener implements ITerminalLinkOpener {
 		@IQuickInputService private readonly _quickInputService: IQuickInputService,
 		@ISearchService private readonly _searchService: ISearchService,
 		@ITerminalLogService private readonly _logService: ITerminalLogService,
-		@IWorkbenchEnvironmentService private readonly _workbenchEnvironmentService: IWorkbenchEnvironmentService,
+		@IWorkbenchEnvironmentService
+		private readonly _workbenchEnvironmentService: IWorkbenchEnvironmentService,
 		@IWorkspaceContextService private readonly _workspaceContextService: IWorkspaceContextService,
 	) {
-		this._fileQueryBuilder = instantiationService.createInstance(QueryBuilder);
+		this._fileQueryBuilder = instantiationService.createInstance(QueryBuilder)
 	}
 
 	async open(link: ITerminalSimpleLink): Promise<void> {
-		const osPath = osPathModule(this._getOS());
-		const pathSeparator = osPath.sep;
+		const osPath = osPathModule(this._getOS())
+		const pathSeparator = osPath.sep
 
 		// Remove file:/// and any leading ./ or ../ since quick access doesn't understand that format
-		let text = link.text.replace(/^file:\/\/\/?/, '');
-		text = osPath.normalize(text).replace(/^(\.+[\\/])+/, '');
+		let text = link.text.replace(/^file:\/\/\/?/, '')
+		text = osPath.normalize(text).replace(/^(\.+[\\/])+/, '')
 
 		// Try extract any trailing line and column numbers by matching the text against parsed
 		// links. This will give a search link `foo` on a line like `"foo", line 10` to open the
@@ -110,17 +112,19 @@ export class TerminalSearchLinkOpener implements ITerminalLinkOpener {
 		//
 		// This also normalizes the path to remove suffixes like :10 or :5.0-4
 		if (link.contextLine) {
-			const parsedLinks = detectLinks(link.contextLine, this._getOS());
+			const parsedLinks = detectLinks(link.contextLine, this._getOS())
 			// Optimistically check that the link _starts with_ the parsed link text. If so,
 			// continue to use the parsed link
-			const matchingParsedLink = parsedLinks.find(parsedLink => parsedLink.suffix && link.text.startsWith(parsedLink.path.text));
+			const matchingParsedLink = parsedLinks.find(
+				(parsedLink) => parsedLink.suffix && link.text.startsWith(parsedLink.path.text),
+			)
 			if (matchingParsedLink) {
 				if (matchingParsedLink.suffix?.row !== undefined) {
 					// Normalize the path based on the parsed link
-					text = matchingParsedLink.path.text;
-					text += `:${matchingParsedLink.suffix.row}`;
+					text = matchingParsedLink.path.text
+					text += `:${matchingParsedLink.suffix.row}`
 					if (matchingParsedLink.suffix?.col !== undefined) {
-						text += `:${matchingParsedLink.suffix.col}`;
+						text += `:${matchingParsedLink.suffix.col}`
 					}
 				}
 			}
@@ -132,78 +136,85 @@ export class TerminalSearchLinkOpener implements ITerminalLinkOpener {
 		// - Grep output: <link>:<result line>
 		// This only happens when the colon is _not_ followed by a forward- or back-slash as that
 		// would break absolute Windows paths (eg. `C:/Users/...`).
-		text = text.replace(/:[^\\/\d][^\d]*$/, '');
+		text = text.replace(/:[^\\/\d][^\d]*$/, '')
 
 		// Remove any trailing periods after the line/column numbers, to prevent breaking the search feature, #200257
 		// Examples:
 		// "Check your code Test.tsx:12:45." -> Test.tsx:12:45
 		// "Check your code Test.tsx:12." -> Test.tsx:12
 
-		text = text.replace(/\.$/, '');
+		text = text.replace(/\.$/, '')
 
 		// If any of the names of the folders in the workspace matches
 		// a prefix of the link, remove that prefix and continue
 		this._workspaceContextService.getWorkspace().folders.forEach((folder) => {
 			if (text.substring(0, folder.name.length + 1) === folder.name + pathSeparator) {
-				text = text.substring(folder.name.length + 1);
-				return;
+				text = text.substring(folder.name.length + 1)
+				return
 			}
-		});
-		let cwdResolvedText = text;
+		})
+		let cwdResolvedText = text
 		if (this._capabilities.has(TerminalCapability.CommandDetection)) {
-			cwdResolvedText = updateLinkWithRelativeCwd(this._capabilities, link.bufferRange.start.y, text, osPath, this._logService)?.[0] || text;
+			cwdResolvedText =
+				updateLinkWithRelativeCwd(
+					this._capabilities,
+					link.bufferRange.start.y,
+					text,
+					osPath,
+					this._logService,
+				)?.[0] || text
 		}
 
 		// Try open the cwd resolved link first
 		if (await this._tryOpenExactLink(cwdResolvedText, link)) {
-			return;
+			return
 		}
 
 		// If the cwd resolved text didn't match, try find the link without the cwd resolved, for
 		// example when a command prints paths in a sub-directory of the current cwd
 		if (text !== cwdResolvedText) {
 			if (await this._tryOpenExactLink(text, link)) {
-				return;
+				return
 			}
 		}
 
 		// Fallback to searching quick access
-		return this._quickInputService.quickAccess.show(text);
+		return this._quickInputService.quickAccess.show(text)
 	}
 
 	private async _getExactMatch(sanitizedLink: string): Promise<IResourceMatch | undefined> {
 		// Make the link relative to the cwd if it isn't absolute
-		const os = this._getOS();
-		const pathModule = osPathModule(os);
-		const isAbsolute = pathModule.isAbsolute(sanitizedLink);
-		let absolutePath: string | undefined = isAbsolute ? sanitizedLink : undefined;
+		const os = this._getOS()
+		const pathModule = osPathModule(os)
+		const isAbsolute = pathModule.isAbsolute(sanitizedLink)
+		let absolutePath: string | undefined = isAbsolute ? sanitizedLink : undefined
 		if (!isAbsolute && this._initialCwd.length > 0) {
-			absolutePath = pathModule.join(this._initialCwd, sanitizedLink);
+			absolutePath = pathModule.join(this._initialCwd, sanitizedLink)
 		}
 
 		// Try open as an absolute link
-		let resourceMatch: IResourceMatch | undefined;
+		let resourceMatch: IResourceMatch | undefined
 		if (absolutePath) {
-			let normalizedAbsolutePath: string = absolutePath;
+			let normalizedAbsolutePath: string = absolutePath
 			if (os === OperatingSystem.Windows) {
-				normalizedAbsolutePath = absolutePath.replace(/\\/g, '/');
+				normalizedAbsolutePath = absolutePath.replace(/\\/g, '/')
 				if (normalizedAbsolutePath.match(/[a-z]:/i)) {
-					normalizedAbsolutePath = `/${normalizedAbsolutePath}`;
+					normalizedAbsolutePath = `/${normalizedAbsolutePath}`
 				}
 			}
-			let uri: URI;
+			let uri: URI
 			if (this._workbenchEnvironmentService.remoteAuthority) {
 				uri = URI.from({
 					scheme: Schemas.vscodeRemote,
 					authority: this._workbenchEnvironmentService.remoteAuthority,
-					path: normalizedAbsolutePath
-				});
+					path: normalizedAbsolutePath,
+				})
 			} else {
-				uri = URI.file(normalizedAbsolutePath);
+				uri = URI.file(normalizedAbsolutePath)
 			}
 			try {
-				const fileStat = await this._fileService.stat(uri);
-				resourceMatch = { uri, isDirectory: fileStat.isDirectory };
+				const fileStat = await this._fileService.stat(uri)
+				resourceMatch = { uri, isDirectory: fileStat.isDirectory }
 			} catch {
 				// File or dir doesn't exist, continue on
 			}
@@ -214,14 +225,14 @@ export class TerminalSearchLinkOpener implements ITerminalLinkOpener {
 			const results = await this._searchService.fileSearch(
 				this._fileQueryBuilder.file(this._workspaceContextService.getWorkspace().folders, {
 					filePattern: sanitizedLink,
-					maxResults: 2
-				})
-			);
+					maxResults: 2,
+				}),
+			)
 			if (results.results.length > 0) {
 				if (results.results.length === 1) {
 					// If there's exactly 1 search result, return it regardless of whether it's
 					// exact or partial.
-					resourceMatch = { uri: results.results[0].resource };
+					resourceMatch = { uri: results.results[0].resource }
 				} else if (!isAbsolute) {
 					// For non-absolute links, exact link matching is allowed only if there is a single an exact
 					// file match. For example searching for `foo.txt` when there is no cwd information
@@ -230,68 +241,71 @@ export class TerminalSearchLinkOpener implements ITerminalLinkOpener {
 					// relative paths with folders such as `src/foo.txt`.
 					const results = await this._searchService.fileSearch(
 						this._fileQueryBuilder.file(this._workspaceContextService.getWorkspace().folders, {
-							filePattern: `**/${sanitizedLink}`
-						})
-					);
+							filePattern: `**/${sanitizedLink}`,
+						}),
+					)
 					// Find an exact match if it exists
-					const exactMatches = results.results.filter(e => e.resource.toString().endsWith(sanitizedLink));
+					const exactMatches = results.results.filter((e) =>
+						e.resource.toString().endsWith(sanitizedLink),
+					)
 					if (exactMatches.length === 1) {
-						resourceMatch = { uri: exactMatches[0].resource };
+						resourceMatch = { uri: exactMatches[0].resource }
 					}
 				}
 			}
 		}
-		return resourceMatch;
+		return resourceMatch
 	}
 
 	private async _tryOpenExactLink(text: string, link: ITerminalSimpleLink): Promise<boolean> {
-		const sanitizedLink = text.replace(/:\d+(:\d+)?$/, '');
+		const sanitizedLink = text.replace(/:\d+(:\d+)?$/, '')
 		try {
-			const result = await this._getExactMatch(sanitizedLink);
+			const result = await this._getExactMatch(sanitizedLink)
 			if (result) {
-				const { uri, isDirectory } = result;
+				const { uri, isDirectory } = result
 				const linkToOpen = {
 					// Use the absolute URI's path here so the optional line/col get detected
 					text: result.uri.path + (text.match(/:\d+(:\d+)?$/)?.[0] || ''),
 					uri,
 					bufferRange: link.bufferRange,
-					type: link.type
-				};
+					type: link.type,
+				}
 				if (uri) {
-					await (isDirectory ? this._localFolderInWorkspaceOpener.open(linkToOpen) : this._localFileOpener.open(linkToOpen));
-					return true;
+					await (isDirectory
+						? this._localFolderInWorkspaceOpener.open(linkToOpen)
+						: this._localFileOpener.open(linkToOpen))
+					return true
 				}
 			}
 		} catch {
-			return false;
+			return false
 		}
-		return false;
+		return false
 	}
 }
 
 interface IResourceMatch {
-	uri: URI;
-	isDirectory?: boolean;
+	uri: URI
+	isDirectory?: boolean
 }
 
 export class TerminalUrlLinkOpener implements ITerminalLinkOpener {
 	constructor(
 		private readonly _isRemote: boolean,
 		@IOpenerService private readonly _openerService: IOpenerService,
-		@IConfigurationService private readonly _configurationService: IConfigurationService
-	) {
-	}
+		@IConfigurationService private readonly _configurationService: IConfigurationService,
+	) {}
 
 	async open(link: ITerminalSimpleLink): Promise<void> {
 		if (!link.uri) {
-			throw new Error('Tried to open a url without a resolved URI');
+			throw new Error('Tried to open a url without a resolved URI')
 		}
 		// It's important to use the raw string value here to avoid converting pre-encoded values
 		// from the URL like `%2B` -> `+`.
 		this._openerService.open(link.text, {
 			allowTunneling: this._isRemote && this._configurationService.getValue('remote.forwardOnOpen'),
 			allowContributedOpeners: true,
-			openExternal: true
-		});
+			openExternal: true,
+		})
 	}
 }

@@ -885,7 +885,7 @@ declare namespace monaco {
 		getPosition(): Position;
 		/**
 		 * Get the position at the start of the selection.
-		*/
+		 */
 		getSelectionStart(): Position;
 		/**
 		 * Create a new selection with a different `selectionStartLineNumber` and `selectionStartColumn`.
@@ -1793,7 +1793,7 @@ declare namespace monaco.editor {
 
 	/**
 	 * Configures text that is injected into the view without changing the underlying document.
-	*/
+	 */
 	export interface InjectedTextOptions {
 		/**
 		 * Sets the text to inject. Must be a single line.
@@ -1815,7 +1815,7 @@ declare namespace monaco.editor {
 		/**
 		 * Configures cursor stops around injected text.
 		 * Defaults to {@link InjectedTextCursorStops.Both}.
-		*/
+		 */
 		readonly cursorStops?: InjectedTextCursorStops | null;
 	}
 
@@ -2375,23 +2375,23 @@ declare namespace monaco.editor {
 	export enum PositionAffinity {
 		/**
 		 * Prefers the left most position.
-		*/
+		 */
 		Left = 0,
 		/**
 		 * Prefers the right most position.
-		*/
+		 */
 		Right = 1,
 		/**
 		 * No preference.
-		*/
+		 */
 		None = 2,
 		/**
 		 * If the given position is on injected text, prefers the position left of it.
-		*/
+		 */
 		LeftOfInjectedText = 3,
 		/**
 		 * If the given position is on injected text, prefers the position right of it.
-		*/
+		 */
 		RightOfInjectedText = 4
 	}
 
@@ -3154,18 +3154,18 @@ declare namespace monaco.editor {
 		/**
 		 * Controls the minimal number of visible leading and trailing lines surrounding the cursor.
 		 * Defaults to 0.
-		*/
+		 */
 		cursorSurroundingLines?: number;
 		/**
 		 * Controls when `cursorSurroundingLines` should be enforced
 		 * Defaults to `default`, `cursorSurroundingLines` is not enforced when cursor position is changed
 		 * by mouse.
-		*/
+		 */
 		cursorSurroundingLinesStyle?: 'default' | 'all';
 		/**
 		 * Render last line number when the file ends with a newline.
 		 * Defaults to 'on' for Windows and macOS and 'dimmed' for Linux.
-		*/
+		 */
 		renderFinalNewline?: 'on' | 'off' | 'dimmed';
 		/**
 		 * Remove unusual line terminators like LINE SEPARATOR (LS), PARAGRAPH SEPARATOR (PS).
@@ -3766,7 +3766,7 @@ declare namespace monaco.editor {
 		/**
 		 * Sets a placeholder for the editor.
 		 * If set, the placeholder is shown if the editor is empty.
-		*/
+		 */
 		placeholder?: string | undefined;
 		/**
 		 * Controls whether the definition link opens element in the peek widget.
@@ -3791,7 +3791,7 @@ declare namespace monaco.editor {
 		useShadowDOM?: boolean;
 		/**
 		 * Controls the behavior of editor guides.
-		*/
+		 */
 		guides?: IGuidesOptions;
 		/**
 		 * Controls the behavior of the unicode highlight feature
@@ -3800,7 +3800,7 @@ declare namespace monaco.editor {
 		unicodeHighlight?: IUnicodeHighlightOptions;
 		/**
 		 * Configures bracket pair colorization (disabled by default).
-		*/
+		 */
 		bracketPairColorization?: IBracketPairColorizationOptions;
 		/**
 		 * Controls dropping into the editor from an external source.
@@ -3856,7 +3856,7 @@ declare namespace monaco.editor {
 		/**
 		 * If set, the diff editor is optimized for small views.
 		 * Defaults to `false`.
-		*/
+		 */
 		compactMode?: boolean;
 		/**
 		 * Timeout in milliseconds after which diff computation is cancelled.
@@ -3885,7 +3885,7 @@ declare namespace monaco.editor {
 		renderMarginRevertIcon?: boolean;
 		/**
 		 * Indicates if the gutter menu should be rendered.
-		*/
+		 */
 		renderGutterMenu?: boolean;
 		/**
 		 * Original model should be editable?
@@ -3908,7 +3908,7 @@ declare namespace monaco.editor {
 		diffWordWrap?: 'off' | 'on' | 'inherit';
 		/**
 		 * Diff Algorithm
-		*/
+		 */
 		diffAlgorithm?: 'legacy' | 'advanced';
 		/**
 		 * Whether the diff editor aria label should be verbose.
@@ -3922,7 +3922,7 @@ declare namespace monaco.editor {
 			showEmptyDecorations?: boolean;
 			/**
 			 * Only applies when `renderSideBySide` is set to false.
-			*/
+			 */
 			useTrueInlineView?: boolean;
 		};
 		/**
@@ -3968,7 +3968,7 @@ declare namespace monaco.editor {
 		defaultValue: V;
 		/**
 		 * Might modify `value`.
-		*/
+		 */
 		applyUpdate(value: V | undefined, update: V): ApplyUpdateResult<V>;
 	}
 
@@ -4059,8 +4059,8 @@ declare namespace monaco.editor {
 	 */
 	export interface IEditorFindOptions {
 		/**
-		* Controls whether the cursor should move to find matches while typing.
-		*/
+		 * Controls whether the cursor should move to find matches while typing.
+		 */
 		cursorMoveOnType?: boolean;
 		/**
 		 * Controls if we seed search string in the Find Widget with editor selection.
@@ -4594,7 +4594,7 @@ declare namespace monaco.editor {
 	export interface IInlineSuggestOptions {
 		/**
 		 * Enable or disable the rendering of automatic inline completions.
-		*/
+		 */
 		enabled?: boolean;
 		/**
 		 * Configures the mode.
@@ -4602,7 +4602,7 @@ declare namespace monaco.editor {
 		 * Use `subword` to only show ghost text if the replace text is a subword of the suggestion text.
 		 * Use `subwordSmart` to only show ghost text if the replace text is a subword of the suggestion text, but the subword must start after the cursor position.
 		 * Defaults to `prefix`.
-		*/
+		 */
 		mode?: 'prefix' | 'subword' | 'subwordSmart';
 		showToolbar?: 'always' | 'onHover' | 'never';
 		syntaxHighlightingEnabled?: boolean;
@@ -4624,11 +4624,11 @@ declare namespace monaco.editor {
 	export interface IBracketPairColorizationOptions {
 		/**
 		 * Enable or disable bracket pair colorization.
-		*/
+		 */
 		enabled?: boolean;
 		/**
 		 * Use independent color pool per bracket type.
-		*/
+		 */
 		independentColorPoolPerBracketType?: boolean;
 	}
 
@@ -4636,7 +4636,7 @@ declare namespace monaco.editor {
 		/**
 		 * Enable rendering of bracket pair guides.
 		 * Defaults to false.
-		*/
+		 */
 		bracketPairs?: boolean | 'active';
 		/**
 		 * Enable rendering of vertical bracket pair guides.
@@ -4646,7 +4646,7 @@ declare namespace monaco.editor {
 		/**
 		 * Enable highlighting of the active bracket pair.
 		 * Defaults to true.
-		*/
+		 */
 		highlightActiveBracketPair?: boolean;
 		/**
 		 * Enable rendering of indent guides.
@@ -4702,7 +4702,7 @@ declare namespace monaco.editor {
 		preview?: boolean;
 		/**
 		 * Configures the mode of the preview.
-		*/
+		 */
 		previewMode?: 'prefix' | 'subword' | 'subwordSmart';
 		/**
 		 * Show details inline with the label. Defaults to true.
@@ -5252,7 +5252,7 @@ declare namespace monaco.editor {
 		afterColumn?: number;
 		/**
 		 * If the `afterColumn` has multiple view columns, the affinity specifies which one to use. Defaults to `none`.
-		*/
+		 */
 		afterColumnAffinity?: PositionAffinity;
 		/**
 		 * Render the zone even when its line is hidden.
@@ -5374,7 +5374,7 @@ declare namespace monaco.editor {
 		/**
 		 * Placement preference when multiple view positions refer to the same (model) position.
 		 * This plays a role when injected text is involved.
-		*/
+		 */
 		positionAffinity?: PositionAffinity;
 	}
 
@@ -5724,7 +5724,7 @@ declare namespace monaco.editor {
 	/**
 	 * Target hit with the mouse in the editor.
 	 */
-	export type IMouseTarget = (IMouseTargetUnknown | IMouseTargetTextarea | IMouseTargetMargin | IMouseTargetViewZone | IMouseTargetContentText | IMouseTargetContentEmpty | IMouseTargetContentWidget | IMouseTargetOverlayWidget | IMouseTargetScrollbar | IMouseTargetOverviewRuler | IMouseTargetOutsideEditor);
+	export type IMouseTarget = IMouseTargetUnknown | IMouseTargetTextarea | IMouseTargetMargin | IMouseTargetViewZone | IMouseTargetContentText | IMouseTargetContentEmpty | IMouseTargetContentWidget | IMouseTargetOverlayWidget | IMouseTargetScrollbar | IMouseTargetOverviewRuler | IMouseTargetOutsideEditor;
 
 	/**
 	 * A mouse event originating from the editor.
@@ -5921,11 +5921,11 @@ declare namespace monaco.editor {
 		 * the editor fires a begin update before the operation and an end update after the operation.
 		 * Whenever the editor fires `onBeginUpdate`, it will also fire `onEndUpdate` once the operation finishes.
 		 * Note that not all operations are bracketed by `onBeginUpdate` and `onEndUpdate`.
-		*/
+		 */
 		readonly onBeginUpdate: IEvent<void>;
 		/**
 		 * Fires after the editor completes the operation it fired `onBeginUpdate` for.
-		*/
+		 */
 		readonly onEndUpdate: IEvent<void>;
 		/**
 		 * Saves current view state of the editor in a serializable object.
@@ -6743,7 +6743,7 @@ declare namespace monaco.languages {
 		/**
 		 * Defines a list of bracket pairs that are colorized depending on their nesting level.
 		 * If not set, the configured brackets will be used.
-		*/
+		 */
 		colorizedBracketPairs?: CharacterPair[];
 		/**
 		 * Defines what characters must be after the cursor for bracket or quote autoclosing to occur when using the \'languageDefined\' autoclosing setting.
@@ -7271,7 +7271,7 @@ declare namespace monaco.languages {
 		 *
 		 * The text can also be a snippet. In that case, a preview with default parameters is shown.
 		 * When accepting the suggestion, the full snippet is inserted.
-		*/
+		 */
 		readonly insertText: string | {
 			snippet: string;
 		};
@@ -7289,19 +7289,19 @@ declare namespace monaco.languages {
 		/**
 		 * The range to replace.
 		 * Must begin and end on the same line.
-		*/
+		 */
 		readonly range?: IRange;
 		readonly command?: Command;
 		readonly action?: Command;
 		/**
 		 * Is called the first time an inline completion is shown.
 		 * @deprecated. Use `onDidShow` of the provider instead.
-		*/
+		 */
 		readonly shownCommand?: Command;
 		/**
 		 * If set to `true`, unopened closing brackets are removed and unclosed opening brackets are closed.
 		 * Defaults to `false`.
-		*/
+		 */
 		readonly completeBracketPairs?: boolean;
 		readonly isInlineEdit?: boolean;
 		readonly showInlineEditMenu?: boolean;
@@ -7316,7 +7316,7 @@ declare namespace monaco.languages {
 
 	/**
 	 * TODO: add `| Uri | { light: Uri; dark: Uri }`.
-	*/
+	 */
 	export type IconPath = editor.ThemeIcon;
 
 	export interface InlineCompletions<TItem extends InlineCompletion = InlineCompletion> {
@@ -7339,7 +7339,7 @@ declare namespace monaco.languages {
 		/**
 		 * Will be called when an item is shown.
 		 * @param updatedInsertText Is useful to understand bracket completion.
-		*/
+		 */
 		handleItemDidShow?(completions: T, item: T['items'][number], updatedInsertText: string): void;
 		/**
 		 * Will be called when an item is partially accepted. TODO: also handle full acceptance here!
@@ -7349,7 +7349,7 @@ declare namespace monaco.languages {
 		handleRejection?(completions: T, item: T['items'][number]): void;
 		/**
 		 * Will be called when a completions list is no longer in use and can be garbage-collected.
-		*/
+		 */
 		freeInlineCompletions(completions: T): void;
 		/**
 		 * Only used for {@link yieldsToGroupIds}.

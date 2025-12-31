@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/175662
 
 	export enum QuickInputButtonLocation {
@@ -16,7 +15,7 @@ declare module 'vscode' {
 		/**
 		 * To the right of the input box.
 		 */
-		Inline = 2
+		Inline = 2,
 	}
 
 	export interface QuickInputButton {
@@ -24,6 +23,6 @@ declare module 'vscode' {
 		 * Where the button should be rendered. The default is {@link QuickInputButtonLocation.Title}.
 		 * @note This property is ignored if the button was added to a QuickPickItem.
 		 */
-		location?: QuickInputButtonLocation;
+		location?: QuickInputButtonLocation
 	}
 }

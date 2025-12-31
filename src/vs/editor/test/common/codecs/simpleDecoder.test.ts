@@ -3,25 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TestDecoder } from '../utils/testDecoder.js';
-import { Range } from '../../../common/core/range.js';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { newWriteableStream } from '../../../../base/common/stream.js';
-import { Tab } from '../../../common/codecs/simpleCodec/tokens/tab.js';
-import { Hash } from '../../../common/codecs/simpleCodec/tokens/hash.js';
-import { Word } from '../../../common/codecs/simpleCodec/tokens/word.js';
-import { Dash } from '../../../common/codecs/simpleCodec/tokens/dash.js';
-import { Space } from '../../../common/codecs/simpleCodec/tokens/space.js';
-import { NewLine } from '../../../common/codecs/linesCodec/tokens/newLine.js';
-import { FormFeed } from '../../../common/codecs/simpleCodec/tokens/formFeed.js';
-import { VerticalTab } from '../../../common/codecs/simpleCodec/tokens/verticalTab.js';
-import { CarriageReturn } from '../../../common/codecs/linesCodec/tokens/carriageReturn.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { SimpleDecoder, TSimpleToken } from '../../../common/codecs/simpleCodec/simpleDecoder.js';
-import { LeftBracket, RightBracket } from '../../../common/codecs/simpleCodec/tokens/brackets.js';
-import { LeftParenthesis, RightParenthesis } from '../../../common/codecs/simpleCodec/tokens/parentheses.js';
-import { LeftAngleBracket, RightAngleBracket } from '../../../common/codecs/simpleCodec/tokens/angleBrackets.js';
-import { ExclamationMark } from '../../../common/codecs/simpleCodec/tokens/exclamationMark.js';
+import { TestDecoder } from '../utils/testDecoder.js'
+import { Range } from '../../../common/core/range.js'
+import { VSBuffer } from '../../../../base/common/buffer.js'
+import { newWriteableStream } from '../../../../base/common/stream.js'
+import { Tab } from '../../../common/codecs/simpleCodec/tokens/tab.js'
+import { Hash } from '../../../common/codecs/simpleCodec/tokens/hash.js'
+import { Word } from '../../../common/codecs/simpleCodec/tokens/word.js'
+import { Dash } from '../../../common/codecs/simpleCodec/tokens/dash.js'
+import { Space } from '../../../common/codecs/simpleCodec/tokens/space.js'
+import { NewLine } from '../../../common/codecs/linesCodec/tokens/newLine.js'
+import { FormFeed } from '../../../common/codecs/simpleCodec/tokens/formFeed.js'
+import { VerticalTab } from '../../../common/codecs/simpleCodec/tokens/verticalTab.js'
+import { CarriageReturn } from '../../../common/codecs/linesCodec/tokens/carriageReturn.js'
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js'
+import { SimpleDecoder, TSimpleToken } from '../../../common/codecs/simpleCodec/simpleDecoder.js'
+import { LeftBracket, RightBracket } from '../../../common/codecs/simpleCodec/tokens/brackets.js'
+import {
+	LeftParenthesis,
+	RightParenthesis,
+} from '../../../common/codecs/simpleCodec/tokens/parentheses.js'
+import {
+	LeftAngleBracket,
+	RightAngleBracket,
+} from '../../../common/codecs/simpleCodec/tokens/angleBrackets.js'
+import { ExclamationMark } from '../../../common/codecs/simpleCodec/tokens/exclamationMark.js'
 
 /**
  * A reusable test utility that asserts that a `SimpleDecoder` instance
@@ -47,20 +53,18 @@ import { ExclamationMark } from '../../../common/codecs/simpleCodec/tokens/excla
  */
 export class TestSimpleDecoder extends TestDecoder<TSimpleToken, SimpleDecoder> {
 	constructor() {
-		const stream = newWriteableStream<VSBuffer>(null);
-		const decoder = new SimpleDecoder(stream);
+		const stream = newWriteableStream<VSBuffer>(null)
+		const decoder = new SimpleDecoder(stream)
 
-		super(stream, decoder);
+		super(stream, decoder)
 	}
 }
 
 suite('SimpleDecoder', () => {
-	const testDisposables = ensureNoDisposablesAreLeakedInTestSuite();
+	const testDisposables = ensureNoDisposablesAreLeakedInTestSuite()
 
 	test('produces expected tokens', async () => {
-		const test = testDisposables.add(
-			new TestSimpleDecoder(),
-		);
+		const test = testDisposables.add(new TestSimpleDecoder())
 
 		await test.run(
 			' hello world!\nhow are\t you?\v\n\n   (test)  [!@#$%^🦄&*_+=-]\f  \n\t<hi 👋>\t🤗❤ \t\n hey\v-\tthere\r\n\r\n',
@@ -128,6 +132,6 @@ suite('SimpleDecoder', () => {
 				new CarriageReturn(new Range(7, 1, 7, 2)),
 				new NewLine(new Range(7, 2, 7, 3)),
 			],
-		);
-	});
-});
+		)
+	})
+})

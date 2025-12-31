@@ -1,0 +1,146 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import assert from 'assert';
+import { FinalNewLineParticipant, TrimFinalNewLinesParticipant, TrimWhitespaceParticipant, } from '../../browser/saveParticipants.js';
+import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
+import { workbenchInstantiationService, TestServiceAccessor, } from '../../../../test/browser/workbenchTestServices.js';
+import { ensureNoDisposablesAreLeakedInTestSuite, toResource, } from '../../../../../base/test/common/utils.js';
+import { Range } from '../../../../../editor/common/core/range.js';
+import { Selection } from '../../../../../editor/common/core/selection.js';
+import { TextFileEditorModel } from '../../../../services/textfile/common/textFileEditorModel.js';
+import { snapshotToString, } from '../../../../services/textfile/common/textfiles.js';
+import { DisposableStore } from '../../../../../base/common/lifecycle.js';
+suite('Save Participants', function () {
+    const disposables = new DisposableStore();
+    let instantiationService;
+    let accessor;
+    setup(() => {
+        instantiationService = workbenchInstantiationService(undefined, disposables);
+        accessor = instantiationService.createInstance(TestServiceAccessor);
+        disposables.add(accessor.textFileService.files);
+    });
+    teardown(() => {
+        disposables.clear();
+    });
+    test('insert final new line', async function () {
+        const model = disposables.add(instantiationService.createInstance(TextFileEditorModel, toResource.call(this, '/path/final_new_line.txt'), 'utf8', undefined));
+        await model.resolve();
+        const configService = new TestConfigurationService();
+        configService.setUserConfiguration('files', { insertFinalNewline: true });
+        const participant = new FinalNewLineParticipant(configService, undefined);
+        // No new line for empty lines
+        let lineContent = '';
+        model.textEditorModel.setValue(lineContent);
+        await participant.participate(model, { reason: 1 /* SaveReason.EXPLICIT */ });
+        assert.strictEqual(snapshotToString(model.createSnapshot()), lineContent);
+        // No new line if last line already empty
+        lineContent = `Hello New Line${model.textEditorModel.getEOL()}`;
+        model.textEditorModel.setValue(lineContent);
+        await participant.participate(model, { reason: 1 /* SaveReason.EXPLICIT */ });
+        assert.strictEqual(snapshotToString(model.createSnapshot()), lineContent);
+        // New empty line added (single line)
+        lineContent = 'Hello New Line';
+        model.textEditorModel.setValue(lineContent);
+        await participant.participate(model, { reason: 1 /* SaveReason.EXPLICIT */ });
+        assert.strictEqual(snapshotToString(model.createSnapshot()), `${lineContent}${model.textEditorModel.getEOL()}`);
+        // New empty line added (multi line)
+        lineContent = `Hello New Line${model.textEditorModel.getEOL()}Hello New Line${model.textEditorModel.getEOL()}Hello New Line`;
+        model.textEditorModel.setValue(lineContent);
+        await participant.participate(model, { reason: 1 /* SaveReason.EXPLICIT */ });
+        assert.strictEqual(snapshotToString(model.createSnapshot()), `${lineContent}${model.textEditorModel.getEOL()}`);
+    });
+    test('trim final new lines', async function () {
+        const model = disposables.add(instantiationService.createInstance(TextFileEditorModel, toResource.call(this, '/path/trim_final_new_line.txt'), 'utf8', undefined));
+        await model.resolve();
+        const configService = new TestConfigurationService();
+        configService.setUserConfiguration('files', { trimFinalNewlines: true });
+        const participant = new TrimFinalNewLinesParticipant(configService, undefined);
+        const textContent = 'Trim New Line';
+        const eol = `${model.textEditorModel.getEOL()}`;
+        // No new line removal if last line is not new line
+        let lineContent = `${textContent}`;
+        model.textEditorModel.setValue(lineContent);
+        await participant.participate(model, { reason: 1 /* SaveReason.EXPLICIT */ });
+        assert.strictEqual(snapshotToString(model.createSnapshot()), lineContent);
+        // No new line removal if last line is single new line
+        lineContent = `${textContent}${eol}`;
+        model.textEditorModel.setValue(lineContent);
+        await participant.participate(model, { reason: 1 /* SaveReason.EXPLICIT */ });
+        assert.strictEqual(snapshotToString(model.createSnapshot()), lineContent);
+        // Remove new line (single line with two new lines)
+        lineContent = `${textContent}${eol}${eol}`;
+        model.textEditorModel.setValue(lineContent);
+        await participant.participate(model, { reason: 1 /* SaveReason.EXPLICIT */ });
+        assert.strictEqual(snapshotToString(model.createSnapshot()), `${textContent}${eol}`);
+        // Remove new lines (multiple lines with multiple new lines)
+        lineContent = `${textContent}${eol}${textContent}${eol}${eol}${eol}`;
+        model.textEditorModel.setValue(lineContent);
+        await participant.participate(model, { reason: 1 /* SaveReason.EXPLICIT */ });
+        assert.strictEqual(snapshotToString(model.createSnapshot()), `${textContent}${eol}${textContent}${eol}`);
+    });
+    test('trim final new lines bug#39750', async function () {
+        const model = disposables.add(instantiationService.createInstance(TextFileEditorModel, toResource.call(this, '/path/trim_final_new_line.txt'), 'utf8', undefined));
+        await model.resolve();
+        const configService = new TestConfigurationService();
+        configService.setUserConfiguration('files', { trimFinalNewlines: true });
+        const participant = new TrimFinalNewLinesParticipant(configService, undefined);
+        const textContent = 'Trim New Line';
+        // single line
+        const lineContent = `${textContent}`;
+        model.textEditorModel.setValue(lineContent);
+        // apply edits and push to undo stack.
+        const textEdits = [{ range: new Range(1, 14, 1, 14), text: '.', forceMoveMarkers: false }];
+        model.textEditorModel.pushEditOperations([new Selection(1, 14, 1, 14)], textEdits, () => {
+            return [new Selection(1, 15, 1, 15)];
+        });
+        // undo
+        await model.textEditorModel.undo();
+        assert.strictEqual(snapshotToString(model.createSnapshot()), `${textContent}`);
+        // trim final new lines should not mess the undo stack
+        await participant.participate(model, { reason: 1 /* SaveReason.EXPLICIT */ });
+        await model.textEditorModel.redo();
+        assert.strictEqual(snapshotToString(model.createSnapshot()), `${textContent}.`);
+    });
+    test('trim final new lines bug#46075', async function () {
+        const model = disposables.add(instantiationService.createInstance(TextFileEditorModel, toResource.call(this, '/path/trim_final_new_line.txt'), 'utf8', undefined));
+        await model.resolve();
+        const configService = new TestConfigurationService();
+        configService.setUserConfiguration('files', { trimFinalNewlines: true });
+        const participant = new TrimFinalNewLinesParticipant(configService, undefined);
+        const textContent = 'Test';
+        const eol = `${model.textEditorModel.getEOL()}`;
+        const content = `${textContent}${eol}${eol}`;
+        model.textEditorModel.setValue(content);
+        // save many times
+        for (let i = 0; i < 10; i++) {
+            await participant.participate(model, { reason: 1 /* SaveReason.EXPLICIT */ });
+        }
+        // confirm trimming
+        assert.strictEqual(snapshotToString(model.createSnapshot()), `${textContent}${eol}`);
+        // undo should go back to previous content immediately
+        await model.textEditorModel.undo();
+        assert.strictEqual(snapshotToString(model.createSnapshot()), `${textContent}${eol}${eol}`);
+        await model.textEditorModel.redo();
+        assert.strictEqual(snapshotToString(model.createSnapshot()), `${textContent}${eol}`);
+    });
+    test('trim whitespace', async function () {
+        const model = disposables.add(instantiationService.createInstance(TextFileEditorModel, toResource.call(this, '/path/trim_final_new_line.txt'), 'utf8', undefined));
+        await model.resolve();
+        const configService = new TestConfigurationService();
+        configService.setUserConfiguration('files', { trimTrailingWhitespace: true });
+        const participant = new TrimWhitespaceParticipant(configService, undefined);
+        const textContent = 'Test';
+        const content = `${textContent} 	`;
+        model.textEditorModel.setValue(content);
+        // save many times
+        for (let i = 0; i < 10; i++) {
+            await participant.participate(model, { reason: 1 /* SaveReason.EXPLICIT */ });
+        }
+        // confirm trimming
+        assert.strictEqual(snapshotToString(model.createSnapshot()), `${textContent}`);
+    });
+    ensureNoDisposablesAreLeakedInTestSuite();
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic2F2ZVBhcnRpY2lwYW50LnRlc3QuanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9Vc2Vycy95YXNoYXNuYWlkdS9LdmFudGNvZGUvdm9pZC9zcmMvIiwic291cmNlcyI6WyJ2cy93b3JrYmVuY2gvY29udHJpYi9jb2RlRWRpdG9yL3Rlc3QvYnJvd3Nlci9zYXZlUGFydGljaXBhbnQudGVzdC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRztBQUVoRyxPQUFPLE1BQU0sTUFBTSxRQUFRLENBQUE7QUFFM0IsT0FBTyxFQUNOLHVCQUF1QixFQUN2Qiw0QkFBNEIsRUFDNUIseUJBQXlCLEdBQ3pCLE1BQU0sbUNBQW1DLENBQUE7QUFDMUMsT0FBTyxFQUFFLHdCQUF3QixFQUFFLE1BQU0sK0VBQStFLENBQUE7QUFDeEgsT0FBTyxFQUNOLDZCQUE2QixFQUM3QixtQkFBbUIsR0FDbkIsTUFBTSxtREFBbUQsQ0FBQTtBQUMxRCxPQUFPLEVBQ04sdUNBQXVDLEVBQ3ZDLFVBQVUsR0FDVixNQUFNLDBDQUEwQyxDQUFBO0FBQ2pELE9BQU8sRUFBRSxLQUFLLEVBQUUsTUFBTSw0Q0FBNEMsQ0FBQTtBQUNsRSxPQUFPLEVBQUUsU0FBUyxFQUFFLE1BQU0sZ0RBQWdELENBQUE7QUFDMUUsT0FBTyxFQUFFLG1CQUFtQixFQUFFLE1BQU0sNkRBQTZELENBQUE7QUFDakcsT0FBTyxFQUVOLGdCQUFnQixHQUNoQixNQUFNLG1EQUFtRCxDQUFBO0FBRzFELE9BQU8sRUFBRSxlQUFlLEVBQUUsTUFBTSx5Q0FBeUMsQ0FBQTtBQUV6RSxLQUFLLENBQUMsbUJBQW1CLEVBQUU7SUFDMUIsTUFBTSxXQUFXLEdBQUcsSUFBSSxlQUFlLEVBQUUsQ0FBQTtJQUN6QyxJQUFJLG9CQUEyQyxDQUFBO0lBQy9DLElBQUksUUFBNkIsQ0FBQTtJQUVqQyxLQUFLLENBQUMsR0FBRyxFQUFFO1FBQ1Ysb0JBQW9CLEdBQUcsNkJBQTZCLENBQUMsU0FBUyxFQUFFLFdBQVcsQ0FBQyxDQUFBO1FBQzVFLFFBQVEsR0FBRyxvQkFBb0IsQ0FBQyxjQUFjLENBQUMsbUJBQW1CLENBQUMsQ0FBQTtRQUNuRSxXQUFXLENBQUMsR0FBRyxDQUE2QixRQUFRLENBQUMsZUFBZSxDQUFDLEtBQUssQ0FBQyxDQUFBO0lBQzVFLENBQUMsQ0FBQyxDQUFBO0lBRUYsUUFBUSxDQUFDLEdBQUcsRUFBRTtRQUNiLFdBQVcsQ0FBQyxLQUFLLEVBQUUsQ0FBQTtJQUNwQixDQUFDLENBQUMsQ0FBQTtJQUVGLElBQUksQ0FBQyx1QkFBdUIsRUFBRSxLQUFLO1FBQ2xDLE1BQU0sS0FBSyxHQUFpQyxXQUFXLENBQUMsR0FBRyxDQUMxRCxvQkFBb0IsQ0FBQyxjQUFjLENBQ2xDLG1CQUFtQixFQUNuQixVQUFVLENBQUMsSUFBSSxDQUFDLElBQUksRUFBRSwwQkFBMEIsQ0FBQyxFQUNqRCxNQUFNLEVBQ04sU0FBUyxDQUN1QixDQUNqQyxDQUFBO1FBRUQsTUFBTSxLQUFLLENBQUMsT0FBTyxFQUFFLENBQUE7UUFDckIsTUFBTSxhQUFhLEdBQUcsSUFBSSx3QkFBd0IsRUFBRSxDQUFBO1FBQ3BELGFBQWEsQ0FBQyxvQkFBb0IsQ0FBQyxPQUFPLEVBQUUsRUFBRSxrQkFBa0IsRUFBRSxJQUFJLEVBQUUsQ0FBQyxDQUFBO1FBQ3pFLE1BQU0sV0FBVyxHQUFHLElBQUksdUJBQXVCLENBQUMsYUFBYSxFQUFFLFNBQVUsQ0FBQyxDQUFBO1FBRTFFLDhCQUE4QjtRQUM5QixJQUFJLFdBQVcsR0FBRyxFQUFFLENBQUE7UUFDcEIsS0FBSyxDQUFDLGVBQWUsQ0FBQyxRQUFRLENBQUMsV0FBVyxDQUFDLENBQUE7UUFDM0MsTUFBTSxXQUFXLENBQUMsV0FBVyxDQUFDLEtBQUssRUFBRSxFQUFFLE1BQU0sNkJBQXFCLEVBQUUsQ0FBQyxDQUFBO1FBQ3JFLE1BQU0sQ0FBQyxXQUFXLENBQUMsZ0JBQWdCLENBQUMsS0FBSyxDQUFDLGNBQWMsRUFBRyxDQUFDLEVBQUUsV0FBVyxDQUFDLENBQUE7UUFFMUUseUNBQXlDO1FBQ3pDLFdBQVcsR0FBRyxpQkFBaUIsS0FBSyxDQUFDLGVBQWUsQ0FBQyxNQUFNLEVBQUUsRUFBRSxDQUFBO1FBQy9ELEtBQUssQ0FBQyxlQUFlLENBQUMsUUFBUSxDQUFDLFdBQVcsQ0FBQyxDQUFBO1FBQzNDLE1BQU0sV0FBVyxDQUFDLFdBQVcsQ0FBQyxLQUFLLEVBQUUsRUFBRSxNQUFNLDZCQUFxQixFQUFFLENBQUMsQ0FBQTtRQUNyRSxNQUFNLENBQUMsV0FBVyxDQUFDLGdCQUFnQixDQUFDLEtBQUssQ0FBQyxjQUFjLEVBQUcsQ0FBQyxFQUFFLFdBQVcsQ0FBQyxDQUFBO1FBRTFFLHFDQUFxQztRQUNyQyxXQUFXLEdBQUcsZ0JBQWdCLENBQUE7UUFDOUIsS0FBSyxDQUFDLGVBQWUsQ0FBQyxRQUFRLENBQUMsV0FBVyxDQUFDLENBQUE7UUFDM0MsTUFBTSxXQUFXLENBQUMsV0FBVyxDQUFDLEtBQUssRUFBRSxFQUFFLE1BQU0sNkJBQXFCLEVBQUUsQ0FBQyxDQUFBO1FBQ3JFLE1BQU0sQ0FBQyxXQUFXLENBQ2pCLGdCQUFnQixDQUFDLEtBQUssQ0FBQyxjQUFjLEVBQUcsQ0FBQyxFQUN6QyxHQUFHLFdBQVcsR0FBRyxLQUFLLENBQUMsZUFBZSxDQUFDLE1BQU0sRUFBRSxFQUFFLENBQ2pELENBQUE7UUFFRCxvQ0FBb0M7UUFDcEMsV0FBVyxHQUFHLGlCQUFpQixLQUFLLENBQUMsZUFBZSxDQUFDLE1BQU0sRUFBRSxpQkFBaUIsS0FBSyxDQUFDLGVBQWUsQ0FBQyxNQUFNLEVBQUUsZ0JBQWdCLENBQUE7UUFDNUgsS0FBSyxDQUFDLGVBQWUsQ0FBQyxRQUFRLENBQUMsV0FBVyxDQUFDLENBQUE7UUFDM0MsTUFBTSxXQUFXLENBQUMsV0FBVyxDQUFDLEtBQUssRUFBRSxFQUFFLE1BQU0sNkJBQXFCLEVBQUUsQ0FBQyxDQUFBO1FBQ3JFLE1BQU0sQ0FBQyxXQUFXLENBQ2pCLGdCQUFnQixDQUFDLEtBQUssQ0FBQyxjQUFjLEVBQUcsQ0FBQyxFQUN6QyxHQUFHLFdBQVcsR0FBRyxLQUFLLENBQUMsZUFBZSxDQUFDLE1BQU0sRUFBRSxFQUFFLENBQ2pELENBQUE7SUFDRixDQUFDLENBQUMsQ0FBQTtJQUVGLElBQUksQ0FBQyxzQkFBc0IsRUFBRSxLQUFLO1FBQ2pDLE1BQU0sS0FBSyxHQUFpQyxXQUFXLENBQUMsR0FBRyxDQUMxRCxvQkFBb0IsQ0FBQyxjQUFjLENBQ2xDLG1CQUFtQixFQUNuQixVQUFVLENBQUMsSUFBSSxDQUFDLElBQUksRUFBRSwrQkFBK0IsQ0FBQyxFQUN0RCxNQUFNLEVBQ04sU0FBUyxDQUN1QixDQUNqQyxDQUFBO1FBRUQsTUFBTSxLQUFLLENBQUMsT0FBTyxFQUFFLENBQUE7UUFDckIsTUFBTSxhQUFhLEdBQUcsSUFBSSx3QkFBd0IsRUFBRSxDQUFBO1FBQ3BELGFBQWEsQ0FBQyxvQkFBb0IsQ0FBQyxPQUFPLEVBQUUsRUFBRSxpQkFBaUIsRUFBRSxJQUFJLEVBQUUsQ0FBQyxDQUFBO1FBQ3hFLE1BQU0sV0FBVyxHQUFHLElBQUksNEJBQTRCLENBQUMsYUFBYSxFQUFFLFNBQVUsQ0FBQyxDQUFBO1FBQy9FLE1BQU0sV0FBVyxHQUFHLGVBQWUsQ0FBQTtRQUNuQyxNQUFNLEdBQUcsR0FBRyxHQUFHLEtBQUssQ0FBQyxlQUFlLENBQUMsTUFBTSxFQUFFLEVBQUUsQ0FBQTtRQUUvQyxtREFBbUQ7UUFDbkQsSUFBSSxXQUFXLEdBQUcsR0FBRyxXQUFXLEVBQUUsQ0FBQTtRQUNsQyxLQUFLLENBQUMsZUFBZSxDQUFDLFFBQVEsQ0FBQyxXQUFXLENBQUMsQ0FBQTtRQUMzQyxNQUFNLFdBQVcsQ0FBQyxXQUFXLENBQUMsS0FBSyxFQUFFLEVBQUUsTUFBTSw2QkFBcUIsRUFBRSxDQUFDLENBQUE7UUFDckUsTUFBTSxDQUFDLFdBQVcsQ0FBQyxnQkFBZ0IsQ0FBQyxLQUFLLENBQUMsY0FBYyxFQUFHLENBQUMsRUFBRSxXQUFXLENBQUMsQ0FBQTtRQUUxRSxzREFBc0Q7UUFDdEQsV0FBVyxHQUFHLEdBQUcsV0FBVyxHQUFHLEdBQUcsRUFBRSxDQUFBO1FBQ3BDLEtBQUssQ0FBQyxlQUFlLENBQUMsUUFBUSxDQUFDLFdBQVcsQ0FBQyxDQUFBO1FBQzNDLE1BQU0sV0FBVyxDQUFDLFdBQVcsQ0FBQyxLQUFLLEVBQUUsRUFBRSxNQUFNLDZCQUFxQixFQUFFLENBQUMsQ0FBQTtRQUNyRSxNQUFNLENBQUMsV0FBVyxDQUFDLGdCQUFnQixDQUFDLEtBQUssQ0FBQyxjQUFjLEVBQUcsQ0FBQyxFQUFFLFdBQVcsQ0FBQyxDQUFBO1FBRTFFLG1EQUFtRDtRQUNuRCxXQUFXLEdBQUcsR0FBRyxXQUFXLEdBQUcsR0FBRyxHQUFHLEdBQUcsRUFBRSxDQUFBO1FBQzFDLEtBQUssQ0FBQyxlQUFlLENBQUMsUUFBUSxDQUFDLFdBQVcsQ0FBQyxDQUFBO1FBQzNDLE1BQU0sV0FBVyxDQUFDLFdBQVcsQ0FBQyxLQUFLLEVBQUUsRUFBRSxNQUFNLDZCQUFxQixFQUFFLENBQUMsQ0FBQTtRQUNyRSxNQUFNLENBQUMsV0FBVyxDQUFDLGdCQUFnQixDQUFDLEtBQUssQ0FBQyxjQUFjLEVBQUcsQ0FBQyxFQUFFLEdBQUcsV0FBVyxHQUFHLEdBQUcsRUFBRSxDQUFDLENBQUE7UUFFckYsNERBQTREO1FBQzVELFdBQVcsR0FBRyxHQUFHLFdBQVcsR0FBRyxHQUFHLEdBQUcsV0FBVyxHQUFHLEdBQUcsR0FBRyxHQUFHLEdBQUcsR0FBRyxFQUFFLENBQUE7UUFDcEUsS0FBSyxDQUFDLGVBQWUsQ0FBQyxRQUFRLENBQUMsV0FBVyxDQUFDLENBQUE7UUFDM0MsTUFBTSxXQUFXLENBQUMsV0FBVyxDQUFDLEtBQUssRUFBRSxFQUFFLE1BQU0sNkJBQXFCLEVBQUUsQ0FBQyxDQUFBO1FBQ3JFLE1BQU0sQ0FBQyxXQUFXLENBQ2pCLGdCQUFnQixDQUFDLEtBQUssQ0FBQyxjQUFjLEVBQUcsQ0FBQyxFQUN6QyxHQUFHLFdBQVcsR0FBRyxHQUFHLEdBQUcsV0FBVyxHQUFHLEdBQUcsRUFBRSxDQUMxQyxDQUFBO0lBQ0YsQ0FBQyxDQUFDLENBQUE7SUFFRixJQUFJLENBQUMsZ0NBQWdDLEVBQUUsS0FBSztRQUMzQyxNQUFNLEtBQUssR0FBaUMsV0FBVyxDQUFDLEdBQUcsQ0FDMUQsb0JBQW9CLENBQUMsY0FBYyxDQUNsQyxtQkFBbUIsRUFDbkIsVUFBVSxDQUFDLElBQUksQ0FBQyxJQUFJLEVBQUUsK0JBQStCLENBQUMsRUFDdEQsTUFBTSxFQUNOLFNBQVMsQ0FDdUIsQ0FDakMsQ0FBQTtRQUVELE1BQU0sS0FBSyxDQUFDLE9BQU8sRUFBRSxDQUFBO1FBQ3JCLE1BQU0sYUFBYSxHQUFHLElBQUksd0JBQXdCLEVBQUUsQ0FBQTtRQUNwRCxhQUFhLENBQUMsb0JBQW9CLENBQUMsT0FBTyxFQUFFLEVBQUUsaUJBQWlCLEVBQUUsSUFBSSxFQUFFLENBQUMsQ0FBQTtRQUN4RSxNQUFNLFdBQVcsR0FBRyxJQUFJLDRCQUE0QixDQUFDLGFBQWEsRUFBRSxTQUFVLENBQUMsQ0FBQTtRQUMvRSxNQUFNLFdBQVcsR0FBRyxlQUFlLENBQUE7UUFFbkMsY0FBYztRQUNkLE1BQU0sV0FBVyxHQUFHLEdBQUcsV0FBVyxFQUFFLENBQUE7UUFDcEMsS0FBSyxDQUFDLGVBQWUsQ0FBQyxRQUFRLENBQUMsV0FBVyxDQUFDLENBQUE7UUFFM0Msc0NBQXNDO1FBQ3RDLE1BQU0sU0FBUyxHQUFHLENBQUMsRUFBRSxLQUFLLEVBQUUsSUFBSSxLQUFLLENBQUMsQ0FBQyxFQUFFLEVBQUUsRUFBRSxDQUFDLEVBQUUsRUFBRSxDQUFDLEVBQUUsSUFBSSxFQUFFLEdBQUcsRUFBRSxnQkFBZ0IsRUFBRSxLQUFLLEVBQUUsQ0FBQyxDQUFBO1FBQzFGLEtBQUssQ0FBQyxlQUFlLENBQUMsa0JBQWtCLENBQUMsQ0FBQyxJQUFJLFNBQVMsQ0FBQyxDQUFDLEVBQUUsRUFBRSxFQUFFLENBQUMsRUFBRSxFQUFFLENBQUMsQ0FBQyxFQUFFLFNBQVMsRUFBRSxHQUFHLEVBQUU7WUFDdkYsT0FBTyxDQUFDLElBQUksU0FBUyxDQUFDLENBQUMsRUFBRSxFQUFFLEVBQUUsQ0FBQyxFQUFFLEVBQUUsQ0FBQyxDQUFDLENBQUE7UUFDckMsQ0FBQyxDQUFDLENBQUE7UUFFRixPQUFPO1FBQ1AsTUFBTSxLQUFLLENBQUMsZUFBZSxDQUFDLElBQUksRUFBRSxDQUFBO1FBQ2xDLE1BQU0sQ0FBQyxXQUFXLENBQUMsZ0JBQWdCLENBQUMsS0FBSyxDQUFDLGNBQWMsRUFBRyxDQUFDLEVBQUUsR0FBRyxXQUFXLEVBQUUsQ0FBQyxDQUFBO1FBRS9FLHNEQUFzRDtRQUN0RCxNQUFNLFdBQVcsQ0FBQyxXQUFXLENBQUMsS0FBSyxFQUFFLEVBQUUsTUFBTSw2QkFBcUIsRUFBRSxDQUFDLENBQUE7UUFDckUsTUFBTSxLQUFLLENBQUMsZUFBZSxDQUFDLElBQUksRUFBRSxDQUFBO1FBQ2xDLE1BQU0sQ0FBQyxXQUFXLENBQUMsZ0JBQWdCLENBQUMsS0FBSyxDQUFDLGNBQWMsRUFBRyxDQUFDLEVBQUUsR0FBRyxXQUFXLEdBQUcsQ0FBQyxDQUFBO0lBQ2pGLENBQUMsQ0FBQyxDQUFBO0lBRUYsSUFBSSxDQUFDLGdDQUFnQyxFQUFFLEtBQUs7UUFDM0MsTUFBTSxLQUFLLEdBQWlDLFdBQVcsQ0FBQyxHQUFHLENBQzFELG9CQUFvQixDQUFDLGNBQWMsQ0FDbEMsbUJBQW1CLEVBQ25CLFVBQVUsQ0FBQyxJQUFJLENBQUMsSUFBSSxFQUFFLCtCQUErQixDQUFDLEVBQ3RELE1BQU0sRUFDTixTQUFTLENBQ3VCLENBQ2pDLENBQUE7UUFFRCxNQUFNLEtBQUssQ0FBQyxPQUFPLEVBQUUsQ0FBQTtRQUNyQixNQUFNLGFBQWEsR0FBRyxJQUFJLHdCQUF3QixFQUFFLENBQUE7UUFDcEQsYUFBYSxDQUFDLG9CQUFvQixDQUFDLE9BQU8sRUFBRSxFQUFFLGlCQUFpQixFQUFFLElBQUksRUFBRSxDQUFDLENBQUE7UUFDeEUsTUFBTSxXQUFXLEdBQUcsSUFBSSw0QkFBNEIsQ0FBQyxhQUFhLEVBQUUsU0FBVSxDQUFDLENBQUE7UUFDL0UsTUFBTSxXQUFXLEdBQUcsTUFBTSxDQUFBO1FBQzFCLE1BQU0sR0FBRyxHQUFHLEdBQUcsS0FBSyxDQUFDLGVBQWUsQ0FBQyxNQUFNLEVBQUUsRUFBRSxDQUFBO1FBQy9DLE1BQU0sT0FBTyxHQUFHLEdBQUcsV0FBVyxHQUFHLEdBQUcsR0FBRyxHQUFHLEVBQUUsQ0FBQTtRQUM1QyxLQUFLLENBQUMsZUFBZSxDQUFDLFFBQVEsQ0FBQyxPQUFPLENBQUMsQ0FBQTtRQUV2QyxrQkFBa0I7UUFDbEIsS0FBSyxJQUFJLENBQUMsR0FBRyxDQUFDLEVBQUUsQ0FBQyxHQUFHLEVBQUUsRUFBRSxDQUFDLEVBQUUsRUFBRSxDQUFDO1lBQzdCLE1BQU0sV0FBVyxDQUFDLFdBQVcsQ0FBQyxLQUFLLEVBQUUsRUFBRSxNQUFNLDZCQUFxQixFQUFFLENBQUMsQ0FBQTtRQUN0RSxDQUFDO1FBRUQsbUJBQW1CO1FBQ25CLE1BQU0sQ0FBQyxXQUFXLENBQUMsZ0JBQWdCLENBQUMsS0FBSyxDQUFDLGNBQWMsRUFBRyxDQUFDLEVBQUUsR0FBRyxXQUFXLEdBQUcsR0FBRyxFQUFFLENBQUMsQ0FBQTtRQUVyRixzREFBc0Q7UUFDdEQsTUFBTSxLQUFLLENBQUMsZUFBZSxDQUFDLElBQUksRUFBRSxDQUFBO1FBQ2xDLE1BQU0sQ0FBQyxXQUFXLENBQUMsZ0JBQWdCLENBQUMsS0FBSyxDQUFDLGNBQWMsRUFBRyxDQUFDLEVBQUUsR0FBRyxXQUFXLEdBQUcsR0FBRyxHQUFHLEdBQUcsRUFBRSxDQUFDLENBQUE7UUFDM0YsTUFBTSxLQUFLLENBQUMsZUFBZSxDQUFDLElBQUksRUFBRSxDQUFBO1FBQ2xDLE1BQU0sQ0FBQyxXQUFXLENBQUMsZ0JBQWdCLENBQUMsS0FBSyxDQUFDLGNBQWMsRUFBRyxDQUFDLEVBQUUsR0FBRyxXQUFXLEdBQUcsR0FBRyxFQUFFLENBQUMsQ0FBQTtJQUN0RixDQUFDLENBQUMsQ0FBQTtJQUVGLElBQUksQ0FBQyxpQkFBaUIsRUFBRSxLQUFLO1FBQzVCLE1BQU0sS0FBSyxHQUFpQyxXQUFXLENBQUMsR0FBRyxDQUMxRCxvQkFBb0IsQ0FBQyxjQUFjLENBQ2xDLG1CQUFtQixFQUNuQixVQUFVLENBQUMsSUFBSSxDQUFDLElBQUksRUFBRSwrQkFBK0IsQ0FBQyxFQUN0RCxNQUFNLEVBQ04sU0FBUyxDQUN1QixDQUNqQyxDQUFBO1FBRUQsTUFBTSxLQUFLLENBQUMsT0FBTyxFQUFFLENBQUE7UUFDckIsTUFBTSxhQUFhLEdBQUcsSUFBSSx3QkFBd0IsRUFBRSxDQUFBO1FBQ3BELGFBQWEsQ0FBQyxvQkFBb0IsQ0FBQyxPQUFPLEVBQUUsRUFBRSxzQkFBc0IsRUFBRSxJQUFJLEVBQUUsQ0FBQyxDQUFBO1FBQzdFLE1BQU0sV0FBVyxHQUFHLElBQUkseUJBQXlCLENBQUMsYUFBYSxFQUFFLFNBQVUsQ0FBQyxDQUFBO1FBQzVFLE1BQU0sV0FBVyxHQUFHLE1BQU0sQ0FBQTtRQUMxQixNQUFNLE9BQU8sR0FBRyxHQUFHLFdBQVcsSUFBSSxDQUFBO1FBQ2xDLEtBQUssQ0FBQyxlQUFlLENBQUMsUUFBUSxDQUFDLE9BQU8sQ0FBQyxDQUFBO1FBRXZDLGtCQUFrQjtRQUNsQixLQUFLLElBQUksQ0FBQyxHQUFHLENBQUMsRUFBRSxDQUFDLEdBQUcsRUFBRSxFQUFFLENBQUMsRUFBRSxFQUFFLENBQUM7WUFDN0IsTUFBTSxXQUFXLENBQUMsV0FBVyxDQUFDLEtBQUssRUFBRSxFQUFFLE1BQU0sNkJBQXFCLEVBQUUsQ0FBQyxDQUFBO1FBQ3RFLENBQUM7UUFFRCxtQkFBbUI7UUFDbkIsTUFBTSxDQUFDLFdBQVcsQ0FBQyxnQkFBZ0IsQ0FBQyxLQUFLLENBQUMsY0FBYyxFQUFHLENBQUMsRUFBRSxHQUFHLFdBQVcsRUFBRSxDQUFDLENBQUE7SUFDaEYsQ0FBQyxDQUFDLENBQUE7SUFFRix1Q0FBdUMsRUFBRSxDQUFBO0FBQzFDLENBQUMsQ0FBQyxDQUFBIn0=

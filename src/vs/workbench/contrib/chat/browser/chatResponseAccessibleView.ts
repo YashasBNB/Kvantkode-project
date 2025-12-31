@@ -3,95 +3,99 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { renderMarkdownAsPlaintext } from '../../../../base/browser/markdownRenderer.js';
-import { MarkdownString } from '../../../../base/common/htmlContent.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { AccessibleViewProviderId, AccessibleViewType, IAccessibleViewContentProvider } from '../../../../platform/accessibility/browser/accessibleView.js';
-import { IAccessibleViewImplementation } from '../../../../platform/accessibility/browser/accessibleViewRegistry.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { AccessibilityVerbositySettingId } from '../../accessibility/browser/accessibilityConfiguration.js';
-import { ChatContextKeys } from '../common/chatContextKeys.js';
-import { isResponseVM } from '../common/chatViewModel.js';
-import { ChatTreeItem, IChatWidget, IChatWidgetService } from './chat.js';
+import { renderMarkdownAsPlaintext } from '../../../../base/browser/markdownRenderer.js'
+import { MarkdownString } from '../../../../base/common/htmlContent.js'
+import { Disposable } from '../../../../base/common/lifecycle.js'
+import {
+	AccessibleViewProviderId,
+	AccessibleViewType,
+	IAccessibleViewContentProvider,
+} from '../../../../platform/accessibility/browser/accessibleView.js'
+import { IAccessibleViewImplementation } from '../../../../platform/accessibility/browser/accessibleViewRegistry.js'
+import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js'
+import { AccessibilityVerbositySettingId } from '../../accessibility/browser/accessibilityConfiguration.js'
+import { ChatContextKeys } from '../common/chatContextKeys.js'
+import { isResponseVM } from '../common/chatViewModel.js'
+import { ChatTreeItem, IChatWidget, IChatWidgetService } from './chat.js'
 
 export class ChatResponseAccessibleView implements IAccessibleViewImplementation {
-	readonly priority = 100;
-	readonly name = 'panelChat';
-	readonly type = AccessibleViewType.View;
-	readonly when = ChatContextKeys.inChatSession;
+	readonly priority = 100
+	readonly name = 'panelChat'
+	readonly type = AccessibleViewType.View
+	readonly when = ChatContextKeys.inChatSession
 	getProvider(accessor: ServicesAccessor) {
-		const widgetService = accessor.get(IChatWidgetService);
-		const widget = widgetService.lastFocusedWidget;
+		const widgetService = accessor.get(IChatWidgetService)
+		const widget = widgetService.lastFocusedWidget
 		if (!widget) {
-			return;
+			return
 		}
-		const chatInputFocused = widget.hasInputFocus();
+		const chatInputFocused = widget.hasInputFocus()
 		if (chatInputFocused) {
-			widget.focusLastMessage();
+			widget.focusLastMessage()
 		}
 
-		const verifiedWidget: IChatWidget = widget;
-		const focusedItem = verifiedWidget.getFocus();
+		const verifiedWidget: IChatWidget = widget
+		const focusedItem = verifiedWidget.getFocus()
 
 		if (!focusedItem) {
-			return;
+			return
 		}
 
-		return new ChatResponseAccessibleProvider(verifiedWidget, focusedItem, chatInputFocused);
+		return new ChatResponseAccessibleProvider(verifiedWidget, focusedItem, chatInputFocused)
 	}
 }
 
 class ChatResponseAccessibleProvider extends Disposable implements IAccessibleViewContentProvider {
-	private _focusedItem: ChatTreeItem;
+	private _focusedItem: ChatTreeItem
 	constructor(
 		private readonly _widget: IChatWidget,
 		item: ChatTreeItem,
-		private readonly _chatInputFocused: boolean
+		private readonly _chatInputFocused: boolean,
 	) {
-		super();
-		this._focusedItem = item;
+		super()
+		this._focusedItem = item
 	}
 
-	readonly id = AccessibleViewProviderId.PanelChat;
-	readonly verbositySettingKey = AccessibilityVerbositySettingId.Chat;
-	readonly options = { type: AccessibleViewType.View };
+	readonly id = AccessibleViewProviderId.PanelChat
+	readonly verbositySettingKey = AccessibilityVerbositySettingId.Chat
+	readonly options = { type: AccessibleViewType.View }
 
 	provideContent(): string {
-		return this._getContent(this._focusedItem);
+		return this._getContent(this._focusedItem)
 	}
 
 	private _getContent(item: ChatTreeItem): string {
-		let responseContent = isResponseVM(item) ? item.response.toString() : '';
+		let responseContent = isResponseVM(item) ? item.response.toString() : ''
 		if (!responseContent && 'errorDetails' in item && item.errorDetails) {
-			responseContent = item.errorDetails.message;
+			responseContent = item.errorDetails.message
 		}
-		return renderMarkdownAsPlaintext(new MarkdownString(responseContent), true);
+		return renderMarkdownAsPlaintext(new MarkdownString(responseContent), true)
 	}
 
 	onClose(): void {
-		this._widget.reveal(this._focusedItem);
+		this._widget.reveal(this._focusedItem)
 		if (this._chatInputFocused) {
-			this._widget.focusInput();
+			this._widget.focusInput()
 		} else {
-			this._widget.focus(this._focusedItem);
+			this._widget.focus(this._focusedItem)
 		}
 	}
 
 	provideNextContent(): string | undefined {
-		const next = this._widget.getSibling(this._focusedItem, 'next');
+		const next = this._widget.getSibling(this._focusedItem, 'next')
 		if (next) {
-			this._focusedItem = next;
-			return this._getContent(next);
+			this._focusedItem = next
+			return this._getContent(next)
 		}
-		return;
+		return
 	}
 
 	providePreviousContent(): string | undefined {
-		const previous = this._widget.getSibling(this._focusedItem, 'previous');
+		const previous = this._widget.getSibling(this._focusedItem, 'previous')
 		if (previous) {
-			this._focusedItem = previous;
-			return this._getContent(previous);
+			this._focusedItem = previous
+			return this._getContent(previous)
 		}
-		return;
+		return
 	}
 }

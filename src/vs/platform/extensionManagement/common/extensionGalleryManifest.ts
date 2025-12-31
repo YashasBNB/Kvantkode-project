@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { Event } from '../../../base/common/event.js'
+import { createDecorator } from '../../instantiation/common/instantiation.js'
 
 export const enum ExtensionGalleryResourceType {
 	ExtensionQueryService = 'ExtensionQueryService',
@@ -36,52 +36,58 @@ export const enum Flag {
 }
 
 export type ExtensionGalleryManifestResource = {
-	readonly id: string;
-	readonly type: string;
-};
+	readonly id: string
+	readonly type: string
+}
 
 export type ExtensionQueryCapabilityValue = {
-	readonly name: string;
-	readonly value: number;
-};
+	readonly name: string
+	readonly value: number
+}
 
 export interface IExtensionGalleryManifest {
-	readonly version: string;
-	readonly resources: readonly ExtensionGalleryManifestResource[];
+	readonly version: string
+	readonly resources: readonly ExtensionGalleryManifestResource[]
 	readonly capabilities: {
 		readonly extensionQuery: {
-			readonly filtering?: readonly ExtensionQueryCapabilityValue[];
-			readonly sorting?: readonly ExtensionQueryCapabilityValue[];
-			readonly flags?: readonly ExtensionQueryCapabilityValue[];
-		};
+			readonly filtering?: readonly ExtensionQueryCapabilityValue[]
+			readonly sorting?: readonly ExtensionQueryCapabilityValue[]
+			readonly flags?: readonly ExtensionQueryCapabilityValue[]
+		}
 		readonly signing?: {
-			readonly allRepositorySigned: boolean;
-		};
-	};
+			readonly allRepositorySigned: boolean
+		}
+	}
 }
 
-export const IExtensionGalleryManifestService = createDecorator<IExtensionGalleryManifestService>('IExtensionGalleryManifestService');
+export const IExtensionGalleryManifestService = createDecorator<IExtensionGalleryManifestService>(
+	'IExtensionGalleryManifestService',
+)
 
 export interface IExtensionGalleryManifestService {
-	readonly _serviceBrand: undefined;
+	readonly _serviceBrand: undefined
 
-	readonly onDidChangeExtensionGalleryManifest: Event<IExtensionGalleryManifest | null>;
-	isEnabled(): boolean;
-	getExtensionGalleryManifest(): Promise<IExtensionGalleryManifest | null>;
+	readonly onDidChangeExtensionGalleryManifest: Event<IExtensionGalleryManifest | null>
+	isEnabled(): boolean
+	getExtensionGalleryManifest(): Promise<IExtensionGalleryManifest | null>
 }
 
-export function getExtensionGalleryManifestResourceUri(manifest: IExtensionGalleryManifest, type: ExtensionGalleryResourceType, version?: string): string | undefined {
+export function getExtensionGalleryManifestResourceUri(
+	manifest: IExtensionGalleryManifest,
+	type: ExtensionGalleryResourceType,
+	version?: string,
+): string | undefined {
 	for (const resource of manifest.resources) {
-		const [r, v] = resource.type.split('/');
+		const [r, v] = resource.type.split('/')
 		if (r !== type) {
-			continue;
+			continue
 		}
 		if (!version || v === version) {
-			return resource.id;
+			return resource.id
 		}
-		break;
+		break
 	}
-	return undefined;
+	return undefined
 }
 
-export const ExtensionGalleryServiceUrlConfigKey = 'extensions.gallery.serviceUrl';
+export const ExtensionGalleryServiceUrlConfigKey = 'extensions.gallery.serviceUrl'

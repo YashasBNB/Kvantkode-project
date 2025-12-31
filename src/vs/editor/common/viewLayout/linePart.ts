@@ -14,7 +14,7 @@ export const enum LinePartMetadata {
 }
 
 export class LinePart {
-	_linePartBrand: void = undefined;
+	_linePartBrand: void = undefined
 
 	constructor(
 		/**
@@ -23,14 +23,14 @@ export class LinePart {
 		public readonly endIndex: number,
 		public readonly type: string,
 		public readonly metadata: number,
-		public readonly containsRTL: boolean
-	) { }
+		public readonly containsRTL: boolean,
+	) {}
 
 	public isWhitespace(): boolean {
-		return (this.metadata & LinePartMetadata.IS_WHITESPACE_MASK ? true : false);
+		return this.metadata & LinePartMetadata.IS_WHITESPACE_MASK ? true : false
 	}
 
 	public isPseudoAfter(): boolean {
-		return (this.metadata & LinePartMetadata.PSEUDO_AFTER_MASK ? true : false);
+		return this.metadata & LinePartMetadata.PSEUDO_AFTER_MASK ? true : false
 	}
 }

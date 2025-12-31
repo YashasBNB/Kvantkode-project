@@ -3,26 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IExperimentationTelemetryReporter } from '../experimentTelemetryReporter';
+import { IExperimentationTelemetryReporter } from '../experimentTelemetryReporter'
 
 export interface TelemetryProperties {
-	readonly [prop: string]: string | number | boolean | undefined;
+	readonly [prop: string]: string | number | boolean | undefined
 }
 
 export interface TelemetryReporter {
-	logTelemetry(eventName: string, properties?: TelemetryProperties): void;
+	logTelemetry(eventName: string, properties?: TelemetryProperties): void
 }
 
 export class VSCodeTelemetryReporter implements TelemetryReporter {
 	constructor(
 		private readonly reporter: IExperimentationTelemetryReporter | undefined,
-		private readonly clientVersionDelegate: () => string
-	) { }
+		private readonly clientVersionDelegate: () => string,
+	) {}
 
 	public logTelemetry(eventName: string, properties: { [prop: string]: string } = {}) {
-		const reporter = this.reporter;
+		const reporter = this.reporter
 		if (!reporter) {
-			return;
+			return
 		}
 
 		/* __GDPR__FRAGMENT__
@@ -30,8 +30,8 @@ export class VSCodeTelemetryReporter implements TelemetryReporter {
 				"version" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 			}
 		*/
-		properties['version'] = this.clientVersionDelegate();
+		properties['version'] = this.clientVersionDelegate()
 
-		reporter.postEventObj(eventName, properties);
+		reporter.postEventObj(eventName, properties)
 	}
 }

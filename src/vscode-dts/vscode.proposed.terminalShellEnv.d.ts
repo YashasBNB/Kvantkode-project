@@ -10,7 +10,7 @@ declare module 'vscode' {
 		/**
 		 * The dictionary of environment variables.
 		 */
-		value: { [key: string]: string | undefined };
+		value: { [key: string]: string | undefined }
 
 		/**
 		 * Whether the environment came from a trusted source and is therefore safe to use its
@@ -21,7 +21,7 @@ declare module 'vscode' {
 		 * This is `true` only when the environment was reported explicitly and it used a nonce for
 		 * verification.
 		 */
-		isTrusted: boolean;
+		isTrusted: boolean
 	}
 
 	export interface TerminalShellIntegration {
@@ -29,7 +29,7 @@ declare module 'vscode' {
 		 * The environment of the shell process. This is undefined if the shell integration script
 		 * does not send the environment.
 		 */
-		readonly env: TerminalShellIntegrationEnvironment | undefined;
+		readonly env: TerminalShellIntegrationEnvironment | undefined
 	}
 
 	// TODO: Is it fine that this shares onDidChangeTerminalShellIntegration with cwd and the shellIntegration object itself?

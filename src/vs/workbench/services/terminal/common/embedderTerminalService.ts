@@ -3,30 +3,44 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { IProcessDataEvent, IProcessProperty, IProcessPropertyMap, IProcessReadyEvent, IShellLaunchConfig, ITerminalChildProcess, ITerminalLaunchError, ProcessPropertyType } from '../../../../platform/terminal/common/terminal.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
+import {
+	InstantiationType,
+	registerSingleton,
+} from '../../../../platform/instantiation/common/extensions.js'
+import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js'
+import { Emitter, Event } from '../../../../base/common/event.js'
+import {
+	IProcessDataEvent,
+	IProcessProperty,
+	IProcessPropertyMap,
+	IProcessReadyEvent,
+	IShellLaunchConfig,
+	ITerminalChildProcess,
+	ITerminalLaunchError,
+	ProcessPropertyType,
+} from '../../../../platform/terminal/common/terminal.js'
+import { Disposable } from '../../../../base/common/lifecycle.js'
 
-export const IEmbedderTerminalService = createDecorator<IEmbedderTerminalService>('embedderTerminalService');
+export const IEmbedderTerminalService =
+	createDecorator<IEmbedderTerminalService>('embedderTerminalService')
 
 /**
  * Manages terminals that the embedder can create before the terminal contrib is available.
  */
 export interface IEmbedderTerminalService {
-	readonly _serviceBrand: undefined;
+	readonly _serviceBrand: undefined
 
-	readonly onDidCreateTerminal: Event<IShellLaunchConfig>;
+	readonly onDidCreateTerminal: Event<IShellLaunchConfig>
 
-	createTerminal(options: IEmbedderTerminalOptions): void;
+	createTerminal(options: IEmbedderTerminalOptions): void
 }
 
-export type EmbedderTerminal = IShellLaunchConfig & Required<Pick<IShellLaunchConfig, 'customPtyImplementation'>>;
+export type EmbedderTerminal = IShellLaunchConfig &
+	Required<Pick<IShellLaunchConfig, 'customPtyImplementation'>>
 
 export interface IEmbedderTerminalOptions {
-	name: string;
-	pty: IEmbedderTerminalPty;
+	name: string
+	pty: IEmbedderTerminalPty
 
 	// Extension APIs that have not been implemented for embedders:
 	//   iconPath?: URI | { light: URI; dark: URI } | ThemeIcon;
@@ -39,12 +53,12 @@ export interface IEmbedderTerminalOptions {
  * See Pseudoterminal on the vscode API for usage.
  */
 export interface IEmbedderTerminalPty {
-	onDidWrite: Event<string>;
-	onDidClose?: Event<void | number>;
-	onDidChangeName?: Event<string>;
+	onDidWrite: Event<string>
+	onDidClose?: Event<void | number>
+	onDidChangeName?: Event<string>
 
-	open(): void;
-	close(): void;
+	open(): void
+	close(): void
 
 	// Extension APIs that have not been implemented for embedders:
 	//   onDidOverrideDimensions?: Event<TerminalDimensions | undefined>;
@@ -53,63 +67,66 @@ export interface IEmbedderTerminalPty {
 }
 
 class EmbedderTerminalService implements IEmbedderTerminalService {
-	declare _serviceBrand: undefined;
+	declare _serviceBrand: undefined
 
-	private readonly _onDidCreateTerminal = new Emitter<IShellLaunchConfig>();
-	readonly onDidCreateTerminal = Event.buffer(this._onDidCreateTerminal.event);
+	private readonly _onDidCreateTerminal = new Emitter<IShellLaunchConfig>()
+	readonly onDidCreateTerminal = Event.buffer(this._onDidCreateTerminal.event)
 
 	createTerminal(options: IEmbedderTerminalOptions): void {
 		const slc: EmbedderTerminal = {
 			name: options.name,
 			isFeatureTerminal: true,
 			customPtyImplementation(terminalId, cols, rows) {
-				return new EmbedderTerminalProcess(terminalId, options.pty);
+				return new EmbedderTerminalProcess(terminalId, options.pty)
 			},
-		};
-		this._onDidCreateTerminal.fire(slc);
+		}
+		this._onDidCreateTerminal.fire(slc)
 	}
 }
 
-
 class EmbedderTerminalProcess extends Disposable implements ITerminalChildProcess {
-	private readonly _pty: IEmbedderTerminalPty;
+	private readonly _pty: IEmbedderTerminalPty
 
-	readonly shouldPersist = false;
+	readonly shouldPersist = false
 
-	readonly onProcessData: Event<IProcessDataEvent | string>;
-	private readonly _onProcessReady = this._register(new Emitter<IProcessReadyEvent>());
-	readonly onProcessReady = this._onProcessReady.event;
-	private readonly _onDidChangeProperty = this._register(new Emitter<IProcessProperty<any>>());
-	readonly onDidChangeProperty = this._onDidChangeProperty.event;
-	private readonly _onProcessExit = this._register(new Emitter<number | undefined>());
-	readonly onProcessExit = this._onProcessExit.event;
+	readonly onProcessData: Event<IProcessDataEvent | string>
+	private readonly _onProcessReady = this._register(new Emitter<IProcessReadyEvent>())
+	readonly onProcessReady = this._onProcessReady.event
+	private readonly _onDidChangeProperty = this._register(new Emitter<IProcessProperty<any>>())
+	readonly onDidChangeProperty = this._onDidChangeProperty.event
+	private readonly _onProcessExit = this._register(new Emitter<number | undefined>())
+	readonly onProcessExit = this._onProcessExit.event
 
 	constructor(
 		readonly id: number,
-		pty: IEmbedderTerminalPty
+		pty: IEmbedderTerminalPty,
 	) {
-		super();
+		super()
 
-		this._pty = pty;
-		this.onProcessData = this._pty.onDidWrite;
+		this._pty = pty
+		this.onProcessData = this._pty.onDidWrite
 		if (this._pty.onDidClose) {
-			this._register(this._pty.onDidClose(e => this._onProcessExit.fire(e || undefined)));
+			this._register(this._pty.onDidClose((e) => this._onProcessExit.fire(e || undefined)))
 		}
 		if (this._pty.onDidChangeName) {
-			this._register(this._pty.onDidChangeName(e => this._onDidChangeProperty.fire({
-				type: ProcessPropertyType.Title,
-				value: e
-			})));
+			this._register(
+				this._pty.onDidChangeName((e) =>
+					this._onDidChangeProperty.fire({
+						type: ProcessPropertyType.Title,
+						value: e,
+					}),
+				),
+			)
 		}
 	}
 
 	async start(): Promise<ITerminalLaunchError | undefined> {
-		this._onProcessReady.fire({ pid: -1, cwd: '', windowsPty: undefined });
-		this._pty.open();
-		return undefined;
+		this._onProcessReady.fire({ pid: -1, cwd: '', windowsPty: undefined })
+		this._pty.open()
+		return undefined
 	}
 	shutdown(): void {
-		this._pty.close();
+		this._pty.close()
 	}
 
 	// TODO: A lot of these aren't useful for some implementations of ITerminalChildProcess, should
@@ -134,18 +151,24 @@ class EmbedderTerminalProcess extends Disposable implements ITerminalChildProces
 		// no-op
 	}
 	async getInitialCwd(): Promise<string> {
-		return '';
+		return ''
 	}
 	async getCwd(): Promise<string> {
-		return '';
+		return ''
 	}
-	refreshProperty<T extends ProcessPropertyType>(property: ProcessPropertyType): Promise<IProcessPropertyMap[T]> {
-		throw new Error(`refreshProperty is not suppported in EmbedderTerminalProcess. property: ${property}`);
+	refreshProperty<T extends ProcessPropertyType>(
+		property: ProcessPropertyType,
+	): Promise<IProcessPropertyMap[T]> {
+		throw new Error(
+			`refreshProperty is not suppported in EmbedderTerminalProcess. property: ${property}`,
+		)
 	}
 
 	updateProperty(property: ProcessPropertyType, value: any): Promise<void> {
-		throw new Error(`updateProperty is not suppported in EmbedderTerminalProcess. property: ${property}, value: ${value}`);
+		throw new Error(
+			`updateProperty is not suppported in EmbedderTerminalProcess. property: ${property}, value: ${value}`,
+		)
 	}
 }
 
-registerSingleton(IEmbedderTerminalService, EmbedderTerminalService, InstantiationType.Delayed);
+registerSingleton(IEmbedderTerminalService, EmbedderTerminalService, InstantiationType.Delayed)

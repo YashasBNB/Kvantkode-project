@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	/**
 	 * A NotebookExecution is how {@link NotebookController notebook controller} can indicate whether the notebook controller is busy or not.
 	 *
@@ -15,12 +14,12 @@ declare module 'vscode' {
 		/**
 		 * Signal that the execution has begun.
 		 */
-		start(): void;
+		start(): void
 
 		/**
 		 * Signal that execution has ended.
 		 */
-		end(): void;
+		end(): void
 	}
 
 	export interface NotebookController {
@@ -34,6 +33,6 @@ declare module 'vscode' {
 		 * @param notebook
 		 * @returns A notebook execution.
 		 */
-		createNotebookExecution(notebook: NotebookDocument): NotebookExecution;
+		createNotebookExecution(notebook: NotebookDocument): NotebookExecution
 	}
 }

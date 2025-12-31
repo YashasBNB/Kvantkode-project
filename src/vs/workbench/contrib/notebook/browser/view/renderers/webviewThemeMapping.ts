@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebviewStyles } from '../../../../webview/browser/webview.js';
+import { WebviewStyles } from '../../../../webview/browser/webview.js'
 
 const mapping: ReadonlyMap<string, string> = new Map([
 	['theme-font-family', 'vscode-font-family'],
@@ -61,14 +61,14 @@ const mapping: ReadonlyMap<string, string> = new Map([
 	['theme-notebook-symbol-highlight-background', 'vscode-notebook-symbolHighlightBackground'],
 	['theme-notebook-diff-removed-background', 'vscode-diffEditor-removedTextBackground'],
 	['theme-notebook-diff-inserted-background', 'vscode-diffEditor-insertedTextBackground'],
-]);
+])
 
 const constants: Readonly<WebviewStyles> = {
 	'theme-input-border-width': '1px',
 	'theme-button-primary-hover-shadow': 'none',
 	'theme-button-secondary-hover-shadow': 'none',
 	'theme-input-border-color': 'transparent',
-};
+}
 
 /**
  * Transforms base vscode theme variables into generic variables for notebook
@@ -77,10 +77,10 @@ const constants: Readonly<WebviewStyles> = {
  * @deprecated
  */
 export const transformWebviewThemeVars = (s: Readonly<WebviewStyles>): WebviewStyles => {
-	const result = { ...s, ...constants };
+	const result = { ...s, ...constants }
 	for (const [target, src] of mapping) {
-		result[target] = s[src];
+		result[target] = s[src]
 	}
 
-	return result;
-};
+	return result
+}

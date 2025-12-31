@@ -3,167 +3,209 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ModelOperations, ModelResult } from '@vscode/vscode-languagedetection';
-import { importAMDNodeModule } from '../../../../amdX.js';
-import { StopWatch } from '../../../../base/common/stopwatch.js';
-import { IWebWorkerServerRequestHandler, IWebWorkerServer } from '../../../../base/common/worker/webWorker.js';
-import { LanguageDetectionWorkerHost, ILanguageDetectionWorker } from './languageDetectionWorker.protocol.js';
-import { WorkerTextModelSyncServer } from '../../../../editor/common/services/textModelSync/textModelSync.impl.js';
+import type { ModelOperations, ModelResult } from '@vscode/vscode-languagedetection'
+import { importAMDNodeModule } from '../../../../amdX.js'
+import { StopWatch } from '../../../../base/common/stopwatch.js'
+import {
+	IWebWorkerServerRequestHandler,
+	IWebWorkerServer,
+} from '../../../../base/common/worker/webWorker.js'
+import {
+	LanguageDetectionWorkerHost,
+	ILanguageDetectionWorker,
+} from './languageDetectionWorker.protocol.js'
+import { WorkerTextModelSyncServer } from '../../../../editor/common/services/textModelSync/textModelSync.impl.js'
 
-type RegexpModel = { detect: (inp: string, langBiases: Record<string, number>, supportedLangs?: string[]) => string | undefined };
+type RegexpModel = {
+	detect: (
+		inp: string,
+		langBiases: Record<string, number>,
+		supportedLangs?: string[],
+	) => string | undefined
+}
 
 export function create(workerServer: IWebWorkerServer): IWebWorkerServerRequestHandler {
-	return new LanguageDetectionWorker(workerServer);
+	return new LanguageDetectionWorker(workerServer)
 }
 
 /**
  * @internal
  */
 export class LanguageDetectionWorker implements ILanguageDetectionWorker {
-	_requestHandlerBrand: any;
+	_requestHandlerBrand: any
 
-	private static readonly expectedRelativeConfidence = 0.2;
-	private static readonly positiveConfidenceCorrectionBucket1 = 0.05;
-	private static readonly positiveConfidenceCorrectionBucket2 = 0.025;
-	private static readonly negativeConfidenceCorrection = 0.5;
+	private static readonly expectedRelativeConfidence = 0.2
+	private static readonly positiveConfidenceCorrectionBucket1 = 0.05
+	private static readonly positiveConfidenceCorrectionBucket2 = 0.025
+	private static readonly negativeConfidenceCorrection = 0.5
 
-	private readonly _workerTextModelSyncServer = new WorkerTextModelSyncServer();
+	private readonly _workerTextModelSyncServer = new WorkerTextModelSyncServer()
 
-	private readonly _host: LanguageDetectionWorkerHost;
-	private _regexpModel: RegexpModel | undefined;
-	private _regexpLoadFailed: boolean = false;
+	private readonly _host: LanguageDetectionWorkerHost
+	private _regexpModel: RegexpModel | undefined
+	private _regexpLoadFailed: boolean = false
 
-	private _modelOperations: ModelOperations | undefined;
-	private _loadFailed: boolean = false;
+	private _modelOperations: ModelOperations | undefined
+	private _loadFailed: boolean = false
 
-	private modelIdToCoreId = new Map<string, string | undefined>();
+	private modelIdToCoreId = new Map<string, string | undefined>()
 
 	constructor(workerServer: IWebWorkerServer) {
-		this._host = LanguageDetectionWorkerHost.getChannel(workerServer);
-		this._workerTextModelSyncServer.bindToServer(workerServer);
+		this._host = LanguageDetectionWorkerHost.getChannel(workerServer)
+		this._workerTextModelSyncServer.bindToServer(workerServer)
 	}
 
-	public async $detectLanguage(uri: string, langBiases: Record<string, number> | undefined, preferHistory: boolean, supportedLangs?: string[]): Promise<string | undefined> {
-		const languages: string[] = [];
-		const confidences: number[] = [];
-		const stopWatch = new StopWatch();
-		const documentTextSample = this.getTextForDetection(uri);
-		if (!documentTextSample) { return; }
+	public async $detectLanguage(
+		uri: string,
+		langBiases: Record<string, number> | undefined,
+		preferHistory: boolean,
+		supportedLangs?: string[],
+	): Promise<string | undefined> {
+		const languages: string[] = []
+		const confidences: number[] = []
+		const stopWatch = new StopWatch()
+		const documentTextSample = this.getTextForDetection(uri)
+		if (!documentTextSample) {
+			return
+		}
 
 		const neuralResolver = async () => {
 			for await (const language of this.detectLanguagesImpl(documentTextSample)) {
 				if (!this.modelIdToCoreId.has(language.languageId)) {
-					this.modelIdToCoreId.set(language.languageId, await this._host.$getLanguageId(language.languageId));
+					this.modelIdToCoreId.set(
+						language.languageId,
+						await this._host.$getLanguageId(language.languageId),
+					)
 				}
-				const coreId = this.modelIdToCoreId.get(language.languageId);
+				const coreId = this.modelIdToCoreId.get(language.languageId)
 				if (coreId && (!supportedLangs?.length || supportedLangs.includes(coreId))) {
-					languages.push(coreId);
-					confidences.push(language.confidence);
+					languages.push(coreId)
+					confidences.push(language.confidence)
 				}
 			}
-			stopWatch.stop();
+			stopWatch.stop()
 
 			if (languages.length) {
-				this._host.$sendTelemetryEvent(languages, confidences, stopWatch.elapsed());
-				return languages[0];
+				this._host.$sendTelemetryEvent(languages, confidences, stopWatch.elapsed())
+				return languages[0]
 			}
-			return undefined;
-		};
-
-		const historicalResolver = async () => this.runRegexpModel(documentTextSample, langBiases ?? {}, supportedLangs);
-
-		if (preferHistory) {
-			const history = await historicalResolver();
-			if (history) { return history; }
-			const neural = await neuralResolver();
-			if (neural) { return neural; }
-		} else {
-			const neural = await neuralResolver();
-			if (neural) { return neural; }
-			const history = await historicalResolver();
-			if (history) { return history; }
+			return undefined
 		}
 
-		return undefined;
+		const historicalResolver = async () =>
+			this.runRegexpModel(documentTextSample, langBiases ?? {}, supportedLangs)
+
+		if (preferHistory) {
+			const history = await historicalResolver()
+			if (history) {
+				return history
+			}
+			const neural = await neuralResolver()
+			if (neural) {
+				return neural
+			}
+		} else {
+			const neural = await neuralResolver()
+			if (neural) {
+				return neural
+			}
+			const history = await historicalResolver()
+			if (history) {
+				return history
+			}
+		}
+
+		return undefined
 	}
 
 	private getTextForDetection(uri: string): string | undefined {
-		const editorModel = this._workerTextModelSyncServer.getModel(uri);
-		if (!editorModel) { return; }
+		const editorModel = this._workerTextModelSyncServer.getModel(uri)
+		if (!editorModel) {
+			return
+		}
 
-		const end = editorModel.positionAt(10000);
+		const end = editorModel.positionAt(10000)
 		const content = editorModel.getValueInRange({
 			startColumn: 1,
 			startLineNumber: 1,
 			endColumn: end.column,
-			endLineNumber: end.lineNumber
-		});
-		return content;
+			endLineNumber: end.lineNumber,
+		})
+		return content
 	}
 
 	private async getRegexpModel(): Promise<RegexpModel | undefined> {
 		if (this._regexpLoadFailed) {
-			return;
+			return
 		}
 		if (this._regexpModel) {
-			return this._regexpModel;
+			return this._regexpModel
 		}
-		const uri: string = await this._host.$getRegexpModelUri();
+		const uri: string = await this._host.$getRegexpModelUri()
 		try {
-			this._regexpModel = await importAMDNodeModule(uri, '') as RegexpModel;
-			return this._regexpModel;
+			this._regexpModel = (await importAMDNodeModule(uri, '')) as RegexpModel
+			return this._regexpModel
 		} catch (e) {
-			this._regexpLoadFailed = true;
+			this._regexpLoadFailed = true
 			// console.warn('error loading language detection model', e);
-			return;
+			return
 		}
 	}
 
-	private async runRegexpModel(content: string, langBiases: Record<string, number>, supportedLangs?: string[]): Promise<string | undefined> {
-		const regexpModel = await this.getRegexpModel();
-		if (!regexpModel) { return; }
+	private async runRegexpModel(
+		content: string,
+		langBiases: Record<string, number>,
+		supportedLangs?: string[],
+	): Promise<string | undefined> {
+		const regexpModel = await this.getRegexpModel()
+		if (!regexpModel) {
+			return
+		}
 
 		if (supportedLangs?.length) {
 			// When using supportedLangs, normally computed biases are too extreme. Just use a "bitmask" of sorts.
 			for (const lang of Object.keys(langBiases)) {
 				if (supportedLangs.includes(lang)) {
-					langBiases[lang] = 1;
+					langBiases[lang] = 1
 				} else {
-					langBiases[lang] = 0;
+					langBiases[lang] = 0
 				}
 			}
 		}
 
-		const detected = regexpModel.detect(content, langBiases, supportedLangs);
-		return detected;
+		const detected = regexpModel.detect(content, langBiases, supportedLangs)
+		return detected
 	}
 
 	private async getModelOperations(): Promise<ModelOperations> {
 		if (this._modelOperations) {
-			return this._modelOperations;
+			return this._modelOperations
 		}
 
-		const uri: string = await this._host.$getIndexJsUri();
-		const { ModelOperations } = await importAMDNodeModule(uri, '') as typeof import('@vscode/vscode-languagedetection');
+		const uri: string = await this._host.$getIndexJsUri()
+		const { ModelOperations } = (await importAMDNodeModule(
+			uri,
+			'',
+		)) as typeof import('@vscode/vscode-languagedetection')
 		this._modelOperations = new ModelOperations({
 			modelJsonLoaderFunc: async () => {
-				const response = await fetch(await this._host.$getModelJsonUri());
+				const response = await fetch(await this._host.$getModelJsonUri())
 				try {
-					const modelJSON = await response.json();
-					return modelJSON;
+					const modelJSON = await response.json()
+					return modelJSON
 				} catch (e) {
-					const message = `Failed to parse model JSON.`;
-					throw new Error(message);
+					const message = `Failed to parse model JSON.`
+					throw new Error(message)
 				}
 			},
 			weightsLoaderFunc: async () => {
-				const response = await fetch(await this._host.$getWeightsUri());
-				const buffer = await response.arrayBuffer();
-				return buffer;
-			}
-		});
+				const response = await fetch(await this._host.$getWeightsUri())
+				const buffer = await response.arrayBuffer()
+				return buffer
+			},
+		})
 
-		return this._modelOperations;
+		return this._modelOperations
 	}
 
 	// This adjusts the language confidence scores to be more accurate based on:
@@ -182,16 +224,16 @@ export class LanguageDetectionWorker implements ILanguageDetectionWorker {
 			case 'py':
 			case 'xml':
 			case 'php':
-				modelResult.confidence += LanguageDetectionWorker.positiveConfidenceCorrectionBucket1;
-				break;
+				modelResult.confidence += LanguageDetectionWorker.positiveConfidenceCorrectionBucket1
+				break
 			// case 'yaml': // YAML has been know to cause incorrect language detection because the language is pretty simple. We don't want to increase the confidence for this.
 			case 'cpp':
 			case 'sh':
 			case 'java':
 			case 'cs':
 			case 'c':
-				modelResult.confidence += LanguageDetectionWorker.positiveConfidenceCorrectionBucket2;
-				break;
+				modelResult.confidence += LanguageDetectionWorker.positiveConfidenceCorrectionBucket2
+				break
 
 			// For the following languages, we need to be extra confident that the language is correct because
 			// we've had issues like #131912 that caused incorrect guesses. To enforce this, we subtract the
@@ -209,74 +251,78 @@ export class LanguageDetectionWorker implements ILanguageDetectionWorker {
 				// aren't built in but suported by the model include:
 				// * Assembly, TeX - These languages didn't have clear language modes in the community
 				// * Markdown, Dockerfile - These languages are simple but they embed other languages
-				modelResult.confidence -= LanguageDetectionWorker.negativeConfidenceCorrection;
-				break;
+				modelResult.confidence -= LanguageDetectionWorker.negativeConfidenceCorrection
+				break
 
 			default:
-				break;
-
+				break
 		}
-		return modelResult;
+		return modelResult
 	}
 
-	private async * detectLanguagesImpl(content: string): AsyncGenerator<ModelResult, void, unknown> {
+	private async *detectLanguagesImpl(content: string): AsyncGenerator<ModelResult, void, unknown> {
 		if (this._loadFailed) {
-			return;
+			return
 		}
 
-		let modelOperations: ModelOperations | undefined;
+		let modelOperations: ModelOperations | undefined
 		try {
-			modelOperations = await this.getModelOperations();
+			modelOperations = await this.getModelOperations()
 		} catch (e) {
-			console.log(e);
-			this._loadFailed = true;
-			return;
+			console.log(e)
+			this._loadFailed = true
+			return
 		}
 
-		let modelResults: ModelResult[] | undefined;
+		let modelResults: ModelResult[] | undefined
 
 		try {
-			modelResults = await modelOperations.runModel(content);
+			modelResults = await modelOperations.runModel(content)
 		} catch (e) {
-			console.warn(e);
+			console.warn(e)
 		}
 
-		if (!modelResults
-			|| modelResults.length === 0
-			|| modelResults[0].confidence < LanguageDetectionWorker.expectedRelativeConfidence) {
-			return;
+		if (
+			!modelResults ||
+			modelResults.length === 0 ||
+			modelResults[0].confidence < LanguageDetectionWorker.expectedRelativeConfidence
+		) {
+			return
 		}
 
-		const firstModelResult = this.adjustLanguageConfidence(modelResults[0]);
+		const firstModelResult = this.adjustLanguageConfidence(modelResults[0])
 		if (firstModelResult.confidence < LanguageDetectionWorker.expectedRelativeConfidence) {
-			return;
+			return
 		}
 
-		const possibleLanguages: ModelResult[] = [firstModelResult];
+		const possibleLanguages: ModelResult[] = [firstModelResult]
 
 		for (let current of modelResults) {
 			if (current === firstModelResult) {
-				continue;
+				continue
 			}
 
-			current = this.adjustLanguageConfidence(current);
-			const currentHighest = possibleLanguages[possibleLanguages.length - 1];
+			current = this.adjustLanguageConfidence(current)
+			const currentHighest = possibleLanguages[possibleLanguages.length - 1]
 
-			if (currentHighest.confidence - current.confidence >= LanguageDetectionWorker.expectedRelativeConfidence) {
+			if (
+				currentHighest.confidence - current.confidence >=
+				LanguageDetectionWorker.expectedRelativeConfidence
+			) {
 				while (possibleLanguages.length) {
-					yield possibleLanguages.shift()!;
+					yield possibleLanguages.shift()!
 				}
 				if (current.confidence > LanguageDetectionWorker.expectedRelativeConfidence) {
-					possibleLanguages.push(current);
-					continue;
+					possibleLanguages.push(current)
+					continue
 				}
-				return;
+				return
 			} else {
 				if (current.confidence > LanguageDetectionWorker.expectedRelativeConfidence) {
-					possibleLanguages.push(current);
-					continue;
+					possibleLanguages.push(current)
+					continue
 				}
-				return;
+				return
 			}
 		}
 	}

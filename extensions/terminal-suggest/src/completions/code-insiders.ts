@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import code, { commonOptions, extensionManagementOptions, troubleshootingOptions } from './code';
+import code, { commonOptions, extensionManagementOptions, troubleshootingOptions } from './code'
 
 const codeInsidersCompletionSpec: Fig.Spec = {
 	...code,
@@ -13,6 +13,6 @@ const codeInsidersCompletionSpec: Fig.Spec = {
 		...extensionManagementOptions('code-insiders'),
 		...troubleshootingOptions('code-insiders'),
 	],
-};
+}
 
-export default codeInsidersCompletionSpec;
+export default codeInsidersCompletionSpec

@@ -69,11 +69,7 @@
 			}
 		},
 		{
-			"scope": [
-				"meta.embedded",
-				"source.groovy.embedded",
-				"variable.legacy.builtin.python"
-			],
+			"scope": ["meta.embedded", "source.groovy.embedded", "variable.legacy.builtin.python"],
 			"settings": {
 				"foreground": "#C5C8C6"
 			}
@@ -123,7 +119,7 @@
 			"scope": "constant.character, constant.other",
 			"settings": {
 				"fontStyle": "",
-				"foreground": "#8080FF",
+				"foreground": "#8080FF"
 			}
 		},
 		{
@@ -147,15 +143,12 @@
 			"scope": "entity.name.class, entity.name.type, entity.name.namespace, entity.name.scope-resolution",
 			"settings": {
 				"fontStyle": "",
-				"foreground": "#9B0000",
+				"foreground": "#9B0000"
 			}
 		},
 		{
 			"name": "Inherited class",
-			"scope": [
-				"entity.other.inherited-class",
-				"punctuation.separator.namespace.ruby"
-			],
+			"scope": ["entity.other.inherited-class", "punctuation.separator.namespace.ruby"],
 			"settings": {
 				"fontStyle": "",
 				"foreground": "#C7444A"
@@ -378,9 +371,7 @@
 		},
 		{
 			"name": "Reset JavaScript string interpolation expression",
-			"scope": [
-				"meta.template.expression"
-			],
+			"scope": ["meta.template.expression"],
 			"settings": {
 				"foreground": "#C5C8C6"
 			}
@@ -441,10 +432,7 @@
 		},
 		{
 			"name": "Ruby Embedded Source",
-			"scope": [
-				"punctuation.section.embedded.begin.ruby",
-				"punctuation.section.embedded.end.ruby"
-			],
+			"scope": ["punctuation.section.embedded.begin.ruby", "punctuation.section.embedded.end.ruby"],
 			"settings": {
 				"foreground": "#D08442"
 			}
@@ -590,9 +578,7 @@
 		},
 		{
 			"name": "Markdown List Punctuation",
-			"scope": [
-				"punctuation.definition.list.begin.markdown"
-			],
+			"scope": ["punctuation.definition.list.begin.markdown"],
 			"settings": {
 				"foreground": ""
 			}

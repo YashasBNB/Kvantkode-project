@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { filepaths } from '../helpers/filepaths';
+import { filepaths } from '../helpers/filepaths'
 
 export const commonOptions: Fig.Option[] = [
 	{
@@ -58,8 +58,7 @@ export const commonOptions: Fig.Option[] = [
 	},
 	{
 		name: ['-g', '--goto'],
-		description:
-			'Open a file at the path on the specified line and character position',
+		description: 'Open a file at the path on the specified line and character position',
 		args: {
 			name: 'file:line[:character]',
 			template: 'filepaths',
@@ -138,21 +137,15 @@ export const commonOptions: Fig.Option[] = [
 	},
 	{
 		name: '--locate-shell-integration-path',
-		description:
-			'Print the path to the shell integration script for the provided shell',
+		description: 'Print the path to the shell integration script for the provided shell',
 		args: {
 			isOptional: false,
 			name: 'shell',
 			description: 'The shell to locate the integration script for',
-			suggestions: [
-				'bash',
-				'fish',
-				'pwsh',
-				'zsh',
-			]
-		}
-	}
-];
+			suggestions: ['bash', 'fish', 'pwsh', 'zsh'],
+		},
+	},
+]
 
 export const extensionManagementOptions = (cliName: string): Fig.Option[] => [
 	{
@@ -169,13 +162,11 @@ export const extensionManagementOptions = (cliName: string): Fig.Option[] => [
 	},
 	{
 		name: '--show-versions',
-		description:
-			'Show versions of installed extensions, when using --list-extensions',
+		description: 'Show versions of installed extensions, when using --list-extensions',
 	},
 	{
 		name: '--category',
-		description:
-			'Filters installed extensions by provided category, when using --list-extensions',
+		description: 'Filters installed extensions by provided category, when using --list-extensions',
 		args: {
 			name: 'category',
 			suggestions: [
@@ -202,8 +193,7 @@ export const extensionManagementOptions = (cliName: string): Fig.Option[] => [
 	},
 	{
 		name: '--install-extension',
-		description:
-			`Installs or updates an extension. The argument is either an extension id or a path to a VSIX. The identifier of an extension is '\${ publisher }.\${ name }'. Use '--force' argument to update to latest version. To install a specific version provide '@\${version}'. For example: 'vscode.csharp@1.2.3'`,
+		description: `Installs or updates an extension. The argument is either an extension id or a path to a VSIX. The identifier of an extension is '\${ publisher }.\${ name }'. Use '--force' argument to update to latest version. To install a specific version provide '@\${version}'. For example: 'vscode.csharp@1.2.3'`,
 		args: {
 			name: 'extension-id[@version] | path-to-vsix',
 			generators: [
@@ -224,7 +214,7 @@ export const extensionManagementOptions = (cliName: string): Fig.Option[] => [
 		description: 'Uninstalls an extension',
 		args: {
 			name: 'extension-id',
-			generators: createCodeGenerators(cliName)
+			generators: createCodeGenerators(cliName),
 		},
 	},
 	{
@@ -232,7 +222,7 @@ export const extensionManagementOptions = (cliName: string): Fig.Option[] => [
 		description:
 			'Enables proposed API features for extensions. Can receive one or more extension IDs to enable individually',
 	},
-];
+]
 
 export const troubleshootingOptions = (cliName: string): Fig.Option[] => [
 	{
@@ -249,15 +239,7 @@ export const troubleshootingOptions = (cliName: string): Fig.Option[] => [
 		args: {
 			name: 'level',
 			default: 'info',
-			suggestions: [
-				'critical',
-				'error',
-				'warn',
-				'info',
-				'debug',
-				'trace',
-				'off',
-			],
+			suggestions: ['critical', 'error', 'warn', 'info', 'debug', 'trace', 'off'],
 		},
 	},
 	{
@@ -277,7 +259,7 @@ export const troubleshootingOptions = (cliName: string): Fig.Option[] => [
 		description: 'Disable an extension',
 		args: {
 			name: 'extension-id',
-			generators: createCodeGenerators(cliName)
+			generators: createCodeGenerators(cliName),
 		},
 	},
 	{
@@ -321,25 +303,28 @@ export const troubleshootingOptions = (cliName: string): Fig.Option[] => [
 		name: '--telemetry',
 		description: 'Shows all telemetry events which VS code collects',
 	},
-];
+]
 
 export function createCodeGenerators(cliName: string): Fig.Generator {
 	return {
 		script: [cliName, '--list-extensions', '--show-versions'],
-		postProcess: parseInstalledExtensions
-	};
+		postProcess: parseInstalledExtensions,
+	}
 }
 
 export function parseInstalledExtensions(out: string): Fig.Suggestion[] | undefined {
-	const extensions = out.split('\n').filter(Boolean).map((line) => {
-		const [id, version] = line.split('@');
-		return {
-			name: id,
-			type: 'option' as Fig.SuggestionType,
-			description: `Version: ${version}`
-		};
-	});
-	return extensions;
+	const extensions = out
+		.split('\n')
+		.filter(Boolean)
+		.map((line) => {
+			const [id, version] = line.split('@')
+			return {
+				name: id,
+				type: 'option' as Fig.SuggestionType,
+				description: `Version: ${version}`,
+			}
+		})
+	return extensions
 }
 
 export const commonAuthOptions: Fig.Option[] = [
@@ -368,20 +353,17 @@ export const commonAuthOptions: Fig.Option[] = [
 		args: {
 			name: 'provider',
 			isOptional: true,
-			suggestions: [
-				'microsoft',
-				'github',
-			],
+			suggestions: ['microsoft', 'github'],
 		},
-	}
-];
+	},
+]
 
 export const tunnelHelpOptions: Fig.Option[] = [
 	{
 		name: ['-h', '--help'],
 		description: 'Print help',
 	},
-];
+]
 
 export const globalTunnelOptions: Fig.Option[] = [
 	{
@@ -402,19 +384,10 @@ export const globalTunnelOptions: Fig.Option[] = [
 		args: {
 			name: 'log',
 			isOptional: true,
-			suggestions: [
-				'trace',
-				'debug',
-				'info',
-				'warn',
-				'error',
-				'critical',
-				'off',
-			],
+			suggestions: ['trace', 'debug', 'info', 'warn', 'error', 'critical', 'off'],
 		},
 	},
-];
-
+]
 
 export const codeTunnelOptions = [
 	{
@@ -428,7 +401,8 @@ export const codeTunnelOptions = [
 	},
 	{
 		name: '--user-data-dir',
-		description: 'Specifies the directory that user data is kept in. Can be used to open multiple distinct instances of the editor',
+		description:
+			'Specifies the directory that user data is kept in. Can be used to open multiple distinct instances of the editor',
 		isRepeatable: true,
 		args: {
 			name: 'user_data_dir',
@@ -437,14 +411,15 @@ export const codeTunnelOptions = [
 	},
 	{
 		name: '--use-version',
-		description: 'Sets the editor version to use for this command. The preferred version can be persisted with `code version use <version>`. Can be \'stable\', \'insiders\', a version number, or an absolute path to an existing install',
+		description:
+			"Sets the editor version to use for this command. The preferred version can be persisted with `code version use <version>`. Can be 'stable', 'insiders', a version number, or an absolute path to an existing install",
 		isRepeatable: true,
 		args: {
 			name: 'use_version',
 			isOptional: true,
 		},
 	},
-];
+]
 
 export const extTunnelSubcommand = {
 	name: 'ext',
@@ -453,38 +428,43 @@ export const extTunnelSubcommand = {
 		{
 			name: 'list',
 			description: 'List installed extensions',
-			options: [...globalTunnelOptions, ...tunnelHelpOptions,
-			{
-				name: '--category',
-				description: 'Filters installed extensions by provided category, when using --list-extensions',
-				isRepeatable: true,
-				args: {
-					name: 'category',
-					isOptional: true,
+			options: [
+				...globalTunnelOptions,
+				...tunnelHelpOptions,
+				{
+					name: '--category',
+					description:
+						'Filters installed extensions by provided category, when using --list-extensions',
+					isRepeatable: true,
+					args: {
+						name: 'category',
+						isOptional: true,
+					},
 				},
-			},
-			{
-				name: '--show-versions',
-				description: 'Show versions of installed extensions, when using --list-extensions',
-			},
-			]
+				{
+					name: '--show-versions',
+					description: 'Show versions of installed extensions, when using --list-extensions',
+				},
+			],
 		},
 		{
 			name: 'install',
 			description: 'Install an extension',
-			options: [...globalTunnelOptions, ...tunnelHelpOptions,
-			{
-				name: '--pre-release',
-				description: 'Installs the pre-release version of the extension',
-			},
-			{
-				name: '--donot-include-pack-and-dependencies',
-				description: `Don't include installing pack and dependencies of the extension`,
-			},
-			{
-				name: '--force',
-				description: `Update to the latest version of the extension if it's already installed`,
-			},
+			options: [
+				...globalTunnelOptions,
+				...tunnelHelpOptions,
+				{
+					name: '--pre-release',
+					description: 'Installs the pre-release version of the extension',
+				},
+				{
+					name: '--donot-include-pack-and-dependencies',
+					description: `Don't include installing pack and dependencies of the extension`,
+				},
+				{
+					name: '--force',
+					description: `Update to the latest version of the extension if it's already installed`,
+				},
 			],
 			args: {
 				name: 'ext-id | id',
@@ -505,18 +485,18 @@ export const extTunnelSubcommand = {
 		{
 			name: 'update',
 			description: 'Update the installed extensions',
-			options: [...globalTunnelOptions, ...tunnelHelpOptions]
+			options: [...globalTunnelOptions, ...tunnelHelpOptions],
 		},
 	],
 	...globalTunnelOptions,
-	...codeTunnelOptions
-};
-
+	...codeTunnelOptions,
+}
 
 export const codeTunnelSubcommands = [
 	{
 		name: 'tunnel',
-		description: 'Create a tunnel that\'s accessible on vscode.dev from anywhere. Run`code tunnel --help` for more usage info',
+		description:
+			"Create a tunnel that's accessible on vscode.dev from anywhere. Run`code tunnel --help` for more usage info",
 		subcommands: [
 			{
 				name: 'prune',
@@ -553,7 +533,7 @@ export const codeTunnelSubcommands = [
 			},
 			{
 				name: 'unregister',
-				description: 'Remove this machine\'s association with the port forwarding service',
+				description: "Remove this machine's association with the port forwarding service",
 				options: [...globalTunnelOptions, ...tunnelHelpOptions],
 			},
 			{
@@ -571,7 +551,7 @@ export const codeTunnelSubcommands = [
 					},
 					{
 						name: 'show',
-						description: 'Show the account that\'s logged into port forwarding service',
+						description: "Show the account that's logged into port forwarding service",
 						options: [...globalTunnelOptions, ...tunnelHelpOptions],
 					},
 					{
@@ -580,8 +560,14 @@ export const codeTunnelSubcommands = [
 						subcommands: [
 							{ name: 'login', description: 'Log in to port forwarding service' },
 							{ name: 'logout', description: 'Log out of port forwarding service' },
-							{ name: 'show', description: 'Show the account that\'s logged into port forwarding service' },
-							{ name: 'help', description: 'Print this message or the help of the given subcommand(s)' },
+							{
+								name: 'show',
+								description: "Show the account that's logged into port forwarding service",
+							},
+							{
+								name: 'help',
+								description: 'Print this message or the help of the given subcommand(s)',
+							},
 						],
 					},
 				],
@@ -600,14 +586,15 @@ export const codeTunnelSubcommands = [
 
 								args: {
 									name: 'name',
-
 								},
 							},
 							{
 								name: '--accept-server-license-terms',
-								description: 'If set, the user accepts the server license terms and the server will be started without a user prompt',
+								description:
+									'If set, the user accepts the server license terms and the server will be started without a user prompt',
 							},
-							...globalTunnelOptions, ...tunnelHelpOptions
+							...globalTunnelOptions,
+							...tunnelHelpOptions,
 						],
 					},
 					{
@@ -624,10 +611,16 @@ export const codeTunnelSubcommands = [
 						name: 'help',
 						description: 'Print this message or the help of the given subcommand(s)',
 						subcommands: [
-							{ name: 'install', description: 'Installs or re-installs the tunnel service on the machine' },
+							{
+								name: 'install',
+								description: 'Installs or re-installs the tunnel service on the machine',
+							},
 							{ name: 'uninstall', description: 'Uninstalls and stops the tunnel service' },
 							{ name: 'log', description: 'Shows logs for the running service' },
-							{ name: 'help', description: 'Print this message or the help of the given subcommand(s)' },
+							{
+								name: 'help',
+								description: 'Print this message or the help of the given subcommand(s)',
+							},
 						],
 					},
 				],
@@ -640,27 +633,45 @@ export const codeTunnelSubcommands = [
 					{ name: 'prune', description: 'Delete all servers which are currently not running' },
 					{ name: 'kill', description: 'Stops any running tunnel on the system' },
 					{ name: 'restart', description: 'Restarts any running tunnel on the system' },
-					{ name: 'status', description: 'Gets whether there is a tunnel running on the current machine' },
-					{ name: 'rename', description: 'Rename the name of this machine associated with port forwarding service' },
-					{ name: 'unregister', description: 'Remove this machine\'s association with the port forwarding service' },
+					{
+						name: 'status',
+						description: 'Gets whether there is a tunnel running on the current machine',
+					},
+					{
+						name: 'rename',
+						description: 'Rename the name of this machine associated with port forwarding service',
+					},
+					{
+						name: 'unregister',
+						description: "Remove this machine's association with the port forwarding service",
+					},
 					{
 						name: 'user',
 						subcommands: [
 							{ name: 'login', description: 'Log in to port forwarding service' },
 							{ name: 'logout', description: 'Log out of port forwarding service' },
-							{ name: 'show', description: 'Show the account that\'s logged into port forwarding service' },
+							{
+								name: 'show',
+								description: "Show the account that's logged into port forwarding service",
+							},
 						],
 					},
 					{
 						name: 'service',
 						description: '(Preview) Manages the tunnel when installed as a system service,',
 						subcommands: [
-							{ name: 'install', description: 'Installs or re-installs the tunnel service on the machine' },
+							{
+								name: 'install',
+								description: 'Installs or re-installs the tunnel service on the machine',
+							},
 							{ name: 'uninstall', description: 'Uninstalls and stops the tunnel service' },
 							{ name: 'log', description: 'Shows logs for the running service' },
 						],
 					},
-					{ name: 'help', description: 'Print this message or the help of the given subcommand(s)' },
+					{
+						name: 'help',
+						description: 'Print this message or the help of the given subcommand(s)',
+					},
 				],
 			},
 		],
@@ -694,7 +705,8 @@ export const codeTunnelSubcommands = [
 			},
 			{
 				name: '--user-data-dir',
-				description: 'Specifies the directory that user data is kept in. Can be used to open multiple distinct instances of the editor',
+				description:
+					'Specifies the directory that user data is kept in. Can be used to open multiple distinct instances of the editor',
 				isRepeatable: true,
 				args: {
 					name: 'user_data_dir',
@@ -703,7 +715,8 @@ export const codeTunnelSubcommands = [
 			},
 			{
 				name: '--use-version',
-				description: 'Sets the editor version to use for this command. The preferred version can be persisted with `code version use <version>`. Can be \'stable\', \'insiders\', a version number, or an absolute path to an existing install',
+				description:
+					"Sets the editor version to use for this command. The preferred version can be persisted with `code version use <version>`. Can be 'stable', 'insiders', a version number, or an absolute path to an existing install",
 				isRepeatable: true,
 				args: {
 					name: 'use_version',
@@ -720,7 +733,8 @@ export const codeTunnelSubcommands = [
 			},
 			{
 				name: '--accept-server-license-terms',
-				description: 'If set, the user accepts the server license terms and the server will be started without a user prompt',
+				description:
+					'If set, the user accepts the server license terms and the server will be started without a user prompt',
 			},
 			{
 				name: '--name',
@@ -742,15 +756,7 @@ export const codeTunnelSubcommands = [
 				args: {
 					name: 'log',
 					isOptional: true,
-					suggestions: [
-						'trace',
-						'debug',
-						'info',
-						'warn',
-						'error',
-						'critical',
-						'off',
-					],
+					suggestions: ['trace', 'debug', 'info', 'warn', 'error', 'critical', 'off'],
 				},
 			},
 			{
@@ -773,7 +779,7 @@ export const codeTunnelSubcommands = [
 	{
 		name: 'version',
 		description: `Changes the version of the editor you're using`,
-		options: globalTunnelOptions
+		options: globalTunnelOptions,
 	},
 	{
 		name: 'serve-web',
@@ -781,7 +787,7 @@ export const codeTunnelSubcommands = [
 		options: [
 			{
 				name: '--host',
-				description: 'Host to listen on, defaults to \'localhost\'',
+				description: "Host to listen on, defaults to 'localhost'",
 				isRepeatable: true,
 				args: {
 					name: 'host',
@@ -843,14 +849,17 @@ export const codeTunnelSubcommands = [
 			},
 			{
 				name: '--without-connection-token',
-				description: 'Run without a connection token. Only use this if the connection is secured by other means',
+				description:
+					'Run without a connection token. Only use this if the connection is secured by other means',
 			},
 			{
 				name: '--accept-server-license-terms',
-				description: 'If set, the user accepts the server license terms and the server will be started without a user prompt',
+				description:
+					'If set, the user accepts the server license terms and the server will be started without a user prompt',
 			},
-			...globalTunnelOptions, ...tunnelHelpOptions,
-		]
+			...globalTunnelOptions,
+			...tunnelHelpOptions,
+		],
 	},
 	{
 		name: 'help',
@@ -858,7 +867,8 @@ export const codeTunnelSubcommands = [
 		subcommands: [
 			{
 				name: 'tunnel',
-				description: 'Create a tunnel that\'s accessible on vscode.dev from anywhere. Run`code tunnel --help` for more usage info',
+				description:
+					"Create a tunnel that's accessible on vscode.dev from anywhere. Run`code tunnel --help` for more usage info",
 				subcommands: [
 					{
 						name: 'prune',
@@ -897,7 +907,7 @@ export const codeTunnelSubcommands = [
 							},
 							{
 								name: 'show',
-								description: 'Show the account that\'s logged into port forwarding service',
+								description: "Show the account that's logged into port forwarding service",
 							},
 						],
 					},
@@ -918,7 +928,7 @@ export const codeTunnelSubcommands = [
 								description: 'Shows logs for the running service',
 							},
 						],
-					}
+					},
 				],
 			},
 			extTunnelSubcommand,
@@ -959,7 +969,7 @@ export const codeTunnelSubcommands = [
 			},
 		],
 	},
-];
+]
 
 const codeCompletionSpec: Fig.Spec = {
 	name: 'code',
@@ -974,7 +984,6 @@ const codeCompletionSpec: Fig.Spec = {
 		...extensionManagementOptions('code'),
 		...troubleshootingOptions('code'),
 	],
-};
+}
 
-export default codeCompletionSpec;
-
+export default codeCompletionSpec

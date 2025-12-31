@@ -18,6 +18,6 @@ declare module 'vscode' {
 		 * in the CommentController that most recently had focus or, when a different CommentController's
 		 * thread has most recently had focus, undefined.
 		 */
-		readonly activeCommentThread: CommentThread | undefined;
+		readonly activeCommentThread: CommentThread | undefined
 	}
 }

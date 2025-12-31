@@ -3,22 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../base/common/event.js';
-import { URI } from '../../../base/common/uri.js';
-import { EditorInputCapabilities, Verbosity, GroupIdentifier, ISaveOptions, IRevertOptions, IMoveResult, IEditorDescriptor, IEditorPane, IUntypedEditorInput, EditorResourceAccessor, AbstractEditorInput, isEditorInput, IEditorIdentifier } from '../editor.js';
-import { isEqual } from '../../../base/common/resources.js';
-import { ConfirmResult } from '../../../platform/dialogs/common/dialogs.js';
-import { IMarkdownString } from '../../../base/common/htmlContent.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../base/common/themables.js';
+import { Emitter } from '../../../base/common/event.js'
+import { URI } from '../../../base/common/uri.js'
+import {
+	EditorInputCapabilities,
+	Verbosity,
+	GroupIdentifier,
+	ISaveOptions,
+	IRevertOptions,
+	IMoveResult,
+	IEditorDescriptor,
+	IEditorPane,
+	IUntypedEditorInput,
+	EditorResourceAccessor,
+	AbstractEditorInput,
+	isEditorInput,
+	IEditorIdentifier,
+} from '../editor.js'
+import { isEqual } from '../../../base/common/resources.js'
+import { ConfirmResult } from '../../../platform/dialogs/common/dialogs.js'
+import { IMarkdownString } from '../../../base/common/htmlContent.js'
+import { IDisposable } from '../../../base/common/lifecycle.js'
+import { ThemeIcon } from '../../../base/common/themables.js'
 
 export interface IEditorCloseHandler {
-
 	/**
 	 * If `true`, will call into the `confirm` method to ask for confirmation
 	 * before closing the editor.
 	 */
-	showConfirm(): boolean;
+	showConfirm(): boolean
 
 	/**
 	 * Allows an editor to control what should happen when the editor
@@ -34,24 +47,23 @@ export interface IEditorCloseHandler {
 	 * @param editors All editors of the same kind that are being closed. Should be used
 	 * to show a combined dialog.
 	 */
-	confirm(editors: ReadonlyArray<IEditorIdentifier>): Promise<ConfirmResult>;
+	confirm(editors: ReadonlyArray<IEditorIdentifier>): Promise<ConfirmResult>
 }
 
 export interface IUntypedEditorOptions {
-
 	/**
 	 * Implementations should try to preserve as much
 	 * view state as possible from the typed input based
 	 * on the group the editor is opened.
 	 */
-	readonly preserveViewState?: GroupIdentifier;
+	readonly preserveViewState?: GroupIdentifier
 
 	/**
 	 * Implementations should preserve the original
 	 * resource of the typed input and not alter
 	 * it.
 	 */
-	readonly preserveResource?: boolean;
+	readonly preserveResource?: boolean
 }
 
 /**
@@ -59,38 +71,37 @@ export interface IUntypedEditorOptions {
  * Each editor input is mapped to an editor that is capable of opening it through the Platform facade.
  */
 export abstract class EditorInput extends AbstractEditorInput {
+	protected readonly _onDidChangeDirty = this._register(new Emitter<void>())
+	protected readonly _onDidChangeLabel = this._register(new Emitter<void>())
+	protected readonly _onDidChangeCapabilities = this._register(new Emitter<void>())
 
-	protected readonly _onDidChangeDirty = this._register(new Emitter<void>());
-	protected readonly _onDidChangeLabel = this._register(new Emitter<void>());
-	protected readonly _onDidChangeCapabilities = this._register(new Emitter<void>());
-
-	private readonly _onWillDispose = this._register(new Emitter<void>());
+	private readonly _onWillDispose = this._register(new Emitter<void>())
 
 	/**
 	 * Triggered when this input changes its dirty state.
 	 */
-	readonly onDidChangeDirty = this._onDidChangeDirty.event;
+	readonly onDidChangeDirty = this._onDidChangeDirty.event
 
 	/**
 	 * Triggered when this input changes its label
 	 */
-	readonly onDidChangeLabel = this._onDidChangeLabel.event;
+	readonly onDidChangeLabel = this._onDidChangeLabel.event
 
 	/**
 	 * Triggered when this input changes its capabilities.
 	 */
-	readonly onDidChangeCapabilities = this._onDidChangeCapabilities.event;
+	readonly onDidChangeCapabilities = this._onDidChangeCapabilities.event
 
 	/**
 	 * Triggered when this input is about to be disposed.
 	 */
-	readonly onWillDispose = this._onWillDispose.event;
+	readonly onWillDispose = this._onWillDispose.event
 
 	/**
 	 * Optional: subclasses can override to implement
 	 * custom confirmation on close behavior.
 	 */
-	readonly closeHandler?: IEditorCloseHandler;
+	readonly closeHandler?: IEditorCloseHandler
 
 	/**
 	 * Unique type identifier for this input. Every editor input of the
@@ -98,7 +109,7 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 * is used for example for serialising/deserialising editor inputs
 	 * via the serialisers of the `EditorInputFactoryRegistry`.
 	 */
-	abstract get typeId(): string;
+	abstract get typeId(): string
 
 	/**
 	 * Returns the optional associated resource of this input.
@@ -111,7 +122,7 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 * checks. DO NOT use this property to present as label to the user.
 	 * Please refer to `EditorResourceAccessor` documentation in that case.
 	 */
-	abstract get resource(): URI | undefined;
+	abstract get resource(): URI | undefined
 
 	/**
 	 * Identifies the type of editor this input represents
@@ -119,14 +130,14 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 * for resolving an untyped input to a typed one
 	 */
 	get editorId(): string | undefined {
-		return undefined;
+		return undefined
 	}
 
 	/**
 	 * The capabilities of the input.
 	 */
 	get capabilities(): EditorInputCapabilities {
-		return EditorInputCapabilities.Readonly;
+		return EditorInputCapabilities.Readonly
 	}
 
 	/**
@@ -134,49 +145,49 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 */
 	hasCapability(capability: EditorInputCapabilities): boolean {
 		if (capability === EditorInputCapabilities.None) {
-			return this.capabilities === EditorInputCapabilities.None;
+			return this.capabilities === EditorInputCapabilities.None
 		}
 
-		return (this.capabilities & capability) !== 0;
+		return (this.capabilities & capability) !== 0
 	}
 
 	isReadonly(): boolean | IMarkdownString {
-		return this.hasCapability(EditorInputCapabilities.Readonly);
+		return this.hasCapability(EditorInputCapabilities.Readonly)
 	}
 
 	/**
 	 * Returns the display name of this input.
 	 */
 	getName(): string {
-		return `Editor ${this.typeId}`;
+		return `Editor ${this.typeId}`
 	}
 
 	/**
 	 * Returns the display description of this input.
 	 */
 	getDescription(verbosity?: Verbosity): string | undefined {
-		return undefined;
+		return undefined
 	}
 
 	/**
 	 * Returns the display title of this input.
 	 */
 	getTitle(verbosity?: Verbosity): string {
-		return this.getName();
+		return this.getName()
 	}
 
 	/**
 	 * Returns the extra classes to apply to the label of this input.
 	 */
 	getLabelExtraClasses(): string[] {
-		return [];
+		return []
 	}
 
 	/**
 	 * Returns the aria label to be read out by a screen reader.
 	 */
 	getAriaLabel(): string {
-		return this.getTitle(Verbosity.SHORT);
+		return this.getTitle(Verbosity.SHORT)
 	}
 
 	/**
@@ -184,7 +195,7 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 * If undefined, the default icon will be used.
 	 */
 	getIcon(): ThemeIcon | undefined {
-		return undefined;
+		return undefined
 	}
 
 	/**
@@ -198,21 +209,21 @@ export abstract class EditorInput extends AbstractEditorInput {
 				"typeId" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 			}
 		*/
-		return { typeId: this.typeId };
+		return { typeId: this.typeId }
 	}
 
 	/**
 	 * Returns if this input is dirty or not.
 	 */
 	isDirty(): boolean {
-		return false;
+		return false
 	}
 
 	/**
 	 * Returns if the input has unsaved changes.
 	 */
 	isModified(): boolean {
-		return this.isDirty();
+		return this.isDirty()
 	}
 
 	/**
@@ -222,7 +233,7 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 * the save is scheduled to happen anyway.
 	 */
 	isSaving(): boolean {
-		return false;
+		return false
 	}
 
 	/**
@@ -234,7 +245,7 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 * input is resolved as part of it.
 	 */
 	async resolve(): Promise<IDisposable | null> {
-		return null;
+		return null
 	}
 
 	/**
@@ -246,8 +257,11 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 * this operation or `undefined` to indicate that the operation
 	 * failed or was canceled.
 	 */
-	async save(group: GroupIdentifier, options?: ISaveOptions): Promise<EditorInput | IUntypedEditorInput | undefined> {
-		return this;
+	async save(
+		group: GroupIdentifier,
+		options?: ISaveOptions,
+	): Promise<EditorInput | IUntypedEditorInput | undefined> {
+		return this
 	}
 
 	/**
@@ -259,14 +273,17 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 * of this operation or `undefined` to indicate that the operation
 	 * failed or was canceled.
 	 */
-	async saveAs(group: GroupIdentifier, options?: ISaveOptions): Promise<EditorInput | IUntypedEditorInput | undefined> {
-		return this;
+	async saveAs(
+		group: GroupIdentifier,
+		options?: ISaveOptions,
+	): Promise<EditorInput | IUntypedEditorInput | undefined> {
+		return this
 	}
 
 	/**
 	 * Reverts this input from the provided group.
 	 */
-	async revert(group: GroupIdentifier, options?: IRevertOptions): Promise<void> { }
+	async revert(group: GroupIdentifier, options?: IRevertOptions): Promise<void> {}
 
 	/**
 	 * Called to determine how to handle a resource that is renamed that matches
@@ -277,14 +294,14 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 * current one with that editor and optional options.
 	 */
 	async rename(group: GroupIdentifier, target: URI): Promise<IMoveResult | undefined> {
-		return undefined;
+		return undefined
 	}
 
 	/**
 	 * Returns a copy of the current editor input. Used when we can't just reuse the input
 	 */
 	copy(): EditorInput {
-		return this;
+		return this
 	}
 
 	/**
@@ -297,28 +314,31 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 * moved.
 	 */
 	canMove(sourceGroup: GroupIdentifier, targetGroup: GroupIdentifier): true | string {
-		return true;
+		return true
 	}
 
 	/**
 	 * Returns if the other object matches this input.
 	 */
 	matches(otherInput: EditorInput | IUntypedEditorInput): boolean {
-
 		// Typed inputs: via  === check
 		if (isEditorInput(otherInput)) {
-			return this === otherInput;
+			return this === otherInput
 		}
 
 		// Untyped inputs: go into properties
-		const otherInputEditorId = otherInput.options?.override;
+		const otherInputEditorId = otherInput.options?.override
 
 		// If the overrides are both defined and don't match that means they're separate inputs
-		if (this.editorId !== otherInputEditorId && otherInputEditorId !== undefined && this.editorId !== undefined) {
-			return false;
+		if (
+			this.editorId !== otherInputEditorId &&
+			otherInputEditorId !== undefined &&
+			this.editorId !== undefined
+		) {
+			return false
 		}
 
-		return isEqual(this.resource, EditorResourceAccessor.getCanonicalUri(otherInput));
+		return isEqual(this.resource, EditorResourceAccessor.getCanonicalUri(otherInput))
 	}
 
 	/**
@@ -329,7 +349,7 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 * for the editor to open in.
 	 */
 	prefersEditorPane<T extends IEditorDescriptor<IEditorPane>>(editorPanes: T[]): T | undefined {
-		return editorPanes.at(0);
+		return editorPanes.at(0)
 	}
 
 	/**
@@ -340,21 +360,21 @@ export abstract class EditorInput extends AbstractEditorInput {
 	 * May return `undefined` if an untyped representation is not supported.
 	 */
 	toUntyped(options?: IUntypedEditorOptions): IUntypedEditorInput | undefined {
-		return undefined;
+		return undefined
 	}
 
 	/**
 	 * Returns if this editor is disposed.
 	 */
 	isDisposed(): boolean {
-		return this._store.isDisposed;
+		return this._store.isDisposed
 	}
 
 	override dispose(): void {
 		if (!this.isDisposed()) {
-			this._onWillDispose.fire();
+			this._onWillDispose.fire()
 		}
 
-		super.dispose();
+		super.dispose()
 	}
 }

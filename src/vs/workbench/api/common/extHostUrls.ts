@@ -3,61 +3,69 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { MainContext, IMainContext, ExtHostUrlsShape, MainThreadUrlsShape } from './extHost.protocol.js';
-import { URI, UriComponents } from '../../../base/common/uri.js';
-import { toDisposable } from '../../../base/common/lifecycle.js';
-import { onUnexpectedError } from '../../../base/common/errors.js';
-import { ExtensionIdentifierSet, IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
+import type * as vscode from 'vscode'
+import {
+	MainContext,
+	IMainContext,
+	ExtHostUrlsShape,
+	MainThreadUrlsShape,
+} from './extHost.protocol.js'
+import { URI, UriComponents } from '../../../base/common/uri.js'
+import { toDisposable } from '../../../base/common/lifecycle.js'
+import { onUnexpectedError } from '../../../base/common/errors.js'
+import {
+	ExtensionIdentifierSet,
+	IExtensionDescription,
+} from '../../../platform/extensions/common/extensions.js'
 
 export class ExtHostUrls implements ExtHostUrlsShape {
+	private static HandlePool = 0
+	private readonly _proxy: MainThreadUrlsShape
 
-	private static HandlePool = 0;
-	private readonly _proxy: MainThreadUrlsShape;
+	private handles = new ExtensionIdentifierSet()
+	private handlers = new Map<number, vscode.UriHandler>()
 
-	private handles = new ExtensionIdentifierSet();
-	private handlers = new Map<number, vscode.UriHandler>();
-
-	constructor(
-		mainContext: IMainContext
-	) {
-		this._proxy = mainContext.getProxy(MainContext.MainThreadUrls);
+	constructor(mainContext: IMainContext) {
+		this._proxy = mainContext.getProxy(MainContext.MainThreadUrls)
 	}
 
-	registerUriHandler(extension: IExtensionDescription, handler: vscode.UriHandler): vscode.Disposable {
-		const extensionId = extension.identifier;
+	registerUriHandler(
+		extension: IExtensionDescription,
+		handler: vscode.UriHandler,
+	): vscode.Disposable {
+		const extensionId = extension.identifier
 		if (this.handles.has(extensionId)) {
-			throw new Error(`Protocol handler already registered for extension ${extensionId}`);
+			throw new Error(`Protocol handler already registered for extension ${extensionId}`)
 		}
 
-		const handle = ExtHostUrls.HandlePool++;
-		this.handles.add(extensionId);
-		this.handlers.set(handle, handler);
-		this._proxy.$registerUriHandler(handle, extensionId, extension.displayName || extension.name);
+		const handle = ExtHostUrls.HandlePool++
+		this.handles.add(extensionId)
+		this.handlers.set(handle, handler)
+		this._proxy.$registerUriHandler(handle, extensionId, extension.displayName || extension.name)
 
 		return toDisposable(() => {
-			this.handles.delete(extensionId);
-			this.handlers.delete(handle);
-			this._proxy.$unregisterUriHandler(handle);
-		});
+			this.handles.delete(extensionId)
+			this.handlers.delete(handle)
+			this._proxy.$unregisterUriHandler(handle)
+		})
 	}
 
 	$handleExternalUri(handle: number, uri: UriComponents): Promise<void> {
-		const handler = this.handlers.get(handle);
+		const handler = this.handlers.get(handle)
 
 		if (!handler) {
-			return Promise.resolve(undefined);
+			return Promise.resolve(undefined)
 		}
 		try {
-			handler.handleUri(URI.revive(uri));
+			handler.handleUri(URI.revive(uri))
 		} catch (err) {
-			onUnexpectedError(err);
+			onUnexpectedError(err)
 		}
 
-		return Promise.resolve(undefined);
+		return Promise.resolve(undefined)
 	}
 
 	async createAppUri(uri: URI): Promise<vscode.Uri> {
-		return URI.revive(await this._proxy.$createAppUri(uri));
+		return URI.revive(await this._proxy.$createAppUri(uri))
 	}
 }

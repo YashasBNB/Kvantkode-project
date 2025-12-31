@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export const ansiColorIdentifiers: { colorName: string; colorValue: string }[] = [];
+export const ansiColorIdentifiers: { colorName: string; colorValue: string }[] = []
 export const ansiColorMap: { [key: string]: { index: number } } = {
 	'terminal.ansiBlack': {
 		index: 0,
@@ -52,11 +52,14 @@ export const ansiColorMap: { [key: string]: { index: number } } = {
 	},
 	'terminal.ansiBrightWhite': {
 		index: 15,
-	}
-};
+	},
+}
 
 for (const id in ansiColorMap) {
-	const entry = ansiColorMap[id];
-	const colorName = id.substring(13);
-	ansiColorIdentifiers[entry.index] = { colorName, colorValue: 'var(--vscode-' + id.replace('.', '-') + ')' };
+	const entry = ansiColorMap[id]
+	const colorName = id.substring(13)
+	ansiColorIdentifiers[entry.index] = {
+		colorName,
+		colorValue: 'var(--vscode-' + id.replace('.', '-') + ')',
+	}
 }

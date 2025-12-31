@@ -14,7 +14,7 @@ export enum ChatConfiguration {
 export enum ChatMode {
 	Ask = 'ask',
 	Edit = 'edit',
-	Agent = 'agent'
+	Agent = 'agent',
 }
 
 export function validateChatMode(mode: unknown): ChatMode | undefined {
@@ -22,13 +22,13 @@ export function validateChatMode(mode: unknown): ChatMode | undefined {
 		case ChatMode.Ask:
 		case ChatMode.Edit:
 		case ChatMode.Agent:
-			return mode as ChatMode;
+			return mode as ChatMode
 		default:
-			return undefined;
+			return undefined
 	}
 }
 
-export type RawChatParticipantLocation = 'panel' | 'terminal' | 'notebook' | 'editing-session';
+export type RawChatParticipantLocation = 'panel' | 'terminal' | 'notebook' | 'editing-session'
 
 export enum ChatAgentLocation {
 	Panel = 'panel',
@@ -41,12 +41,17 @@ export enum ChatAgentLocation {
 export namespace ChatAgentLocation {
 	export function fromRaw(value: RawChatParticipantLocation | string): ChatAgentLocation {
 		switch (value) {
-			case 'panel': return ChatAgentLocation.Panel;
-			case 'terminal': return ChatAgentLocation.Terminal;
-			case 'notebook': return ChatAgentLocation.Notebook;
-			case 'editor': return ChatAgentLocation.Editor;
-			case 'editing-session': return ChatAgentLocation.EditingSession;
+			case 'panel':
+				return ChatAgentLocation.Panel
+			case 'terminal':
+				return ChatAgentLocation.Terminal
+			case 'notebook':
+				return ChatAgentLocation.Notebook
+			case 'editor':
+				return ChatAgentLocation.Editor
+			case 'editing-session':
+				return ChatAgentLocation.EditingSession
 		}
-		return ChatAgentLocation.Panel;
+		return ChatAgentLocation.Panel
 	}
 }

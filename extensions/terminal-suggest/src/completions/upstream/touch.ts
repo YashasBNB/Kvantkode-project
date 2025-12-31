@@ -1,59 +1,59 @@
 const completionSpec: Fig.Spec = {
-	name: "touch",
-	description: "Change file access and modification times",
+	name: 'touch',
+	description: 'Change file access and modification times',
 	args: {
-		name: "file",
+		name: 'file',
 		isVariadic: true,
-		template: "folders",
+		template: 'folders',
 		suggestCurrentToken: true,
 	},
 	options: [
 		{
-			name: "-A",
+			name: '-A',
 			description:
-				"Adjust the access and modification time stamps for the file by the specified value",
+				'Adjust the access and modification time stamps for the file by the specified value',
 			args: {
-				name: "time",
-				description: "[-][[hh]mm]SS",
+				name: 'time',
+				description: '[-][[hh]mm]SS',
 			},
 		},
-		{ name: "-a", description: "Change the access time of the file" },
+		{ name: '-a', description: 'Change the access time of the file' },
 		{
-			name: "-c",
-			description: "Do not create the file if it does not exist",
+			name: '-c',
+			description: 'Do not create the file if it does not exist',
 		},
 		{
-			name: "-f",
+			name: '-f',
 			description:
-				"Attempt to force the update, even if the file permissions do not currently permit it",
+				'Attempt to force the update, even if the file permissions do not currently permit it',
 		},
 		{
-			name: "-h",
+			name: '-h',
 			description:
-				"If the file is a symbolic link, change the times of the link itself rather than the file that the link points to",
+				'If the file is a symbolic link, change the times of the link itself rather than the file that the link points to',
 		},
 		{
-			name: "-m",
-			description: "Change the modification time of the file",
+			name: '-m',
+			description: 'Change the modification time of the file',
 		},
 		{
-			name: "-r",
+			name: '-r',
 			description:
-				"Use the access and modifications times from the specified file instead of the current time of day",
+				'Use the access and modifications times from the specified file instead of the current time of day',
 			args: {
-				name: "file",
+				name: 'file',
 			},
 		},
 		{
-			name: "-t",
+			name: '-t',
 			description:
-				"Change the access and modification times to the specified time instead of the current time of day",
+				'Change the access and modification times to the specified time instead of the current time of day',
 			args: {
-				name: "timestamp",
-				description: "[[CC]YY]MMDDhhmm[.SS]",
+				name: 'timestamp',
+				description: '[[CC]YY]MMDDhhmm[.SS]',
 			},
 		},
 	],
-};
+}
 
-export default completionSpec;
+export default completionSpec

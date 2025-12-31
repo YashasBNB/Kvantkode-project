@@ -3,34 +3,38 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../dom.js';
-import { ThemeIcon } from '../../../common/themables.js';
+import * as dom from '../../dom.js'
+import { ThemeIcon } from '../../../common/themables.js'
 
-const labelWithIconsRegex = new RegExp(`(\\\\)?\\$\\((${ThemeIcon.iconNameExpression}(?:${ThemeIcon.iconModifierExpression})?)\\)`, 'g');
+const labelWithIconsRegex = new RegExp(
+	`(\\\\)?\\$\\((${ThemeIcon.iconNameExpression}(?:${ThemeIcon.iconModifierExpression})?)\\)`,
+	'g',
+)
 export function renderLabelWithIcons(text: string): Array<HTMLSpanElement | string> {
-	const elements = new Array<HTMLSpanElement | string>();
-	let match: RegExpExecArray | null;
+	const elements = new Array<HTMLSpanElement | string>()
+	let match: RegExpExecArray | null
 
-	let textStart = 0, textStop = 0;
+	let textStart = 0,
+		textStop = 0
 	while ((match = labelWithIconsRegex.exec(text)) !== null) {
-		textStop = match.index || 0;
+		textStop = match.index || 0
 		if (textStart < textStop) {
-			elements.push(text.substring(textStart, textStop));
+			elements.push(text.substring(textStart, textStop))
 		}
-		textStart = (match.index || 0) + match[0].length;
+		textStart = (match.index || 0) + match[0].length
 
-		const [, escaped, codicon] = match;
-		elements.push(escaped ? `$(${codicon})` : renderIcon({ id: codicon }));
+		const [, escaped, codicon] = match
+		elements.push(escaped ? `$(${codicon})` : renderIcon({ id: codicon }))
 	}
 
 	if (textStart < text.length) {
-		elements.push(text.substring(textStart));
+		elements.push(text.substring(textStart))
 	}
-	return elements;
+	return elements
 }
 
 export function renderIcon(icon: ThemeIcon): HTMLSpanElement {
-	const node = dom.$(`span`);
-	node.classList.add(...ThemeIcon.asClassNameArray(icon));
-	return node;
+	const node = dom.$(`span`)
+	node.classList.add(...ThemeIcon.asClassNameArray(icon))
+	return node
 }

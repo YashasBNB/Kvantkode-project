@@ -3,35 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as sinon from 'sinon';
-import type * as nbformat from '@jupyterlab/nbformat';
-import * as assert from 'assert';
-import * as vscode from 'vscode';
-import { jupyterCellOutputToCellOutput, jupyterNotebookModelToNotebookData } from '../deserializers';
-import { createMarkdownCellFromNotebookCell, getCellMetadata } from '../serializers';
+import * as sinon from 'sinon'
+import type * as nbformat from '@jupyterlab/nbformat'
+import * as assert from 'assert'
+import * as vscode from 'vscode'
+import { jupyterCellOutputToCellOutput, jupyterNotebookModelToNotebookData } from '../deserializers'
+import { createMarkdownCellFromNotebookCell, getCellMetadata } from '../serializers'
 
 function deepStripProperties(obj: any, props: string[]) {
 	for (const prop in obj) {
 		if (obj[prop]) {
-			delete obj[prop];
+			delete obj[prop]
 		} else if (typeof obj[prop] === 'object') {
-			deepStripProperties(obj[prop], props);
+			deepStripProperties(obj[prop], props)
 		}
 	}
 }
 suite(`ipynb serializer`, () => {
-	let disposables: vscode.Disposable[] = [];
+	let disposables: vscode.Disposable[] = []
 	setup(() => {
-		disposables = [];
-	});
+		disposables = []
+	})
 	teardown(async () => {
-		disposables.forEach(d => d.dispose());
-		disposables = [];
-		sinon.restore();
-	});
+		disposables.forEach((d) => d.dispose())
+		disposables = []
+		sinon.restore()
+	})
 
 	const base64EncodedImage =
-		'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mOUlZL6DwAB/wFSU1jVmgAAAABJRU5ErkJggg==';
+		'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mOUlZL6DwAB/wFSU1jVmgAAAABJRU5ErkJggg=='
 	test('Deserialize', async () => {
 		const cells: nbformat.ICell[] = [
 			{
@@ -39,58 +39,77 @@ suite(`ipynb serializer`, () => {
 				execution_count: 10,
 				outputs: [],
 				source: 'print(1)',
-				metadata: {}
+				metadata: {},
 			},
 			{
 				cell_type: 'code',
 				outputs: [],
 				source: 'print(2)',
-				metadata: {}
+				metadata: {},
 			},
 			{
 				cell_type: 'markdown',
 				source: '# HEAD',
-				metadata: {}
-			}
-		];
-		const notebook = jupyterNotebookModelToNotebookData({ cells }, 'python');
-		assert.ok(notebook);
+				metadata: {},
+			},
+		]
+		const notebook = jupyterNotebookModelToNotebookData({ cells }, 'python')
+		assert.ok(notebook)
 
-		const expectedCodeCell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(1)', 'python');
-		expectedCodeCell.outputs = [];
-		expectedCodeCell.metadata = { execution_count: 10, metadata: {} };
-		expectedCodeCell.executionSummary = { executionOrder: 10 };
+		const expectedCodeCell = new vscode.NotebookCellData(
+			vscode.NotebookCellKind.Code,
+			'print(1)',
+			'python',
+		)
+		expectedCodeCell.outputs = []
+		expectedCodeCell.metadata = { execution_count: 10, metadata: {} }
+		expectedCodeCell.executionSummary = { executionOrder: 10 }
 
-		const expectedCodeCell2 = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, 'print(2)', 'python');
-		expectedCodeCell2.outputs = [];
-		expectedCodeCell2.metadata = { execution_count: null, metadata: {} };
-		expectedCodeCell2.executionSummary = {};
+		const expectedCodeCell2 = new vscode.NotebookCellData(
+			vscode.NotebookCellKind.Code,
+			'print(2)',
+			'python',
+		)
+		expectedCodeCell2.outputs = []
+		expectedCodeCell2.metadata = { execution_count: null, metadata: {} }
+		expectedCodeCell2.executionSummary = {}
 
-		const expectedMarkdownCell = new vscode.NotebookCellData(vscode.NotebookCellKind.Markup, '# HEAD', 'markdown');
-		expectedMarkdownCell.outputs = [];
+		const expectedMarkdownCell = new vscode.NotebookCellData(
+			vscode.NotebookCellKind.Markup,
+			'# HEAD',
+			'markdown',
+		)
+		expectedMarkdownCell.outputs = []
 		expectedMarkdownCell.metadata = {
-			metadata: {}
-		};
+			metadata: {},
+		}
 
-		assert.deepStrictEqual(notebook.cells, [expectedCodeCell, expectedCodeCell2, expectedMarkdownCell]);
-	});
-
+		assert.deepStrictEqual(notebook.cells, [
+			expectedCodeCell,
+			expectedCodeCell2,
+			expectedMarkdownCell,
+		])
+	})
 
 	test('Serialize', async () => {
-		const markdownCell = new vscode.NotebookCellData(vscode.NotebookCellKind.Markup, '# header1', 'markdown');
+		const markdownCell = new vscode.NotebookCellData(
+			vscode.NotebookCellKind.Markup,
+			'# header1',
+			'markdown',
+		)
 		markdownCell.metadata = {
 			attachments: {
 				'image.png': {
-					'image/png': 'abc'
-				}
+					'image/png': 'abc',
+				},
 			},
 			id: '123',
 			metadata: {
-				foo: 'bar'
-			}
-		};
+				foo: 'bar',
+			},
+		}
 
-		const cellMetadata = getCellMetadata({ cell: markdownCell });
+		const cellMetadata = getCellMetadata({ cell: markdownCell })
 		assert.deepStrictEqual(cellMetadata, {
 			id: '123',
 			metadata: {
@@ -98,27 +117,31 @@ suite(`ipynb serializer`, () => {
 			},
 			attachments: {
 				'image.png': {
-					'image/png': 'abc'
-				}
-			}
-		});
+					'image/png': 'abc',
+				},
+			},
+		})
 
-		const markdownCell2 = new vscode.NotebookCellData(vscode.NotebookCellKind.Markup, '# header1', 'markdown');
+		const markdownCell2 = new vscode.NotebookCellData(
+			vscode.NotebookCellKind.Markup,
+			'# header1',
+			'markdown',
+		)
 		markdownCell2.metadata = {
 			id: '123',
 			metadata: {
-				foo: 'bar'
+				foo: 'bar',
 			},
 			attachments: {
 				'image.png': {
-					'image/png': 'abc'
-				}
-			}
-		};
+					'image/png': 'abc',
+				},
+			},
+		}
 
-		const nbMarkdownCell = createMarkdownCellFromNotebookCell(markdownCell);
-		const nbMarkdownCell2 = createMarkdownCellFromNotebookCell(markdownCell2);
-		assert.deepStrictEqual(nbMarkdownCell, nbMarkdownCell2);
+		const nbMarkdownCell = createMarkdownCellFromNotebookCell(markdownCell)
+		const nbMarkdownCell2 = createMarkdownCellFromNotebookCell(markdownCell2)
+		assert.deepStrictEqual(nbMarkdownCell, nbMarkdownCell2)
 
 		assert.deepStrictEqual(nbMarkdownCell, {
 			cell_type: 'markdown',
@@ -128,18 +151,18 @@ suite(`ipynb serializer`, () => {
 			},
 			attachments: {
 				'image.png': {
-					'image/png': 'abc'
-				}
+					'image/png': 'abc',
+				},
 			},
-			id: '123'
-		});
-	});
+			id: '123',
+		})
+	})
 
 	suite('Outputs', () => {
 		function validateCellOutputTranslation(
 			outputs: nbformat.IOutput[],
 			expectedOutputs: vscode.NotebookCellOutput[],
-			propertiesToExcludeFromComparison: string[] = []
+			propertiesToExcludeFromComparison: string[] = [],
 		) {
 			const cells: nbformat.ICell[] = [
 				{
@@ -147,23 +170,23 @@ suite(`ipynb serializer`, () => {
 					execution_count: 10,
 					outputs,
 					source: 'print(1)',
-					metadata: {}
-				}
-			];
-			const notebook = jupyterNotebookModelToNotebookData({ cells }, 'python');
+					metadata: {},
+				},
+			]
+			const notebook = jupyterNotebookModelToNotebookData({ cells }, 'python')
 
 			// OutputItems contain an `id` property generated by VSC.
 			// Exclude that property when comparing.
-			const propertiesToExclude = propertiesToExcludeFromComparison.concat(['id']);
-			const actualOuts = notebook.cells[0].outputs;
-			deepStripProperties(actualOuts, propertiesToExclude);
-			deepStripProperties(expectedOutputs, propertiesToExclude);
-			assert.deepStrictEqual(actualOuts, expectedOutputs);
+			const propertiesToExclude = propertiesToExcludeFromComparison.concat(['id'])
+			const actualOuts = notebook.cells[0].outputs
+			deepStripProperties(actualOuts, propertiesToExclude)
+			deepStripProperties(expectedOutputs, propertiesToExclude)
+			assert.deepStrictEqual(actualOuts, expectedOutputs)
 		}
 
 		test('Empty output', () => {
-			validateCellOutputTranslation([], []);
-		});
+			validateCellOutputTranslation([], [])
+		})
 
 		test('Stream output', () => {
 			validateCellOutputTranslation(
@@ -171,66 +194,60 @@ suite(`ipynb serializer`, () => {
 					{
 						output_type: 'stream',
 						name: 'stderr',
-						text: 'Error'
+						text: 'Error',
 					},
 					{
 						output_type: 'stream',
 						name: 'stdout',
-						text: 'NoError'
-					}
+						text: 'NoError',
+					},
 				],
 				[
 					new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr('Error')], {
-						outputType: 'stream'
+						outputType: 'stream',
 					}),
 					new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stdout('NoError')], {
-						outputType: 'stream'
-					})
-				]
-			);
-		});
+						outputType: 'stream',
+					}),
+				],
+			)
+		})
 		test('Stream output and line endings', () => {
 			validateCellOutputTranslation(
 				[
 					{
 						output_type: 'stream',
 						name: 'stdout',
-						text: [
-							'Line1\n',
-							'\n',
-							'Line3\n',
-							'Line4'
-						]
-					}
+						text: ['Line1\n', '\n', 'Line3\n', 'Line4'],
+					},
 				],
 				[
-					new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stdout('Line1\n\nLine3\nLine4')], {
-						outputType: 'stream'
-					})
-				]
-			);
+					new vscode.NotebookCellOutput(
+						[vscode.NotebookCellOutputItem.stdout('Line1\n\nLine3\nLine4')],
+						{
+							outputType: 'stream',
+						},
+					),
+				],
+			)
 			validateCellOutputTranslation(
 				[
 					{
 						output_type: 'stream',
 						name: 'stdout',
-						text: [
-							'Hello\n',
-							'Hello\n',
-							'Hello\n',
-							'Hello\n',
-							'Hello\n',
-							'Hello\n'
-						]
-					}
+						text: ['Hello\n', 'Hello\n', 'Hello\n', 'Hello\n', 'Hello\n', 'Hello\n'],
+					},
 				],
 				[
-					new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stdout('Hello\nHello\nHello\nHello\nHello\nHello\n')], {
-						outputType: 'stream'
-					})
-				]
-			);
-		});
+					new vscode.NotebookCellOutput(
+						[vscode.NotebookCellOutputItem.stdout('Hello\nHello\nHello\nHello\nHello\nHello\n')],
+						{
+							outputType: 'stream',
+						},
+					),
+				],
+			)
+		})
 		test('Multi-line Stream output', () => {
 			validateCellOutputTranslation(
 				[
@@ -247,26 +264,35 @@ suite(`ipynb serializer`, () => {
 							'Epoch 4/5\n',
 							'...\n',
 							'Epoch 5/5\n',
-							'...\n'
-						]
-					}
+							'...\n',
+						],
+					},
 				],
 				[
-					new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stdout(['Epoch 1/5\n',
-						'...\n',
-						'Epoch 2/5\n',
-						'...\n',
-						'Epoch 3/5\n',
-						'...\n',
-						'Epoch 4/5\n',
-						'...\n',
-						'Epoch 5/5\n',
-						'...\n'].join(''))], {
-						outputType: 'stream'
-					})
-				]
-			);
-		});
+					new vscode.NotebookCellOutput(
+						[
+							vscode.NotebookCellOutputItem.stdout(
+								[
+									'Epoch 1/5\n',
+									'...\n',
+									'Epoch 2/5\n',
+									'...\n',
+									'Epoch 3/5\n',
+									'...\n',
+									'Epoch 4/5\n',
+									'...\n',
+									'Epoch 5/5\n',
+									'...\n',
+								].join(''),
+							),
+						],
+						{
+							outputType: 'stream',
+						},
+					),
+				],
+			)
+		})
 
 		test('Multi-line Stream output (last empty line should not be saved in ipynb)', () => {
 			validateCellOutputTranslation(
@@ -284,28 +310,37 @@ suite(`ipynb serializer`, () => {
 							'Epoch 4/5\n',
 							'...\n',
 							'Epoch 5/5\n',
-							'...\n'
-						]
-					}
+							'...\n',
+						],
+					},
 				],
 				[
-					new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr(['Epoch 1/5\n',
-						'...\n',
-						'Epoch 2/5\n',
-						'...\n',
-						'Epoch 3/5\n',
-						'...\n',
-						'Epoch 4/5\n',
-						'...\n',
-						'Epoch 5/5\n',
-						'...\n',
-						// This last empty line should not be saved in ipynb.
-						'\n'].join(''))], {
-						outputType: 'stream'
-					})
-				]
-			);
-		});
+					new vscode.NotebookCellOutput(
+						[
+							vscode.NotebookCellOutputItem.stderr(
+								[
+									'Epoch 1/5\n',
+									'...\n',
+									'Epoch 2/5\n',
+									'...\n',
+									'Epoch 3/5\n',
+									'...\n',
+									'Epoch 4/5\n',
+									'...\n',
+									'Epoch 5/5\n',
+									'...\n',
+									// This last empty line should not be saved in ipynb.
+									'\n',
+								].join(''),
+							),
+						],
+						{
+							outputType: 'stream',
+						},
+					),
+				],
+			)
+		})
 
 		test('Streamed text with Ansi characters', async () => {
 			validateCellOutputTranslation(
@@ -313,19 +348,19 @@ suite(`ipynb serializer`, () => {
 					{
 						name: 'stderr',
 						text: '\u001b[K\u001b[33m✅ \u001b[0m Loading\n',
-						output_type: 'stream'
-					}
+						output_type: 'stream',
+					},
 				],
 				[
 					new vscode.NotebookCellOutput(
 						[vscode.NotebookCellOutputItem.stderr('\u001b[K\u001b[33m✅ \u001b[0m Loading\n')],
 						{
-							outputType: 'stream'
-						}
-					)
-				]
-			);
-		});
+							outputType: 'stream',
+						},
+					),
+				],
+			)
+		})
 
 		test('Streamed text with angle bracket characters', async () => {
 			validateCellOutputTranslation(
@@ -333,16 +368,16 @@ suite(`ipynb serializer`, () => {
 					{
 						name: 'stderr',
 						text: '1 is < 2',
-						output_type: 'stream'
-					}
+						output_type: 'stream',
+					},
 				],
 				[
 					new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.stderr('1 is < 2')], {
-						outputType: 'stream'
-					})
-				]
-			);
-		});
+						outputType: 'stream',
+					}),
+				],
+			)
+		})
 
 		test('Streamed text with angle bracket characters and ansi chars', async () => {
 			validateCellOutputTranslation(
@@ -350,19 +385,23 @@ suite(`ipynb serializer`, () => {
 					{
 						name: 'stderr',
 						text: '1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n',
-						output_type: 'stream'
-					}
+						output_type: 'stream',
+					},
 				],
 				[
 					new vscode.NotebookCellOutput(
-						[vscode.NotebookCellOutputItem.stderr('1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n')],
+						[
+							vscode.NotebookCellOutputItem.stderr(
+								'1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n',
+							),
+						],
 						{
-							outputType: 'stream'
-						}
-					)
-				]
-			);
-		});
+							outputType: 'stream',
+						},
+					),
+				],
+			)
+		})
 
 		test('Error', async () => {
 			validateCellOutputTranslation(
@@ -371,8 +410,8 @@ suite(`ipynb serializer`, () => {
 						ename: 'Error Name',
 						evalue: 'Error Value',
 						traceback: ['stack1', 'stack2', 'stack3'],
-						output_type: 'error'
-					}
+						output_type: 'error',
+					},
 				],
 				[
 					new vscode.NotebookCellOutput(
@@ -380,8 +419,8 @@ suite(`ipynb serializer`, () => {
 							vscode.NotebookCellOutputItem.error({
 								name: 'Error Name',
 								message: 'Error Value',
-								stack: ['stack1', 'stack2', 'stack3'].join('\n')
-							})
+								stack: ['stack1', 'stack2', 'stack3'].join('\n'),
+							}),
 						],
 						{
 							outputType: 'error',
@@ -389,52 +428,57 @@ suite(`ipynb serializer`, () => {
 								ename: 'Error Name',
 								evalue: 'Error Value',
 								traceback: ['stack1', 'stack2', 'stack3'],
-								output_type: 'error'
-							}
-						}
-					)
-				]
-			);
-		});
+								output_type: 'error',
+							},
+						},
+					),
+				],
+			)
+		})
 
-		['display_data', 'execute_result'].forEach(output_type => {
+		;['display_data', 'execute_result'].forEach((output_type) => {
 			suite(`Rich output for output_type = ${output_type}`, () => {
 				// Properties to exclude when comparing.
-				let propertiesToExcludeFromComparison: string[] = [];
+				let propertiesToExcludeFromComparison: string[] = []
 				setup(() => {
 					if (output_type === 'display_data') {
 						// With display_data the execution_count property will never exist in the output.
 						// We can ignore that (as it will never exist).
 						// But we leave it in the case of `output_type === 'execute_result'`
-						propertiesToExcludeFromComparison = ['execution_count', 'executionCount'];
+						propertiesToExcludeFromComparison = ['execution_count', 'executionCount']
 					}
-				});
+				})
 
 				test('Text mimeType output', async () => {
 					validateCellOutputTranslation(
 						[
 							{
 								data: {
-									'text/plain': 'Hello World!'
+									'text/plain': 'Hello World!',
 								},
 								output_type,
 								metadata: {},
-								execution_count: 1
-							}
+								execution_count: 1,
+							},
 						],
 						[
 							new vscode.NotebookCellOutput(
-								[new vscode.NotebookCellOutputItem(Buffer.from('Hello World!', 'utf8'), 'text/plain')],
+								[
+									new vscode.NotebookCellOutputItem(
+										Buffer.from('Hello World!', 'utf8'),
+										'text/plain',
+									),
+								],
 								{
 									outputType: output_type,
 									metadata: {}, // display_data & execute_result always have metadata.
-									executionCount: 1
-								}
-							)
+									executionCount: 1,
+								},
+							),
 						],
-						propertiesToExcludeFromComparison
-					);
-				});
+						propertiesToExcludeFromComparison,
+					)
+				})
 
 				test('png,jpeg images', async () => {
 					validateCellOutputTranslation(
@@ -443,28 +487,34 @@ suite(`ipynb serializer`, () => {
 								execution_count: 1,
 								data: {
 									'image/png': base64EncodedImage,
-									'image/jpeg': base64EncodedImage
+									'image/jpeg': base64EncodedImage,
 								},
 								metadata: {},
-								output_type
-							}
+								output_type,
+							},
 						],
 						[
 							new vscode.NotebookCellOutput(
 								[
-									new vscode.NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png'),
-									new vscode.NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/jpeg')
+									new vscode.NotebookCellOutputItem(
+										Buffer.from(base64EncodedImage, 'base64'),
+										'image/png',
+									),
+									new vscode.NotebookCellOutputItem(
+										Buffer.from(base64EncodedImage, 'base64'),
+										'image/jpeg',
+									),
 								],
 								{
 									executionCount: 1,
 									outputType: output_type,
-									metadata: {} // display_data & execute_result always have metadata.
-								}
-							)
+									metadata: {}, // display_data & execute_result always have metadata.
+								},
+							),
 						],
-						propertiesToExcludeFromComparison
-					);
-				});
+						propertiesToExcludeFromComparison,
+					)
+				})
 
 				test('png image with a light background', async () => {
 					validateCellOutputTranslation(
@@ -472,29 +522,34 @@ suite(`ipynb serializer`, () => {
 							{
 								execution_count: 1,
 								data: {
-									'image/png': base64EncodedImage
+									'image/png': base64EncodedImage,
 								},
 								metadata: {
-									needs_background: 'light'
+									needs_background: 'light',
 								},
-								output_type
-							}
+								output_type,
+							},
 						],
 						[
 							new vscode.NotebookCellOutput(
-								[new vscode.NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')],
+								[
+									new vscode.NotebookCellOutputItem(
+										Buffer.from(base64EncodedImage, 'base64'),
+										'image/png',
+									),
+								],
 								{
 									executionCount: 1,
 									metadata: {
-										needs_background: 'light'
+										needs_background: 'light',
 									},
-									outputType: output_type
-								}
-							)
+									outputType: output_type,
+								},
+							),
 						],
-						propertiesToExcludeFromComparison
-					);
-				});
+						propertiesToExcludeFromComparison,
+					)
+				})
 
 				test('png image with a dark background', async () => {
 					validateCellOutputTranslation(
@@ -502,29 +557,34 @@ suite(`ipynb serializer`, () => {
 							{
 								execution_count: 1,
 								data: {
-									'image/png': base64EncodedImage
+									'image/png': base64EncodedImage,
 								},
 								metadata: {
-									needs_background: 'dark'
+									needs_background: 'dark',
 								},
-								output_type
-							}
+								output_type,
+							},
 						],
 						[
 							new vscode.NotebookCellOutput(
-								[new vscode.NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')],
+								[
+									new vscode.NotebookCellOutputItem(
+										Buffer.from(base64EncodedImage, 'base64'),
+										'image/png',
+									),
+								],
 								{
 									executionCount: 1,
 									metadata: {
-										needs_background: 'dark'
+										needs_background: 'dark',
 									},
-									outputType: output_type
-								}
-							)
+									outputType: output_type,
+								},
+							),
 						],
-						propertiesToExcludeFromComparison
-					);
-				});
+						propertiesToExcludeFromComparison,
+					)
+				})
 
 				test('png image with custom dimensions', async () => {
 					validateCellOutputTranslation(
@@ -532,29 +592,34 @@ suite(`ipynb serializer`, () => {
 							{
 								execution_count: 1,
 								data: {
-									'image/png': base64EncodedImage
+									'image/png': base64EncodedImage,
 								},
 								metadata: {
-									'image/png': { height: '111px', width: '999px' }
+									'image/png': { height: '111px', width: '999px' },
 								},
-								output_type
-							}
+								output_type,
+							},
 						],
 						[
 							new vscode.NotebookCellOutput(
-								[new vscode.NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')],
+								[
+									new vscode.NotebookCellOutputItem(
+										Buffer.from(base64EncodedImage, 'base64'),
+										'image/png',
+									),
+								],
 								{
 									executionCount: 1,
 									metadata: {
-										'image/png': { height: '111px', width: '999px' }
+										'image/png': { height: '111px', width: '999px' },
 									},
-									outputType: output_type
-								}
-							)
+									outputType: output_type,
+								},
+							),
 						],
-						propertiesToExcludeFromComparison
-					);
-				});
+						propertiesToExcludeFromComparison,
+					)
+				})
 
 				test('png allowed to scroll', async () => {
 					validateCellOutputTranslation(
@@ -562,48 +627,56 @@ suite(`ipynb serializer`, () => {
 							{
 								execution_count: 1,
 								data: {
-									'image/png': base64EncodedImage
+									'image/png': base64EncodedImage,
 								},
 								metadata: {
 									unconfined: true,
-									'image/png': { width: '999px' }
+									'image/png': { width: '999px' },
 								},
-								output_type
-							}
+								output_type,
+							},
 						],
 						[
 							new vscode.NotebookCellOutput(
-								[new vscode.NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')],
+								[
+									new vscode.NotebookCellOutputItem(
+										Buffer.from(base64EncodedImage, 'base64'),
+										'image/png',
+									),
+								],
 								{
 									executionCount: 1,
 									metadata: {
 										unconfined: true,
-										'image/png': { width: '999px' }
+										'image/png': { width: '999px' },
 									},
-									outputType: output_type
-								}
-							)
+									outputType: output_type,
+								},
+							),
 						],
-						propertiesToExcludeFromComparison
-					);
-				});
-			});
-		});
-	});
+						propertiesToExcludeFromComparison,
+					)
+				})
+			})
+		})
+	})
 
 	suite('Output Order', () => {
 		test('Verify order of outputs', async () => {
-			const dataAndExpectedOrder: { output: nbformat.IDisplayData; expectedMimeTypesOrder: string[] }[] = [
+			const dataAndExpectedOrder: {
+				output: nbformat.IDisplayData
+				expectedMimeTypesOrder: string[]
+			}[] = [
 				{
 					output: {
 						data: {
 							'application/vnd.vegalite.v4+json': 'some json',
-							'text/html': '<a>Hello</a>'
+							'text/html': '<a>Hello</a>',
 						},
 						metadata: {},
-						output_type: 'display_data'
+						output_type: 'display_data',
 					},
-					expectedMimeTypesOrder: ['application/vnd.vegalite.v4+json', 'text/html']
+					expectedMimeTypesOrder: ['application/vnd.vegalite.v4+json', 'text/html'],
 				},
 				{
 					output: {
@@ -611,17 +684,17 @@ suite(`ipynb serializer`, () => {
 							'application/vnd.vegalite.v4+json': 'some json',
 							'application/javascript': 'some js',
 							'text/plain': 'some text',
-							'text/html': '<a>Hello</a>'
+							'text/html': '<a>Hello</a>',
 						},
 						metadata: {},
-						output_type: 'display_data'
+						output_type: 'display_data',
 					},
 					expectedMimeTypesOrder: [
 						'application/vnd.vegalite.v4+json',
 						'text/html',
 						'application/javascript',
-						'text/plain'
-					]
+						'text/plain',
+					],
 				},
 				{
 					output: {
@@ -629,92 +702,92 @@ suite(`ipynb serializer`, () => {
 							'application/vnd.vegalite.v4+json': '', // Empty, should give preference to other mimetypes.
 							'application/javascript': 'some js',
 							'text/plain': 'some text',
-							'text/html': '<a>Hello</a>'
+							'text/html': '<a>Hello</a>',
 						},
 						metadata: {},
-						output_type: 'display_data'
+						output_type: 'display_data',
 					},
 					expectedMimeTypesOrder: [
 						'text/html',
 						'application/javascript',
 						'text/plain',
-						'application/vnd.vegalite.v4+json'
-					]
+						'application/vnd.vegalite.v4+json',
+					],
 				},
 				{
 					output: {
 						data: {
 							'text/plain': 'some text',
-							'text/html': '<a>Hello</a>'
+							'text/html': '<a>Hello</a>',
 						},
 						metadata: {},
-						output_type: 'display_data'
+						output_type: 'display_data',
 					},
-					expectedMimeTypesOrder: ['text/html', 'text/plain']
+					expectedMimeTypesOrder: ['text/html', 'text/plain'],
 				},
 				{
 					output: {
 						data: {
 							'application/javascript': 'some js',
-							'text/plain': 'some text'
+							'text/plain': 'some text',
 						},
 						metadata: {},
-						output_type: 'display_data'
+						output_type: 'display_data',
 					},
-					expectedMimeTypesOrder: ['application/javascript', 'text/plain']
+					expectedMimeTypesOrder: ['application/javascript', 'text/plain'],
 				},
 				{
 					output: {
 						data: {
 							'image/svg+xml': 'some svg',
-							'text/plain': 'some text'
+							'text/plain': 'some text',
 						},
 						metadata: {},
-						output_type: 'display_data'
+						output_type: 'display_data',
 					},
-					expectedMimeTypesOrder: ['image/svg+xml', 'text/plain']
+					expectedMimeTypesOrder: ['image/svg+xml', 'text/plain'],
 				},
 				{
 					output: {
 						data: {
 							'text/latex': 'some latex',
-							'text/plain': 'some text'
+							'text/plain': 'some text',
 						},
 						metadata: {},
-						output_type: 'display_data'
+						output_type: 'display_data',
 					},
-					expectedMimeTypesOrder: ['text/latex', 'text/plain']
+					expectedMimeTypesOrder: ['text/latex', 'text/plain'],
 				},
 				{
 					output: {
 						data: {
 							'application/vnd.jupyter.widget-view+json': 'some widget',
-							'text/plain': 'some text'
+							'text/plain': 'some text',
 						},
 						metadata: {},
-						output_type: 'display_data'
+						output_type: 'display_data',
 					},
-					expectedMimeTypesOrder: ['application/vnd.jupyter.widget-view+json', 'text/plain']
+					expectedMimeTypesOrder: ['application/vnd.jupyter.widget-view+json', 'text/plain'],
 				},
 				{
 					output: {
 						data: {
 							'text/plain': 'some text',
 							'image/svg+xml': 'some svg',
-							'image/png': 'some png'
+							'image/png': 'some png',
 						},
 						metadata: {},
-						output_type: 'display_data'
+						output_type: 'display_data',
 					},
-					expectedMimeTypesOrder: ['image/png', 'image/svg+xml', 'text/plain']
-				}
-			];
+					expectedMimeTypesOrder: ['image/png', 'image/svg+xml', 'text/plain'],
+				},
+			]
 
 			dataAndExpectedOrder.forEach(({ output, expectedMimeTypesOrder }) => {
-				const sortedOutputs = jupyterCellOutputToCellOutput(output);
-				const mimeTypes = sortedOutputs.items.map((item) => item.mime).join(',');
-				assert.equal(mimeTypes, expectedMimeTypesOrder.join(','));
-			});
-		});
-	});
-});
+				const sortedOutputs = jupyterCellOutputToCellOutput(output)
+				const mimeTypes = sortedOutputs.items.map((item) => item.mime).join(',')
+				assert.equal(mimeTypes, expectedMimeTypesOrder.join(','))
+			})
+		})
+	})
+})

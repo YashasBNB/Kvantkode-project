@@ -2,84 +2,70 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import assert from 'assert';
-import * as Formatter from '../../common/jsonFormatter.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from './utils.js';
+import assert from 'assert'
+import * as Formatter from '../../common/jsonFormatter.js'
+import { ensureNoDisposablesAreLeakedInTestSuite } from './utils.js'
 
 suite('JSON - formatter', () => {
-
-	ensureNoDisposablesAreLeakedInTestSuite();
+	ensureNoDisposablesAreLeakedInTestSuite()
 
 	function format(content: string, expected: string, insertSpaces = true) {
-		let range: Formatter.Range | undefined = undefined;
-		const rangeStart = content.indexOf('|');
-		const rangeEnd = content.lastIndexOf('|');
+		let range: Formatter.Range | undefined = undefined
+		const rangeStart = content.indexOf('|')
+		const rangeEnd = content.lastIndexOf('|')
 		if (rangeStart !== -1 && rangeEnd !== -1) {
-			content = content.substring(0, rangeStart) + content.substring(rangeStart + 1, rangeEnd) + content.substring(rangeEnd + 1);
-			range = { offset: rangeStart, length: rangeEnd - rangeStart };
+			content =
+				content.substring(0, rangeStart) +
+				content.substring(rangeStart + 1, rangeEnd) +
+				content.substring(rangeEnd + 1)
+			range = { offset: rangeStart, length: rangeEnd - rangeStart }
 		}
 
-		const edits = Formatter.format(content, range, { tabSize: 2, insertSpaces: insertSpaces, eol: '\n' });
+		const edits = Formatter.format(content, range, {
+			tabSize: 2,
+			insertSpaces: insertSpaces,
+			eol: '\n',
+		})
 
-		let lastEditOffset = content.length;
+		let lastEditOffset = content.length
 		for (let i = edits.length - 1; i >= 0; i--) {
-			const edit = edits[i];
-			assert(edit.offset >= 0 && edit.length >= 0 && edit.offset + edit.length <= content.length);
-			assert(typeof edit.content === 'string');
-			assert(lastEditOffset >= edit.offset + edit.length); // make sure all edits are ordered
-			lastEditOffset = edit.offset;
-			content = content.substring(0, edit.offset) + edit.content + content.substring(edit.offset + edit.length);
+			const edit = edits[i]
+			assert(edit.offset >= 0 && edit.length >= 0 && edit.offset + edit.length <= content.length)
+			assert(typeof edit.content === 'string')
+			assert(lastEditOffset >= edit.offset + edit.length) // make sure all edits are ordered
+			lastEditOffset = edit.offset
+			content =
+				content.substring(0, edit.offset) +
+				edit.content +
+				content.substring(edit.offset + edit.length)
 		}
 
-		assert.strictEqual(content, expected);
+		assert.strictEqual(content, expected)
 	}
 
 	test('object - single property', () => {
-		const content = [
-			'{"x" : 1}'
-		].join('\n');
+		const content = ['{"x" : 1}'].join('\n')
 
-		const expected = [
-			'{',
-			'  "x": 1',
-			'}'
-		].join('\n');
+		const expected = ['{', '  "x": 1', '}'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 	test('object - multiple properties', () => {
-		const content = [
-			'{"x" : 1,  "y" : "foo", "z"  : true}'
-		].join('\n');
+		const content = ['{"x" : 1,  "y" : "foo", "z"  : true}'].join('\n')
 
-		const expected = [
-			'{',
-			'  "x": 1,',
-			'  "y": "foo",',
-			'  "z": true',
-			'}'
-		].join('\n');
+		const expected = ['{', '  "x": 1,', '  "y": "foo",', '  "z": true', '}'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 	test('object - no properties ', () => {
-		const content = [
-			'{"x" : {    },  "y" : {}}'
-		].join('\n');
+		const content = ['{"x" : {    },  "y" : {}}'].join('\n')
 
-		const expected = [
-			'{',
-			'  "x": {},',
-			'  "y": {}',
-			'}'
-		].join('\n');
+		const expected = ['{', '  "x": {},', '  "y": {}', '}'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 	test('object - nesting', () => {
-		const content = [
-			'{"x" : {  "y" : { "z"  : { }}, "a": true}}'
-		].join('\n');
+		const content = ['{"x" : {  "y" : { "z"  : { }}, "a": true}}'].join('\n')
 
 		const expected = [
 			'{',
@@ -89,58 +75,38 @@ suite('JSON - formatter', () => {
 			'    },',
 			'    "a": true',
 			'  }',
-			'}'
-		].join('\n');
+			'}',
+		].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 
 	test('array - single items', () => {
-		const content = [
-			'["[]"]'
-		].join('\n');
+		const content = ['["[]"]'].join('\n')
 
-		const expected = [
-			'[',
-			'  "[]"',
-			']'
-		].join('\n');
+		const expected = ['[', '  "[]"', ']'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 
 	test('array - multiple items', () => {
-		const content = [
-			'[true,null,1.2]'
-		].join('\n');
+		const content = ['[true,null,1.2]'].join('\n')
 
-		const expected = [
-			'[',
-			'  true,',
-			'  null,',
-			'  1.2',
-			']'
-		].join('\n');
+		const expected = ['[', '  true,', '  null,', '  1.2', ']'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 
 	test('array - no items', () => {
-		const content = [
-			'[      ]'
-		].join('\n');
+		const content = ['[      ]'].join('\n')
 
-		const expected = [
-			'[]'
-		].join('\n');
+		const expected = ['[]'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 
 	test('array - nesting', () => {
-		const content = [
-			'[ [], [ [ {} ], "a" ]  ]'
-		].join('\n');
+		const content = ['[ [], [ [ {} ], "a" ]  ]'].join('\n')
 
 		const expected = [
 			'[',
@@ -152,114 +118,60 @@ suite('JSON - formatter', () => {
 			'    "a"',
 			'  ]',
 			']',
-		].join('\n');
+		].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 
 	test('syntax errors', () => {
-		const content = [
-			'[ null 1.2 ]'
-		].join('\n');
+		const content = ['[ null 1.2 ]'].join('\n')
 
-		const expected = [
-			'[',
-			'  null 1.2',
-			']',
-		].join('\n');
+		const expected = ['[', '  null 1.2', ']'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 
 	test('empty lines', () => {
-		const content = [
-			'{',
-			'"a": true,',
-			'',
-			'"b": true',
-			'}',
-		].join('\n');
+		const content = ['{', '"a": true,', '', '"b": true', '}'].join('\n')
 
-		const expected = [
-			'{',
-			'\t"a": true,',
-			'\t"b": true',
-			'}',
-		].join('\n');
+		const expected = ['{', '\t"a": true,', '\t"b": true', '}'].join('\n')
 
-		format(content, expected, false);
-	});
+		format(content, expected, false)
+	})
 	test('single line comment', () => {
-		const content = [
-			'[ ',
-			'//comment',
-			'"foo", "bar"',
-			'] '
-		].join('\n');
+		const content = ['[ ', '//comment', '"foo", "bar"', '] '].join('\n')
 
-		const expected = [
-			'[',
-			'  //comment',
-			'  "foo",',
-			'  "bar"',
-			']',
-		].join('\n');
+		const expected = ['[', '  //comment', '  "foo",', '  "bar"', ']'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 	test('block line comment', () => {
-		const content = [
-			'[{',
-			'        /*comment*/     ',
-			'"foo" : true',
-			'}] '
-		].join('\n');
+		const content = ['[{', '        /*comment*/     ', '"foo" : true', '}] '].join('\n')
 
-		const expected = [
-			'[',
-			'  {',
-			'    /*comment*/',
-			'    "foo": true',
-			'  }',
-			']',
-		].join('\n');
+		const expected = ['[', '  {', '    /*comment*/', '    "foo": true', '  }', ']'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 	test('single line comment on same line', () => {
-		const content = [
-			' {  ',
-			'        "a": {}// comment    ',
-			' } '
-		].join('\n');
+		const content = [' {  ', '        "a": {}// comment    ', ' } '].join('\n')
 
-		const expected = [
-			'{',
-			'  "a": {} // comment    ',
-			'}',
-		].join('\n');
+		const expected = ['{', '  "a": {} // comment    ', '}'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 	test('single line comment on same line 2', () => {
-		const content = [
-			'{ //comment',
-			'}'
-		].join('\n');
+		const content = ['{ //comment', '}'].join('\n')
 
-		const expected = [
-			'{ //comment',
-			'}'
-		].join('\n');
+		const expected = ['{ //comment', '}'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 	test('block comment on same line', () => {
 		const content = [
 			'{      "a": {}, /*comment*/    ',
 			'        /*comment*/ "b": {},    ',
 			'        "c": {/*comment*/}    } ',
-		].join('\n');
+		].join('\n')
 
 		const expected = [
 			'{',
@@ -267,10 +179,10 @@ suite('JSON - formatter', () => {
 			'  /*comment*/ "b": {},',
 			'  "c": { /*comment*/}',
 			'}',
-		].join('\n');
+		].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 
 	test('block comment on same line advanced', () => {
 		const content = [
@@ -278,7 +190,7 @@ suite('JSON - formatter', () => {
 			'             null',
 			'        ] /*comment*/',
 			'        ,"e": /*comment*/ [null] }',
-		].join('\n');
+		].join('\n')
 
 		const expected = [
 			'{',
@@ -289,99 +201,57 @@ suite('JSON - formatter', () => {
 			'    null',
 			'  ]',
 			'}',
-		].join('\n');
+		].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 
 	test('multiple block comments on same line', () => {
 		const content = [
 			'{      "a": {} /*comment*/, /*comment*/   ',
-			'        /*comment*/ "b": {}  /*comment*/  } '
-		].join('\n');
+			'        /*comment*/ "b": {}  /*comment*/  } ',
+		].join('\n')
 
 		const expected = [
 			'{',
 			'  "a": {} /*comment*/, /*comment*/',
 			'  /*comment*/ "b": {} /*comment*/',
 			'}',
-		].join('\n');
+		].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 	test('multiple mixed comments on same line', () => {
-		const content = [
-			'[ /*comment*/  /*comment*/   // comment ',
-			']'
-		].join('\n');
+		const content = ['[ /*comment*/  /*comment*/   // comment ', ']'].join('\n')
 
-		const expected = [
-			'[ /*comment*/ /*comment*/ // comment ',
-			']'
-		].join('\n');
+		const expected = ['[ /*comment*/ /*comment*/ // comment ', ']'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 
 	test('range', () => {
-		const content = [
-			'{ "a": {},',
-			'|"b": [null, null]|',
-			'} '
-		].join('\n');
+		const content = ['{ "a": {},', '|"b": [null, null]|', '} '].join('\n')
 
-		const expected = [
-			'{ "a": {},',
-			'"b": [',
-			'  null,',
-			'  null',
-			']',
-			'} ',
-		].join('\n');
+		const expected = ['{ "a": {},', '"b": [', '  null,', '  null', ']', '} '].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 
 	test('range with existing indent', () => {
-		const content = [
-			'{ "a": {},',
-			'   |"b": [null],',
-			'"c": {}',
-			'}|'
-		].join('\n');
+		const content = ['{ "a": {},', '   |"b": [null],', '"c": {}', '}|'].join('\n')
 
-		const expected = [
-			'{ "a": {},',
-			'   "b": [',
-			'    null',
-			'  ],',
-			'  "c": {}',
-			'}',
-		].join('\n');
+		const expected = ['{ "a": {},', '   "b": [', '    null', '  ],', '  "c": {}', '}'].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 
 	test('range with existing indent - tabs', () => {
-		const content = [
-			'{ "a": {},',
-			'|  "b": [null],   ',
-			'"c": {}',
-			'} |    '
-		].join('\n');
+		const content = ['{ "a": {},', '|  "b": [null],   ', '"c": {}', '} |    '].join('\n')
 
-		const expected = [
-			'{ "a": {},',
-			'\t"b": [',
-			'\t\tnull',
-			'\t],',
-			'\t"c": {}',
-			'}',
-		].join('\n');
+		const expected = ['{ "a": {},', '\t"b": [', '\t\tnull', '\t],', '\t"c": {}', '}'].join('\n')
 
-		format(content, expected, false);
-	});
-
+		format(content, expected, false)
+	})
 
 	test('block comment none-line breaking symbols', () => {
 		const content = [
@@ -394,8 +264,8 @@ suite('JSON - formatter', () => {
 			',',
 			' "b": true',
 			'/* comment */',
-			'}'
-		].join('\n');
+			'}',
+		].join('\n')
 
 		const expected = [
 			'{',
@@ -411,10 +281,10 @@ suite('JSON - formatter', () => {
 			'  "b": true',
 			'  /* comment */',
 			'}',
-		].join('\n');
+		].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 	test('line comment after none-line breaking symbols', () => {
 		const content = [
 			'{ "a":',
@@ -424,8 +294,8 @@ suite('JSON - formatter', () => {
 			'// comment',
 			': null',
 			'// comment',
-			'}'
-		].join('\n');
+			'}',
+		].join('\n')
 
 		const expected = [
 			'{',
@@ -437,16 +307,15 @@ suite('JSON - formatter', () => {
 			'  : null',
 			'  // comment',
 			'}',
-		].join('\n');
+		].join('\n')
 
-		format(content, expected);
-	});
+		format(content, expected)
+	})
 
 	test('toFormattedString', () => {
 		const obj = {
-			a: { b: 1, d: ['hello'] }
-		};
-
+			a: { b: 1, d: ['hello'] },
+		}
 
 		const getExpected = (tab: string, eol: string) => {
 			return [
@@ -457,17 +326,17 @@ suite('JSON - formatter', () => {
 				`${tab}${tab}${tab}"hello"`,
 				`${tab}${tab}]`,
 				`${tab}}`,
-				'}'
-			].join(eol);
-		};
+				'}',
+			].join(eol)
+		}
 
-		let actual = Formatter.toFormattedString(obj, { insertSpaces: true, tabSize: 2, eol: '\n' });
-		assert.strictEqual(actual, getExpected('  ', '\n'));
+		let actual = Formatter.toFormattedString(obj, { insertSpaces: true, tabSize: 2, eol: '\n' })
+		assert.strictEqual(actual, getExpected('  ', '\n'))
 
-		actual = Formatter.toFormattedString(obj, { insertSpaces: true, tabSize: 2, eol: '\r\n' });
-		assert.strictEqual(actual, getExpected('  ', '\r\n'));
+		actual = Formatter.toFormattedString(obj, { insertSpaces: true, tabSize: 2, eol: '\r\n' })
+		assert.strictEqual(actual, getExpected('  ', '\r\n'))
 
-		actual = Formatter.toFormattedString(obj, { insertSpaces: false, eol: '\r\n' });
-		assert.strictEqual(actual, getExpected('\t', '\r\n'));
-	});
-});
+		actual = Formatter.toFormattedString(obj, { insertSpaces: false, eol: '\r\n' })
+		assert.strictEqual(actual, getExpected('\t', '\r\n'))
+	})
+})

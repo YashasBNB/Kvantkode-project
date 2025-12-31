@@ -3,22 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MarkdownLink } from '../tokens/markdownLink.js';
-import { NewLine } from '../../linesCodec/tokens/newLine.js';
-import { assert } from '../../../../../base/common/assert.js';
-import { FormFeed } from '../../simpleCodec/tokens/formFeed.js';
-import { TSimpleToken } from '../../simpleCodec/simpleDecoder.js';
-import { VerticalTab } from '../../simpleCodec/tokens/verticalTab.js';
-import { CarriageReturn } from '../../linesCodec/tokens/carriageReturn.js';
-import { LeftBracket, RightBracket } from '../../simpleCodec/tokens/brackets.js';
-import { ParserBase, TAcceptTokenResult } from '../../simpleCodec/parserBase.js';
-import { LeftParenthesis, RightParenthesis } from '../../simpleCodec/tokens/parentheses.js';
+import { MarkdownLink } from '../tokens/markdownLink.js'
+import { NewLine } from '../../linesCodec/tokens/newLine.js'
+import { assert } from '../../../../../base/common/assert.js'
+import { FormFeed } from '../../simpleCodec/tokens/formFeed.js'
+import { TSimpleToken } from '../../simpleCodec/simpleDecoder.js'
+import { VerticalTab } from '../../simpleCodec/tokens/verticalTab.js'
+import { CarriageReturn } from '../../linesCodec/tokens/carriageReturn.js'
+import { LeftBracket, RightBracket } from '../../simpleCodec/tokens/brackets.js'
+import { ParserBase, TAcceptTokenResult } from '../../simpleCodec/parserBase.js'
+import { LeftParenthesis, RightParenthesis } from '../../simpleCodec/tokens/parentheses.js'
 
 /**
  * List of characters that are not allowed in links so stop a markdown link sequence abruptly.
  */
-const MARKDOWN_LINK_STOP_CHARACTERS: readonly string[] = [CarriageReturn, NewLine, VerticalTab, FormFeed]
-	.map((token) => { return token.symbol; });
+const MARKDOWN_LINK_STOP_CHARACTERS: readonly string[] = [
+	CarriageReturn,
+	NewLine,
+	VerticalTab,
+	FormFeed,
+].map((token) => {
+	return token.symbol
+})
 
 /**
  * The parser responsible for parsing a `markdown link caption` part of a markdown
@@ -35,18 +41,23 @@ const MARKDOWN_LINK_STOP_CHARACTERS: readonly string[] = [CarriageReturn, NewLin
  * for re-emitting the {@link tokens} accumulated so far as standalone entities since they are no
  * longer represent a coherent token entity of a larger size.
  */
-export class PartialMarkdownLinkCaption extends ParserBase<TSimpleToken, PartialMarkdownLinkCaption | MarkdownLinkCaption> {
+export class PartialMarkdownLinkCaption extends ParserBase<
+	TSimpleToken,
+	PartialMarkdownLinkCaption | MarkdownLinkCaption
+> {
 	constructor(token: LeftBracket) {
-		super([token]);
+		super([token])
 	}
 
-	public accept(token: TSimpleToken): TAcceptTokenResult<PartialMarkdownLinkCaption | MarkdownLinkCaption> {
+	public accept(
+		token: TSimpleToken,
+	): TAcceptTokenResult<PartialMarkdownLinkCaption | MarkdownLinkCaption> {
 		// any of stop characters is are breaking a markdown link caption sequence
 		if (MARKDOWN_LINK_STOP_CHARACTERS.includes(token.text)) {
 			return {
 				result: 'failure',
 				wasTokenConsumed: false,
-			};
+			}
 		}
 
 		// the `]` character ends the caption of a markdown link
@@ -55,17 +66,17 @@ export class PartialMarkdownLinkCaption extends ParserBase<TSimpleToken, Partial
 				result: 'success',
 				nextParser: new MarkdownLinkCaption([...this.tokens, token]),
 				wasTokenConsumed: true,
-			};
+			}
 		}
 
 		// otherwise, include the token in the sequence
 		// and keep the current parser object instance
-		this.currentTokens.push(token);
+		this.currentTokens.push(token)
 		return {
 			result: 'success',
 			nextParser: this,
 			wasTokenConsumed: true,
-		};
+		}
 	}
 }
 
@@ -82,8 +93,13 @@ export class PartialMarkdownLinkCaption extends ParserBase<TSimpleToken, Partial
  * to be responsible for re-emitting the {@link tokens} accumulated so far as standalone
  * entities since they are no longer represent a coherent token entity of a larger size.
  */
-export class MarkdownLinkCaption extends ParserBase<TSimpleToken, MarkdownLinkCaption | PartialMarkdownLink> {
-	public accept(token: TSimpleToken): TAcceptTokenResult<MarkdownLinkCaption | PartialMarkdownLink> {
+export class MarkdownLinkCaption extends ParserBase<
+	TSimpleToken,
+	MarkdownLinkCaption | PartialMarkdownLink
+> {
+	public accept(
+		token: TSimpleToken,
+	): TAcceptTokenResult<MarkdownLinkCaption | PartialMarkdownLink> {
 		// the `(` character starts the link part of a markdown link
 		// that is the only character that can follow the caption
 		if (token instanceof LeftParenthesis) {
@@ -91,13 +107,13 @@ export class MarkdownLinkCaption extends ParserBase<TSimpleToken, MarkdownLinkCa
 				result: 'success',
 				wasTokenConsumed: true,
 				nextParser: new PartialMarkdownLink([...this.tokens], token),
-			};
+			}
 		}
 
 		return {
 			result: 'failure',
 			wasTokenConsumed: false,
-		};
+		}
 	}
 }
 
@@ -123,22 +139,25 @@ export class MarkdownLinkCaption extends ParserBase<TSimpleToken, MarkdownLinkCa
  *     to be complete as soon as this requirement is met. Therefore the `final` word is used in
  *     the description comments above to highlight this important detail.
  */
-export class PartialMarkdownLink extends ParserBase<TSimpleToken, PartialMarkdownLink | MarkdownLink> {
+export class PartialMarkdownLink extends ParserBase<
+	TSimpleToken,
+	PartialMarkdownLink | MarkdownLink
+> {
 	/**
 	 * Number of open parenthesis in the sequence.
 	 * See comment in the {@linkcode accept} method for more details.
 	 */
-	private openParensCount: number = 1;
+	private openParensCount: number = 1
 
 	constructor(
 		protected readonly captionTokens: TSimpleToken[],
 		token: LeftParenthesis,
 	) {
-		super([token]);
+		super([token])
 	}
 
 	public override get tokens(): readonly TSimpleToken[] {
-		return [...this.captionTokens, ...this.currentTokens];
+		return [...this.captionTokens, ...this.currentTokens]
 	}
 
 	public accept(token: TSimpleToken): TAcceptTokenResult<PartialMarkdownLink | MarkdownLink> {
@@ -152,11 +171,11 @@ export class PartialMarkdownLink extends ParserBase<TSimpleToken, PartialMarkdow
 		// to be complete
 
 		if (token instanceof LeftParenthesis) {
-			this.openParensCount += 1;
+			this.openParensCount += 1
 		}
 
 		if (token instanceof RightParenthesis) {
-			this.openParensCount -= 1;
+			this.openParensCount -= 1
 
 			// sanity check! this must alway hold true because we return a complete markdown
 			// link as soon as we encounter matching number of closing parenthesis, hence
@@ -164,33 +183,33 @@ export class PartialMarkdownLink extends ParserBase<TSimpleToken, PartialMarkdow
 			assert(
 				this.openParensCount >= 0,
 				`Unexpected right parenthesis token encountered: '${token}'.`,
-			);
+			)
 
 			// the markdown link is complete as soon as we get the same number of closing parenthesis
 			if (this.openParensCount === 0) {
-				const { startLineNumber, startColumn } = this.captionTokens[0].range;
+				const { startLineNumber, startColumn } = this.captionTokens[0].range
 
 				// create link caption string
 				const caption = this.captionTokens
-					.map((token) => { return token.text; })
-					.join('');
+					.map((token) => {
+						return token.text
+					})
+					.join('')
 
 				// create link reference string
-				this.currentTokens.push(token);
+				this.currentTokens.push(token)
 				const reference = this.currentTokens
-					.map((token) => { return token.text; }).join('');
+					.map((token) => {
+						return token.text
+					})
+					.join('')
 
 				// return complete markdown link object
 				return {
 					result: 'success',
 					wasTokenConsumed: true,
-					nextParser: new MarkdownLink(
-						startLineNumber,
-						startColumn,
-						caption,
-						reference,
-					),
-				};
+					nextParser: new MarkdownLink(startLineNumber, startColumn, caption, reference),
+				}
 			}
 		}
 
@@ -199,15 +218,15 @@ export class PartialMarkdownLink extends ParserBase<TSimpleToken, PartialMarkdow
 			return {
 				result: 'failure',
 				wasTokenConsumed: false,
-			};
+			}
 		}
 
 		// the rest of the tokens can be included in the sequence
-		this.currentTokens.push(token);
+		this.currentTokens.push(token)
 		return {
 			result: 'success',
 			nextParser: this,
 			wasTokenConsumed: true,
-		};
+		}
 	}
 }

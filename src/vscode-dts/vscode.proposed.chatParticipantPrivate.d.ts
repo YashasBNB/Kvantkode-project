@@ -6,7 +6,6 @@
 // version: 6
 
 declare module 'vscode' {
-
 	/**
 	 * The location at which the chat is happening.
 	 */
@@ -35,56 +34,56 @@ declare module 'vscode' {
 
 	export class ChatRequestEditorData {
 		//TODO@API should be the editor
-		document: TextDocument;
-		selection: Selection;
-		wholeRange: Range;
+		document: TextDocument
+		selection: Selection
+		wholeRange: Range
 
-		constructor(document: TextDocument, selection: Selection, wholeRange: Range);
+		constructor(document: TextDocument, selection: Selection, wholeRange: Range)
 	}
 
 	export class ChatRequestNotebookData {
 		//TODO@API should be the editor
-		readonly cell: TextDocument;
+		readonly cell: TextDocument
 
-		constructor(cell: TextDocument);
+		constructor(cell: TextDocument)
 	}
 
 	export interface ChatRequest {
 		/**
 		 * The id of the chat request. Used to identity an interaction with any of the chat surfaces.
 		 */
-		readonly id: string;
+		readonly id: string
 		/**
 		 * The attempt number of the request. The first request has attempt number 0.
 		 */
-		readonly attempt: number;
+		readonly attempt: number
 
 		/**
 		 * If automatic command detection is enabled.
 		 */
-		readonly enableCommandDetection: boolean;
+		readonly enableCommandDetection: boolean
 
 		/**
 		 * If the chat participant or command was automatically assigned.
 		 */
-		readonly isParticipantDetected: boolean;
+		readonly isParticipantDetected: boolean
 
 		/**
 		 * The location at which the chat is happening. This will always be one of the supported values
 		 *
 		 * @deprecated
 		 */
-		readonly location: ChatLocation;
+		readonly location: ChatLocation
 
 		/**
 		 * Information that is specific to the location at which chat is happening, e.g within a document, notebook,
 		 * or terminal. Will be `undefined` for the chat panel.
 		 */
-		readonly location2: ChatRequestEditorData | ChatRequestNotebookData | undefined;
+		readonly location2: ChatRequestEditorData | ChatRequestNotebookData | undefined
 	}
 
 	export interface ChatParticipant {
-		supportIssueReporting?: boolean;
+		supportIssueReporting?: boolean
 	}
 
 	export enum ChatErrorLevel {
@@ -97,89 +96,105 @@ declare module 'vscode' {
 		/**
 		 * If set to true, the message content is completely hidden. Only ChatErrorDetails#message will be shown.
 		 */
-		responseIsRedacted?: boolean;
+		responseIsRedacted?: boolean
 
-		isQuotaExceeded?: boolean;
+		isQuotaExceeded?: boolean
 
-		level?: ChatErrorLevel;
+		level?: ChatErrorLevel
 	}
 
 	export namespace chat {
-		export function createDynamicChatParticipant(id: string, dynamicProps: DynamicChatParticipantProps, handler: ChatExtendedRequestHandler): ChatParticipant;
+		export function createDynamicChatParticipant(
+			id: string,
+			dynamicProps: DynamicChatParticipantProps,
+			handler: ChatExtendedRequestHandler,
+		): ChatParticipant
 	}
 
 	/**
 	 * These don't get set on the ChatParticipant after creation, like other props, because they are typically defined in package.json and we want them at the time of creation.
 	 */
 	export interface DynamicChatParticipantProps {
-		name: string;
-		publisherName: string;
-		description?: string;
-		fullName?: string;
+		name: string
+		publisherName: string
+		description?: string
+		fullName?: string
 	}
 
 	export namespace lm {
-		export function registerIgnoredFileProvider(provider: LanguageModelIgnoredFileProvider): Disposable;
+		export function registerIgnoredFileProvider(
+			provider: LanguageModelIgnoredFileProvider,
+		): Disposable
 	}
 
 	export interface LanguageModelIgnoredFileProvider {
-		provideFileIgnored(uri: Uri, token: CancellationToken): ProviderResult<boolean>;
+		provideFileIgnored(uri: Uri, token: CancellationToken): ProviderResult<boolean>
 	}
 
 	export interface LanguageModelToolInvocationOptions<T> {
-		chatRequestId?: string;
-		chatSessionId?: string;
-		chatInteractionId?: string;
-		terminalCommand?: string;
+		chatRequestId?: string
+		chatSessionId?: string
+		chatInteractionId?: string
+		terminalCommand?: string
 	}
 
 	export interface PreparedToolInvocation {
-		pastTenseMessage?: string | MarkdownString;
-		presentation?: 'hidden' | undefined;
+		pastTenseMessage?: string | MarkdownString
+		presentation?: 'hidden' | undefined
 	}
 
 	export interface LanguageModelTool<T> {
-		prepareInvocation2?(options: LanguageModelToolInvocationPrepareOptions<T>, token: CancellationToken): ProviderResult<PreparedTerminalToolInvocation>;
+		prepareInvocation2?(
+			options: LanguageModelToolInvocationPrepareOptions<T>,
+			token: CancellationToken,
+		): ProviderResult<PreparedTerminalToolInvocation>
 	}
 
 	export class PreparedTerminalToolInvocation {
-		readonly command: string;
-		readonly language: string;
-		readonly confirmationMessages?: LanguageModelToolConfirmationMessages;
+		readonly command: string
+		readonly language: string
+		readonly confirmationMessages?: LanguageModelToolConfirmationMessages
 
 		constructor(
 			command: string,
 			language: string,
 			confirmationMessages?: LanguageModelToolConfirmationMessages,
-		);
+		)
 	}
 
 	export class ExtendedLanguageModelToolResult extends LanguageModelToolResult {
-		toolResultMessage?: string | MarkdownString;
-		toolResultDetails?: Array<Uri | Location>;
+		toolResultMessage?: string | MarkdownString
+		toolResultDetails?: Array<Uri | Location>
 	}
 
 	// #region Chat participant detection
 
 	export interface ChatParticipantMetadata {
-		participant: string;
-		command?: string;
-		disambiguation: { category: string; description: string; examples: string[] }[];
+		participant: string
+		command?: string
+		disambiguation: { category: string; description: string; examples: string[] }[]
 	}
 
 	export interface ChatParticipantDetectionResult {
-		participant: string;
-		command?: string;
+		participant: string
+		command?: string
 	}
 
 	export interface ChatParticipantDetectionProvider {
-		provideParticipantDetection(chatRequest: ChatRequest, context: ChatContext, options: { participants?: ChatParticipantMetadata[]; location: ChatLocation }, token: CancellationToken): ProviderResult<ChatParticipantDetectionResult>;
+		provideParticipantDetection(
+			chatRequest: ChatRequest,
+			context: ChatContext,
+			options: { participants?: ChatParticipantMetadata[]; location: ChatLocation },
+			token: CancellationToken,
+		): ProviderResult<ChatParticipantDetectionResult>
 	}
 
 	export namespace chat {
-		export function registerChatParticipantDetectionProvider(participantDetectionProvider: ChatParticipantDetectionProvider): Disposable;
+		export function registerChatParticipantDetectionProvider(
+			participantDetectionProvider: ChatParticipantDetectionProvider,
+		): Disposable
 
-		export const onDidDisposeChatSession: Event<string>;
+		export const onDidDisposeChatSession: Event<string>
 	}
 
 	// #endregion

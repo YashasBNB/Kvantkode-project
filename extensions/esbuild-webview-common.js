@@ -8,8 +8,8 @@
  * @fileoverview Common build script for extension scripts used in in webviews.
  */
 
-const path = require('path');
-const esbuild = require('esbuild');
+const path = require('path')
+const esbuild = require('esbuild')
 
 /**
  * @typedef {Partial<import('esbuild').BuildOptions> & {
@@ -33,9 +33,9 @@ async function build(options, didBuild) {
 		platform: 'browser',
 		target: ['es2020'],
 		...options,
-	});
+	})
 
-	await didBuild?.(options.outdir);
+	await didBuild?.(options.outdir)
 }
 
 /**
@@ -46,9 +46,9 @@ async function build(options, didBuild) {
  */
 async function tryBuild(options, didBuild) {
 	try {
-		await build(options, didBuild);
+		await build(options, didBuild)
 	} catch (err) {
-		console.error(err);
+		console.error(err)
 	}
 }
 
@@ -63,12 +63,12 @@ async function tryBuild(options, didBuild) {
  * @param {(outDir: string) => unknown} [didBuild]
  */
 module.exports.run = async function (config, args, didBuild) {
-	let outdir = config.outdir;
-	const outputRootIndex = args.indexOf('--outputRoot');
+	let outdir = config.outdir
+	const outputRootIndex = args.indexOf('--outputRoot')
 	if (outputRootIndex >= 0) {
-		const outputRoot = args[outputRootIndex + 1];
-		const outputDirName = path.basename(outdir);
-		outdir = path.join(outputRoot, outputDirName);
+		const outputRoot = args[outputRootIndex + 1]
+		const outputDirName = path.basename(outdir)
+		outdir = path.join(outputRoot, outputDirName)
 	}
 
 	/** @type {BuildOptions} */
@@ -76,15 +76,15 @@ module.exports.run = async function (config, args, didBuild) {
 		entryPoints: config.entryPoints,
 		outdir,
 		...(config.additionalOptions || {}),
-	};
-
-	const isWatch = args.indexOf('--watch') >= 0;
-	if (isWatch) {
-		await tryBuild(resolvedOptions, didBuild);
-
-		const watcher = require('@parcel/watcher');
-		watcher.subscribe(config.srcDir, () => tryBuild(resolvedOptions, didBuild));
-	} else {
-		return build(resolvedOptions, didBuild).catch(() => process.exit(1));
 	}
-};
+
+	const isWatch = args.indexOf('--watch') >= 0
+	if (isWatch) {
+		await tryBuild(resolvedOptions, didBuild)
+
+		const watcher = require('@parcel/watcher')
+		watcher.subscribe(config.srcDir, () => tryBuild(resolvedOptions, didBuild))
+	} else {
+		return build(resolvedOptions, didBuild).catch(() => process.exit(1))
+	}
+}

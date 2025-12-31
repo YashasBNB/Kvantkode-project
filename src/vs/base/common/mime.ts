@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { extname } from './path.js';
+import { extname } from './path.js'
 
 export const Mimes = Object.freeze({
 	text: 'text/plain',
@@ -13,10 +13,10 @@ export const Mimes = Object.freeze({
 	latex: 'text/latex',
 	uriList: 'text/uri-list',
 	html: 'text/html',
-});
+})
 
 interface MapExtToMediaMimes {
-	[index: string]: string;
+	[index: string]: string
 }
 
 const mapExtToTextMimes: MapExtToMediaMimes = {
@@ -28,8 +28,8 @@ const mapExtToTextMimes: MapExtToMediaMimes = {
 	'.js': 'text/javascript',
 	'.mjs': 'text/javascript',
 	'.txt': 'text/plain',
-	'.xml': 'text/xml'
-};
+	'.xml': 'text/xml',
+}
 
 // Known media mimes that we can handle
 const mapExtToMediaMimes: MapExtToMediaMimes = {
@@ -82,46 +82,43 @@ const mapExtToMediaMimes: MapExtToMediaMimes = {
 	'.wma': 'audio/x-ms-wma',
 	'.wmv': 'video/x-ms-wmv',
 	'.woff': 'application/font-woff',
-};
+}
 
 export function getMediaOrTextMime(path: string): string | undefined {
-	const ext = extname(path);
-	const textMime = mapExtToTextMimes[ext.toLowerCase()];
+	const ext = extname(path)
+	const textMime = mapExtToTextMimes[ext.toLowerCase()]
 	if (textMime !== undefined) {
-		return textMime;
+		return textMime
 	} else {
-		return getMediaMime(path);
+		return getMediaMime(path)
 	}
 }
 
 export function getMediaMime(path: string): string | undefined {
-	const ext = extname(path);
-	return mapExtToMediaMimes[ext.toLowerCase()];
+	const ext = extname(path)
+	return mapExtToMediaMimes[ext.toLowerCase()]
 }
 
 export function getExtensionForMimeType(mimeType: string): string | undefined {
 	for (const extension in mapExtToMediaMimes) {
 		if (mapExtToMediaMimes[extension] === mimeType) {
-			return extension;
+			return extension
 		}
 	}
 
-	return undefined;
+	return undefined
 }
 
-const _simplePattern = /^(.+)\/(.+?)(;.+)?$/;
+const _simplePattern = /^(.+)\/(.+?)(;.+)?$/
 
-export function normalizeMimeType(mimeType: string): string;
-export function normalizeMimeType(mimeType: string, strict: true): string | undefined;
+export function normalizeMimeType(mimeType: string): string
+export function normalizeMimeType(mimeType: string, strict: true): string | undefined
 export function normalizeMimeType(mimeType: string, strict?: true): string | undefined {
-
-	const match = _simplePattern.exec(mimeType);
+	const match = _simplePattern.exec(mimeType)
 	if (!match) {
-		return strict
-			? undefined
-			: mimeType;
+		return strict ? undefined : mimeType
 	}
 	// https://datatracker.ietf.org/doc/html/rfc2045#section-5.1
 	// media and subtype must ALWAYS be lowercase, parameter not
-	return `${match[1].toLowerCase()}/${match[2].toLowerCase()}${match[3] ?? ''}`;
+	return `${match[1].toLowerCase()}/${match[2].toLowerCase()}${match[3] ?? ''}`
 }

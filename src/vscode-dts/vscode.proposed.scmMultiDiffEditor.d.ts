@@ -11,13 +11,13 @@ declare module 'vscode' {
 		 * The uri that resolves to the original document of this resource (before the change).
 		 * Used for the multi diff editor exclusively.
 		 */
-		readonly multiDiffEditorOriginalUri?: Uri;
+		readonly multiDiffEditorOriginalUri?: Uri
 
 		/**
 		 * The uri that resolves to the modified document of this resource (after the change).
 		 * Used for the multi diff editor exclusively.
 		 */
-		readonly multiFileDiffEditorModifiedUri?: Uri;
+		readonly multiFileDiffEditorModifiedUri?: Uri
 	}
 
 	export interface SourceControl {
@@ -29,6 +29,10 @@ declare module 'vscode' {
 		 * 				Set `multiDiffEditorEnableViewChanges` to `true` to enable the "View Changes" option which opens the multi file diff editor.
 		 * @return An instance of {@link SourceControlResourceGroup resource group}.
 		 */
-		createResourceGroup(id: string, label: string, options: { multiDiffEditorEnableViewChanges?: boolean }): SourceControlResourceGroup;
+		createResourceGroup(
+			id: string,
+			label: string,
+			options: { multiDiffEditorEnableViewChanges?: boolean },
+		): SourceControlResourceGroup
 	}
 }

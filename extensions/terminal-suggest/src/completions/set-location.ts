@@ -21,7 +21,7 @@ const cdSpec: Fig.Spec = {
 				hidden: true,
 			},
 		],
-	}
-};
+	},
+}
 
-export default cdSpec;
+export default cdSpec

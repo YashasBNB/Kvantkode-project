@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Void Python dependency updater weekly (user)
+
+[Timer]
+# Every Monday at 03:00
+OnCalendar=Mon *-*-* 03:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

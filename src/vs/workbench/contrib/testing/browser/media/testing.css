@@ -73,7 +73,8 @@
 		margin-right: 0.8em;
 	}
 
-	&:hover, &.focused {
+	&:hover,
+	&.focused {
 		.monaco-action-bar {
 			display: initial;
 		}
@@ -103,11 +104,17 @@
 	border-radius: 3px;
 }
 
-.test-explorer .monaco-list-row:not(.focused, :hover) .monaco-action-bar.testing-is-continuous-run .action-item {
+.test-explorer
+	.monaco-list-row:not(.focused, :hover)
+	.monaco-action-bar.testing-is-continuous-run
+	.action-item {
 	display: none;
 }
 
-.test-explorer .monaco-list-row .monaco-action-bar.testing-is-continuous-run .action-item:last-child {
+.test-explorer
+	.monaco-list-row
+	.monaco-action-bar.testing-is-continuous-run
+	.action-item:last-child {
 	display: block !important;
 }
 
@@ -191,7 +198,11 @@
 	border-radius: 100%;
 }
 
-.monaco-workbench .part > .title > .title-actions .action-label.codicon-testing-autorun.checked::after {
+.monaco-workbench
+	.part
+	> .title
+	> .title-actions
+	.action-label.codicon-testing-autorun.checked::after {
 	display: block;
 }
 
@@ -299,7 +310,7 @@
 			color: var(--vscode-textLink-activeForeground);
 		}
 
-		&[aria-disabled="true"] {
+		&[aria-disabled='true'] {
 			color: inherit;
 			cursor: default;
 
@@ -382,9 +393,9 @@
 }
 
 .test-label-description {
-	opacity: .7;
+	opacity: 0.7;
 	margin-left: 0.5em;
-	font-size: .9em;
+	font-size: 0.9em;
 	white-space: pre;
 }
 
@@ -548,7 +559,6 @@
 			margin-right: 4px;
 		}
 	}
-
 }
 
 .test-coverage-tree-per-test-switcher {
@@ -626,14 +636,16 @@
 }
 
 .coverage-deco-gutter.coverage-deco-miss.coverage-deco-hit::before {
-	background-image: linear-gradient(45deg,
-			var(--vscode-testing-coveredGutterBackground) 25%,
-			var(--vscode-testing-uncoveredGutterBackground) 25%,
-			var(--vscode-testing-uncoveredGutterBackground) 50%,
-			var(--vscode-testing-coveredGutterBackground) 50%,
-			75%,
-			var(--vscode-testing-uncoveredGutterBackground) 75%,
-			var(--vscode-testing-uncoveredGutterBackground) 100%);
+	background-image: linear-gradient(
+		45deg,
+		var(--vscode-testing-coveredGutterBackground) 25%,
+		var(--vscode-testing-uncoveredGutterBackground) 25%,
+		var(--vscode-testing-uncoveredGutterBackground) 50%,
+		var(--vscode-testing-coveredGutterBackground) 50%,
+		75%,
+		var(--vscode-testing-uncoveredGutterBackground) 75%,
+		var(--vscode-testing-uncoveredGutterBackground) 100%
+	);
 	background-size: 6px 6px;
 	background-color: transparent;
 }
@@ -674,7 +686,7 @@
 		transform: translate(-50%, -50%);
 		padding: calc(var(--vscode-testing-coverage-lineHeight) / 10);
 		border-radius: 2px;
-		font: normal normal normal calc(var(--vscode-testing-coverage-lineHeight) / 2)/1 codicon;
+		font: normal normal normal calc(var(--vscode-testing-coverage-lineHeight) / 2) / 1 codicon;
 		border: 1px solid;
 	}
 
@@ -698,8 +710,16 @@
 			bottom: 0;
 			width: 0.5em;
 			background-image:
-				linear-gradient(to bottom left, transparent 50%, var(--vscode-testing-coverCountBadgeBackground) 0),
-				linear-gradient(to bottom right, var(--vscode-testing-coverCountBadgeBackground) 50%, transparent 0);
+				linear-gradient(
+					to bottom left,
+					transparent 50%,
+					var(--vscode-testing-coverCountBadgeBackground) 0
+				),
+				linear-gradient(
+					to bottom right,
+					var(--vscode-testing-coverCountBadgeBackground) 50%,
+					transparent 0
+				);
 			background-size: 100% 50%;
 			background-repeat: no-repeat;
 			background-position: top, bottom;

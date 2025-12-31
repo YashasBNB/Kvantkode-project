@@ -3,10 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
-import { TypeScriptServiceConfiguration } from '../configuration/configuration';
-import { API } from './api';
-
+import * as vscode from 'vscode'
+import { TypeScriptServiceConfiguration } from '../configuration/configuration'
+import { API } from './api'
 
 export const enum TypeScriptVersionSource {
 	Bundled = 'bundled',
@@ -17,52 +16,53 @@ export const enum TypeScriptVersionSource {
 }
 
 export class TypeScriptVersion {
-
 	constructor(
 		public readonly source: TypeScriptVersionSource,
 		public readonly path: string,
 		public readonly apiVersion: API | undefined,
 		private readonly _pathLabel?: string,
-	) { }
+	) {}
 
 	public get tsServerPath(): string {
-		return this.path;
+		return this.path
 	}
 
 	public get pathLabel(): string {
-		return this._pathLabel ?? this.path;
+		return this._pathLabel ?? this.path
 	}
 
 	public get isValid(): boolean {
-		return this.apiVersion !== undefined;
+		return this.apiVersion !== undefined
 	}
 
 	public eq(other: TypeScriptVersion): boolean {
 		if (this.path !== other.path) {
-			return false;
+			return false
 		}
 
 		if (this.apiVersion === other.apiVersion) {
-			return true;
+			return true
 		}
 		if (!this.apiVersion || !other.apiVersion) {
-			return false;
+			return false
 		}
-		return this.apiVersion.eq(other.apiVersion);
+		return this.apiVersion.eq(other.apiVersion)
 	}
 
 	public get displayName(): string {
-		const version = this.apiVersion;
-		return version ? version.displayName : vscode.l10n.t("Could not load the TypeScript version at this path");
+		const version = this.apiVersion
+		return version
+			? version.displayName
+			: vscode.l10n.t('Could not load the TypeScript version at this path')
 	}
 }
 
 export interface ITypeScriptVersionProvider {
-	updateConfiguration(configuration: TypeScriptServiceConfiguration): void;
+	updateConfiguration(configuration: TypeScriptServiceConfiguration): void
 
-	readonly defaultVersion: TypeScriptVersion;
-	readonly globalVersion: TypeScriptVersion | undefined;
-	readonly localVersion: TypeScriptVersion | undefined;
-	readonly localVersions: readonly TypeScriptVersion[];
-	readonly bundledVersion: TypeScriptVersion;
+	readonly defaultVersion: TypeScriptVersion
+	readonly globalVersion: TypeScriptVersion | undefined
+	readonly localVersion: TypeScriptVersion | undefined
+	readonly localVersions: readonly TypeScriptVersion[]
+	readonly bundledVersion: TypeScriptVersion
 }

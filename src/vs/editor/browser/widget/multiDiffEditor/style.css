@@ -44,7 +44,6 @@
 		flex: 1;
 		overflow: hidden;
 
-
 		.collapse-button {
 			margin: 0 5px;
 			cursor: pointer;
@@ -121,8 +120,6 @@
 					padding: 0 8px;
 				}
 			}
-
-
 		}
 
 		.editorParent {

@@ -4,14 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 // import { filepaths, folders } from '@fig/autocomplete-generators';
-import * as Internal from '../shared/internal';
+import * as Internal from '../shared/internal'
 import {
 	firstMatchingToken,
 	makeArray,
 	SpecLocationSource,
 	SuggestionFlag,
 	SuggestionFlags,
-} from '../shared/utils';
+} from '../shared/utils'
 // import {
 // 	executeCommand,
 // 	executeLoginShell,
@@ -19,29 +19,22 @@ import {
 // 	isInDevMode,
 // 	SETTINGS,
 // } from '../../api-bindings-wrappers/src';
-import {
-	Command,
-	substituteAlias,
-} from '../shell-parser';
+import { Command, substituteAlias } from '../shell-parser'
 // import {
 // 	getSpecPath,
 // 	loadSubcommandCached,
 // 	serializeSpecLocation,
 // } from './loadSpec.js';
-import {
-	ParseArgumentsError,
-	ParsingHistoryError,
-	UpdateStateError,
-} from './errors.js';
-import { convertSubcommand, initializeDefault } from '../fig-autocomplete-shared';
-import { exec, type ExecException } from 'child_process';
-import type { IFigExecuteExternals } from '../execute';
+import { ParseArgumentsError, ParsingHistoryError, UpdateStateError } from './errors.js'
+import { convertSubcommand, initializeDefault } from '../fig-autocomplete-shared'
+import { exec, type ExecException } from 'child_process'
+import type { IFigExecuteExternals } from '../execute'
 
 type ArgArrayState = {
-	args: Array<Internal.Arg> | null;
-	index: number;
-	variadicCount?: number;
-};
+	args: Array<Internal.Arg> | null
+	index: number
+	variadicCount?: number
+}
 
 export enum TokenType {
 	None = 'none',
@@ -56,144 +49,139 @@ export enum TokenType {
 
 export type BasicAnnotation =
 	| {
-		text: string;
-		type: Exclude<TokenType, TokenType.Composite>;
+			text: string
+			type: Exclude<TokenType, TokenType.Composite>
 
-		// Same as text, unless in CompositeAnnotation, where, e.g. in ls -lah
-		// the "a" token has text: "a" but tokenName: -a
-		tokenName?: string;
-	}
+			// Same as text, unless in CompositeAnnotation, where, e.g. in ls -lah
+			// the "a" token has text: "a" but tokenName: -a
+			tokenName?: string
+	  }
 	| {
-		text: string;
-		type: TokenType.Subcommand;
-		spec: Internal.Subcommand;
-		specLocation: Internal.SpecLocation;
-	};
+			text: string
+			type: TokenType.Subcommand
+			spec: Internal.Subcommand
+			specLocation: Internal.SpecLocation
+	  }
 
 type CompositeAnnotation = {
-	text: string;
-	type: TokenType.Composite;
-	subtokens: BasicAnnotation[];
-};
+	text: string
+	type: TokenType.Composite
+	subtokens: BasicAnnotation[]
+}
 
-export type Annotation = BasicAnnotation | CompositeAnnotation;
+export type Annotation = BasicAnnotation | CompositeAnnotation
 
 export type ArgumentParserState = {
-	completionObj: Internal.Subcommand;
+	completionObj: Internal.Subcommand
 
-	optionArgState: ArgArrayState;
-	subcommandArgState: ArgArrayState;
-	annotations: Annotation[];
-	passedOptions: Internal.Option[];
+	optionArgState: ArgArrayState
+	subcommandArgState: ArgArrayState
+	annotations: Annotation[]
+	passedOptions: Internal.Option[]
 
-	commandIndex: number;
+	commandIndex: number
 	// Used to exclude subcommand suggestions after user has entered a subcommand arg.
-	haveEnteredSubcommandArgs: boolean;
-	isEndOfOptions: boolean;
-};
+	haveEnteredSubcommandArgs: boolean
+	isEndOfOptions: boolean
+}
 
 // Result with derived completionObj/currentArg from cached state.
 export type ArgumentParserResult = {
-	completionObj: Internal.Subcommand;
-	currentArg: Internal.Arg | null;
-	passedOptions: Internal.Option[];
-	searchTerm: string;
-	commandIndex: number;
-	suggestionFlags: SuggestionFlags;
-	annotations: Annotation[];
-};
+	completionObj: Internal.Subcommand
+	currentArg: Internal.Arg | null
+	passedOptions: Internal.Option[]
+	searchTerm: string
+	commandIndex: number
+	suggestionFlags: SuggestionFlags
+	annotations: Annotation[]
+}
 
 export const createArgState = (args?: Internal.Arg[]): ArgArrayState => {
-	const updatedArgs: Internal.Arg[] = [];
+	const updatedArgs: Internal.Arg[] = []
 
 	for (const arg of args ?? []) {
-		const updatedGenerators = new Set<Fig.Generator>();
+		const updatedGenerators = new Set<Fig.Generator>()
 		for (let i = 0; i < arg.generators.length; i += 1) {
-			const generator = arg.generators[i];
-			const templateArray = makeArray(generator.template ?? []);
+			const generator = arg.generators[i]
+			const templateArray = makeArray(generator.template ?? [])
 
-			let updatedGenerator: Fig.Generator | undefined;
+			let updatedGenerator: Fig.Generator | undefined
 			// TODO: Pass templates out as a result
 			if (templateArray.includes('filepaths') && templateArray.includes('folders')) {
-				updatedGenerator = { template: ['filepaths', 'folders'] };
+				updatedGenerator = { template: ['filepaths', 'folders'] }
 			} else if (templateArray.includes('filepaths')) {
-				updatedGenerator = { template: 'filepaths' };
+				updatedGenerator = { template: 'filepaths' }
 			} else if (templateArray.includes('folders')) {
-				updatedGenerator = { template: 'folders' };
+				updatedGenerator = { template: 'folders' }
 			}
 
-			if (updatedGenerator && typeof generator !== 'string' && generator.filterTemplateSuggestions) {
-				updatedGenerator.filterTemplateSuggestions =
-					generator.filterTemplateSuggestions;
+			if (
+				updatedGenerator &&
+				typeof generator !== 'string' &&
+				generator.filterTemplateSuggestions
+			) {
+				updatedGenerator.filterTemplateSuggestions = generator.filterTemplateSuggestions
 			}
-			updatedGenerators.add(updatedGenerator ?? generator);
+			updatedGenerators.add(updatedGenerator ?? generator)
 		}
 
 		updatedArgs.push({
 			...arg,
 			generators: [...updatedGenerators],
-		});
+		})
 	}
 	return {
 		args: updatedArgs.length > 0 ? updatedArgs : null,
 		index: 0,
-	};
-};
+	}
+}
 
-export const flattenAnnotations = (
-	annotations: Annotation[],
-): BasicAnnotation[] => {
-	const result: BasicAnnotation[] = [];
+export const flattenAnnotations = (annotations: Annotation[]): BasicAnnotation[] => {
+	const result: BasicAnnotation[] = []
 	for (let i = 0; i < annotations.length; i += 1) {
-		const annotation = annotations[i];
+		const annotation = annotations[i]
 		if (annotation.type === TokenType.Composite) {
-			result.push(...annotation.subtokens);
+			result.push(...annotation.subtokens)
 		} else {
-			result.push(annotation);
+			result.push(annotation)
 		}
 	}
-	return result;
-};
+	return result
+}
 
 export const optionsAreEqual = (a: Internal.Option, b: Internal.Option) =>
-	a.name.some((name) => b.name.includes(name));
+	a.name.some((name) => b.name.includes(name))
 
-export const countEqualOptions = (
-	option: Internal.Option,
-	options: Internal.Option[],
-) =>
-	options.reduce(
-		(count, opt) => (optionsAreEqual(option, opt) ? count + 1 : count),
-		0,
-	);
+export const countEqualOptions = (option: Internal.Option, options: Internal.Option[]) =>
+	options.reduce((count, opt) => (optionsAreEqual(option, opt) ? count + 1 : count), 0)
 
 export const updateArgState = (argState: ArgArrayState): ArgArrayState => {
 	// Consume an argument and update the arg state accordingly.
-	const { args, index, variadicCount } = argState;
+	const { args, index, variadicCount } = argState
 
 	if (args && args[index] && args[index].isVariadic) {
-		return { args, index, variadicCount: (variadicCount || 0) + 1 };
+		return { args, index, variadicCount: (variadicCount || 0) + 1 }
 	}
 
 	if (args && args[index] && index < args.length - 1) {
-		return { args, index: index + 1 };
+		return { args, index: index + 1 }
 	}
 
-	return { args: null, index: 0 };
-};
+	return { args: null, index: 0 }
+}
 
 export const getCurrentArg = (argState: ArgArrayState): Internal.Arg | null =>
-	(argState.args && argState.args[argState.index]) || null;
+	(argState.args && argState.args[argState.index]) || null
 
 export const isMandatoryOrVariadic = (arg: Internal.Arg | null): boolean =>
-	!!arg && (arg.isVariadic || !arg.isOptional);
+	!!arg && (arg.isVariadic || !arg.isOptional)
 
 const preferOptionArg = (state: ArgumentParserState): boolean =>
 	isMandatoryOrVariadic(getCurrentArg(state.optionArgState)) ||
-	!getCurrentArg(state.subcommandArgState);
+	!getCurrentArg(state.subcommandArgState)
 
 const getArgState = (state: ArgumentParserState): ArgArrayState =>
-	preferOptionArg(state) ? state.optionArgState : state.subcommandArgState;
+	preferOptionArg(state) ? state.optionArgState : state.subcommandArgState
 
 const canConsumeOptions = (state: ArgumentParserState): boolean => {
 	const {
@@ -202,20 +190,20 @@ const canConsumeOptions = (state: ArgumentParserState): boolean => {
 		isEndOfOptions,
 		haveEnteredSubcommandArgs,
 		completionObj,
-	} = state;
+	} = state
 
 	if (
 		haveEnteredSubcommandArgs &&
 		completionObj.parserDirectives?.optionsMustPrecedeArguments === true
 	) {
-		return false;
+		return false
 	}
 
 	if (isEndOfOptions) {
-		return false;
+		return false
 	}
-	const subcommandArg = getCurrentArg(subcommandArgState);
-	const optionArg = getCurrentArg(optionArgState);
+	const subcommandArg = getCurrentArg(subcommandArgState)
+	const optionArg = getCurrentArg(optionArgState)
 
 	if (isMandatoryOrVariadic(getCurrentArg(optionArgState))) {
 		// If option arg is mandatory or variadic, we may still be able to consume
@@ -226,9 +214,9 @@ const canConsumeOptions = (state: ArgumentParserState): boolean => {
 			optionArgState.variadicCount &&
 			optionArg.optionsCanBreakVariadicArg !== false
 		) {
-			return true;
+			return true
 		}
-		return false;
+		return false
 	}
 
 	if (
@@ -238,69 +226,60 @@ const canConsumeOptions = (state: ArgumentParserState): boolean => {
 	) {
 		// If we are in the middle of a variadic subcommand arg, we cannot consume the
 		// next token as an option if optionsCanBreakVariadicArg is false
-		return false;
+		return false
 	}
 
-	return true;
-};
+	return true
+}
 
-export const findOption = (
-	spec: Internal.Subcommand,
-	token: string,
-): Internal.Option => {
-	const option = spec.options[token] || spec.persistentOptions[token];
+export const findOption = (spec: Internal.Subcommand, token: string): Internal.Option => {
+	const option = spec.options[token] || spec.persistentOptions[token]
 	if (!option) {
-		throw new UpdateStateError(`Option not found: ${token}`);
+		throw new UpdateStateError(`Option not found: ${token}`)
 	}
-	return option;
-};
+	return option
+}
 
-export const findSubcommand = (
-	spec: Internal.Subcommand,
-	token: string,
-): Internal.Subcommand => {
-	const subcommand = spec.subcommands[token];
+export const findSubcommand = (spec: Internal.Subcommand, token: string): Internal.Subcommand => {
+	const subcommand = spec.subcommands[token]
 	if (!subcommand) {
-		throw new UpdateStateError('Subcommand not found');
+		throw new UpdateStateError('Subcommand not found')
 	}
-	return subcommand;
-};
+	return subcommand
+}
 
 const updateStateForSubcommand = (
 	state: ArgumentParserState,
 	token: string,
 	isFinalToken = false,
 ): ArgumentParserState => {
-	const { completionObj, haveEnteredSubcommandArgs } = state;
+	const { completionObj, haveEnteredSubcommandArgs } = state
 	if (!completionObj.subcommands) {
-		throw new UpdateStateError('No subcommands');
+		throw new UpdateStateError('No subcommands')
 	}
 
 	if (haveEnteredSubcommandArgs) {
-		throw new UpdateStateError('Already entered subcommand args');
+		throw new UpdateStateError('Already entered subcommand args')
 	}
 
-	const newCompletionObj = findSubcommand(state.completionObj, token);
+	const newCompletionObj = findSubcommand(state.completionObj, token)
 
 	const annotations: Annotation[] = [
 		...state.annotations,
 		{ text: token, type: TokenType.Subcommand },
-	];
+	]
 
 	if (isFinalToken) {
-		return { ...state, annotations };
+		return { ...state, annotations }
 	}
 
 	// Mutate for parser directives and persistent options: these are carried
 	// down deterministically.
 	if (!newCompletionObj.parserDirectives && completionObj.parserDirectives) {
-		newCompletionObj.parserDirectives = completionObj.parserDirectives;
+		newCompletionObj.parserDirectives = completionObj.parserDirectives
 	}
 
-	Object.assign(
-		newCompletionObj.persistentOptions,
-		completionObj.persistentOptions,
-	);
+	Object.assign(newCompletionObj.persistentOptions, completionObj.persistentOptions)
 
 	return {
 		...state,
@@ -310,36 +289,33 @@ const updateStateForSubcommand = (
 		passedOptions: [],
 		optionArgState: createArgState(),
 		subcommandArgState: createArgState(newCompletionObj.args),
-	};
-};
+	}
+}
 
 const updateStateForOption = (
 	state: ArgumentParserState,
 	token: string,
 	isFinalToken = false,
 ): ArgumentParserState => {
-	const option = findOption(state.completionObj, token);
-	let { isRepeatable } = option;
+	const option = findOption(state.completionObj, token)
+	let { isRepeatable } = option
 	if (isRepeatable === false) {
-		isRepeatable = 1;
+		isRepeatable = 1
 	}
 	if (isRepeatable !== true && isRepeatable !== undefined) {
-		const currentRepetitions = countEqualOptions(option, state.passedOptions);
+		const currentRepetitions = countEqualOptions(option, state.passedOptions)
 		if (currentRepetitions >= isRepeatable) {
 			throw new UpdateStateError(
 				`Cannot pass option again, already passed ${currentRepetitions} times, ` +
-				`and can only be passed ${isRepeatable} times`,
-			);
+					`and can only be passed ${isRepeatable} times`,
+			)
 		}
 	}
 
-	const annotations: Annotation[] = [
-		...state.annotations,
-		{ text: token, type: TokenType.Option },
-	];
+	const annotations: Annotation[] = [...state.annotations, { text: token, type: TokenType.Option }]
 
 	if (isFinalToken) {
-		return { ...state, annotations };
+		return { ...state, annotations }
 	}
 
 	return {
@@ -347,8 +323,8 @@ const updateStateForOption = (
 		annotations,
 		passedOptions: [...state.passedOptions, option],
 		optionArgState: createArgState(option.args),
-	};
-};
+	}
+}
 
 const updateStateForOptionArg = (
 	state: ArgumentParserState,
@@ -356,24 +332,24 @@ const updateStateForOptionArg = (
 	isFinalToken = false,
 ): ArgumentParserState => {
 	if (!getCurrentArg(state.optionArgState)) {
-		throw new UpdateStateError('Cannot consume option arg.');
+		throw new UpdateStateError('Cannot consume option arg.')
 	}
 
 	const annotations: Annotation[] = [
 		...state.annotations,
 		{ text: token, type: TokenType.OptionArg },
-	];
+	]
 
 	if (isFinalToken) {
-		return { ...state, annotations };
+		return { ...state, annotations }
 	}
 
 	return {
 		...state,
 		annotations,
 		optionArgState: updateArgState(state.optionArgState),
-	};
-};
+	}
+}
 
 const updateStateForSubcommandArg = (
 	state: ArgumentParserState,
@@ -382,16 +358,16 @@ const updateStateForSubcommandArg = (
 ): ArgumentParserState => {
 	// Consume token as subcommand arg if possible.
 	if (!getCurrentArg(state.subcommandArgState)) {
-		throw new UpdateStateError('Cannot consume subcommand arg.');
+		throw new UpdateStateError('Cannot consume subcommand arg.')
 	}
 
 	const annotations: Annotation[] = [
 		...state.annotations,
 		{ text: token, type: TokenType.SubcommandArg },
-	];
+	]
 
 	if (isFinalToken) {
-		return { ...state, annotations };
+		return { ...state, annotations }
 	}
 
 	return {
@@ -399,8 +375,8 @@ const updateStateForSubcommandArg = (
 		annotations,
 		subcommandArgState: updateArgState(state.subcommandArgState),
 		haveEnteredSubcommandArgs: true,
-	};
-};
+	}
+}
 
 const updateStateForChainedOptionToken = (
 	state: ArgumentParserState,
@@ -412,51 +388,40 @@ const updateStateForChainedOptionToken = (
 	// See https://stackoverflow.com/a/10818697
 	// Handle -- as special option flag.
 	if (isFinalToken && ['-', '--'].includes(token)) {
-		throw new UpdateStateError('Final token, not consuming as option');
+		throw new UpdateStateError('Final token, not consuming as option')
 	}
 
 	if (token === '--') {
 		return {
 			...state,
 			isEndOfOptions: true,
-			annotations: [
-				...state.annotations,
-				{ text: token, type: TokenType.Option },
-			],
+			annotations: [...state.annotations, { text: token, type: TokenType.Option }],
 			optionArgState: { args: null, index: 0 },
-		};
+		}
 	}
 
-	const { parserDirectives } = state.completionObj;
+	const { parserDirectives } = state.completionObj
 	const isLongOption =
-		parserDirectives?.flagsArePosixNoncompliant ||
-		token.startsWith('--') ||
-		!token.startsWith('-');
+		parserDirectives?.flagsArePosixNoncompliant || token.startsWith('--') || !token.startsWith('-')
 
 	if (isLongOption) {
-		const optionSeparators = new Set(
-			parserDirectives?.optionArgSeparators || '=',
-		);
-		const separatorMatches = firstMatchingToken(token, optionSeparators);
+		const optionSeparators = new Set(parserDirectives?.optionArgSeparators || '=')
+		const separatorMatches = firstMatchingToken(token, optionSeparators)
 
 		if (separatorMatches) {
 			// Handle long option with equals --num=10, -pnf=10, opt=10.
-			const matchedSeparator = separatorMatches[0];
-			const [flag, ...optionArgParts] = token.split(matchedSeparator);
-			const optionArg = optionArgParts.join(matchedSeparator);
-			const optionState = updateStateForOption(state, flag);
+			const matchedSeparator = separatorMatches[0]
+			const [flag, ...optionArgParts] = token.split(matchedSeparator)
+			const optionArg = optionArgParts.join(matchedSeparator)
+			const optionState = updateStateForOption(state, flag)
 
 			if ((optionState.optionArgState.args?.length ?? 0) > 1) {
 				throw new UpdateStateError(
 					'Cannot pass argument with separator: option takes multiple args',
-				);
+				)
 			}
 
-			const finalState = updateStateForOptionArg(
-				optionState,
-				optionArg,
-				isFinalToken,
-			);
+			const finalState = updateStateForOptionArg(optionState, optionArg, isFinalToken)
 
 			return {
 				...finalState,
@@ -475,57 +440,55 @@ const updateStateForChainedOptionToken = (
 						],
 					},
 				],
-			};
+			}
 		}
 
 		// Normal long option
-		const finalState = updateStateForOption(state, token, isFinalToken);
-		const option = findOption(state.completionObj, token);
+		const finalState = updateStateForOption(state, token, isFinalToken)
+		const option = findOption(state.completionObj, token)
 		return option.requiresEquals || option.requiresSeparator
 			? { ...finalState, optionArgState: { args: null, index: 0 } }
-			: finalState;
+			: finalState
 	}
 
-	let optionState = state;
-	let optionArg = '';
-	const subtokens: BasicAnnotation[] = [];
-	let { passedOptions } = state;
+	let optionState = state
+	let optionArg = ''
+	const subtokens: BasicAnnotation[] = []
+	let { passedOptions } = state
 
 	for (let i = 1; i < token.length; i += 1) {
-		const [optionFlag, remaining] = [`-${token[i]}`, token.slice(i + 1)];
-		passedOptions = optionState.passedOptions;
+		const [optionFlag, remaining] = [`-${token[i]}`, token.slice(i + 1)]
+		passedOptions = optionState.passedOptions
 		try {
-			optionState = updateStateForOption(optionState, optionFlag);
+			optionState = updateStateForOption(optionState, optionFlag)
 		} catch (err) {
 			if (i > 1) {
-				optionArg = token.slice(i);
-				break;
+				optionArg = token.slice(i)
+				break
 			}
-			throw err;
+			throw err
 		}
 
 		subtokens.push({
 			type: TokenType.Option,
 			text: i === 1 ? optionFlag : token[i],
 			tokenName: optionFlag,
-		});
+		})
 
 		if (isMandatoryOrVariadic(getCurrentArg(optionState.optionArgState))) {
-			optionArg = remaining;
-			break;
+			optionArg = remaining
+			break
 		}
 	}
 
 	if (optionArg) {
 		if ((optionState.optionArgState.args?.length ?? 0) > 1) {
-			throw new UpdateStateError(
-				'Cannot chain option argument: option takes multiple args',
-			);
+			throw new UpdateStateError('Cannot chain option argument: option takes multiple args')
 		}
 
-		optionState = updateStateForOptionArg(optionState, optionArg, isFinalToken);
-		passedOptions = optionState.passedOptions;
-		subtokens.push({ type: TokenType.OptionArg, text: optionArg });
+		optionState = updateStateForOptionArg(optionState, optionArg, isFinalToken)
+		passedOptions = optionState.passedOptions
+		subtokens.push({ type: TokenType.OptionArg, text: optionArg })
 	}
 
 	return {
@@ -539,12 +502,11 @@ const updateStateForChainedOptionToken = (
 			},
 		],
 		passedOptions: isFinalToken ? passedOptions : optionState.passedOptions,
-	};
-};
+	}
+}
 
 const canConsumeSubcommands = (state: ArgumentParserState): boolean =>
-	!isMandatoryOrVariadic(getCurrentArg(state.optionArgState)) &&
-	!state.haveEnteredSubcommandArgs;
+	!isMandatoryOrVariadic(getCurrentArg(state.optionArgState)) && !state.haveEnteredSubcommandArgs
 
 // State machine for argument parser.
 function updateState(
@@ -554,7 +516,7 @@ function updateState(
 ): ArgumentParserState {
 	if (canConsumeSubcommands(state)) {
 		try {
-			return updateStateForSubcommand(state, token, isFinalToken);
+			return updateStateForSubcommand(state, token, isFinalToken)
 		} catch (_err) {
 			// Continue to other token types if we can't consume subcommand.
 		}
@@ -562,7 +524,7 @@ function updateState(
 
 	if (canConsumeOptions(state)) {
 		try {
-			return updateStateForChainedOptionToken(state, token, isFinalToken);
+			return updateStateForChainedOptionToken(state, token, isFinalToken)
 		} catch (_err) {
 			// Continue to other token types if we can't consume option.
 		}
@@ -570,13 +532,13 @@ function updateState(
 
 	if (preferOptionArg(state)) {
 		try {
-			return updateStateForOptionArg(state, token, isFinalToken);
+			return updateStateForOptionArg(state, token, isFinalToken)
 		} catch (_err) {
 			// Continue to other token types if we can't consume option arg.
 		}
 	}
 
-	return updateStateForSubcommandArg(state, token, isFinalToken);
+	return updateStateForSubcommandArg(state, token, isFinalToken)
 }
 
 const getInitialState = (
@@ -588,9 +550,7 @@ const getInitialState = (
 	passedOptions: [],
 
 	annotations:
-		text && specLocation
-			? [{ text, type: TokenType.Subcommand, spec, specLocation }]
-			: [],
+		text && specLocation ? [{ text, type: TokenType.Subcommand, spec, specLocation }] : [],
 	commandIndex: 0,
 
 	optionArgState: createArgState(),
@@ -598,22 +558,20 @@ const getInitialState = (
 
 	haveEnteredSubcommandArgs: false,
 	isEndOfOptions: false,
-});
+})
 
 const historyExecuteShellCommand: Fig.ExecuteCommandFunction = async () => {
-	throw new ParsingHistoryError(
-		'Cannot run shell command while parsing history',
-	);
-};
+	throw new ParsingHistoryError('Cannot run shell command while parsing history')
+}
 
 function getExecuteShellCommandFunction(
 	isParsingHistory = false,
 	executeExternals: IFigExecuteExternals,
 ) {
 	if (isParsingHistory) {
-		return historyExecuteShellCommand;
+		return historyExecuteShellCommand
 	}
-	return executeExternals.executeCommand;
+	return executeExternals.executeCommand
 }
 
 // const getGenerateSpecCacheKey = (
@@ -710,41 +668,37 @@ function getExecuteShellCommandFunction(
 // 	return state;
 // };
 
-export const getResultFromState = (
-	state: ArgumentParserState,
-): ArgumentParserResult => {
-	const { completionObj, passedOptions, commandIndex, annotations } = state;
+export const getResultFromState = (state: ArgumentParserState): ArgumentParserResult => {
+	const { completionObj, passedOptions, commandIndex, annotations } = state
 
-	const lastAnnotation: Annotation | undefined =
-		annotations[annotations.length - 1];
-	let argState = getArgState(state);
-	let searchTerm = lastAnnotation?.text ?? '';
+	const lastAnnotation: Annotation | undefined = annotations[annotations.length - 1]
+	let argState = getArgState(state)
+	let searchTerm = lastAnnotation?.text ?? ''
 
-	let onlySuggestArgs = state.isEndOfOptions;
+	let onlySuggestArgs = state.isEndOfOptions
 
 	if (lastAnnotation?.type === TokenType.Composite) {
-		argState = state.optionArgState;
+		argState = state.optionArgState
 
-		const lastSubtoken =
-			lastAnnotation.subtokens[lastAnnotation.subtokens.length - 1];
+		const lastSubtoken = lastAnnotation.subtokens[lastAnnotation.subtokens.length - 1]
 		if (lastSubtoken.type === TokenType.OptionArg) {
-			searchTerm = lastSubtoken.text;
-			onlySuggestArgs = true;
+			searchTerm = lastSubtoken.text
+			onlySuggestArgs = true
 		}
 	}
 
-	const currentArg = getCurrentArg(argState);
+	const currentArg = getCurrentArg(argState)
 
 	// Determine what to suggest from final state, always suggest args.
-	let suggestionFlags: SuggestionFlags = SuggestionFlag.Args;
+	let suggestionFlags: SuggestionFlags = SuggestionFlag.Args
 
 	// Selectively enable options or subcommand suggestions if it makes sense.
 	if (!onlySuggestArgs) {
 		if (canConsumeSubcommands(state)) {
-			suggestionFlags |= SuggestionFlag.Subcommands;
+			suggestionFlags |= SuggestionFlag.Subcommands
 		}
 		if (canConsumeOptions(state)) {
-			suggestionFlags |= SuggestionFlag.Options;
+			suggestionFlags |= SuggestionFlag.Options
 		}
 	}
 
@@ -757,8 +711,8 @@ export const getResultFromState = (
 		currentArg,
 		searchTerm,
 		suggestionFlags,
-	};
-};
+	}
+}
 
 export const initialParserState = getResultFromState(
 	getInitialState({
@@ -769,7 +723,7 @@ export const initialParserState = getResultFromState(
 		parserDirectives: {},
 		args: [],
 	}),
-);
+)
 
 // const parseArgumentsCache = createCache<ArgumentParserState>();
 // const parseArgumentsGenerateSpecCache = createCache<ArgumentParserState>();
@@ -805,13 +759,13 @@ const parseArgumentsCached = async (
 	// localconsole: console.console = console,
 ): Promise<ArgumentParserState> => {
 	// Route to cp.exec instead, we don't need to deal with ipc
-	const exec = getExecuteShellCommandFunction(isParsingHistory, executeExternals);
+	const exec = getExecuteShellCommandFunction(isParsingHistory, executeExternals)
 
-	let currentCommand = command;
-	let tokens = currentCommand.tokens.slice(startIndex);
+	let currentCommand = command
+	let tokens = currentCommand.tokens.slice(startIndex)
 	// const tokenText = tokens.map((token) => token.text);
 
-	const specPath: Fig.SpecLocation = { type: 'global', name: 'fake' };
+	const specPath: Fig.SpecLocation = { type: 'global', name: 'fake' }
 
 	// tokenTest[0] is the command and the spec they need
 	// const locations = specLocations || [
@@ -865,19 +819,19 @@ const parseArgumentsCached = async (
 	// }
 
 	if (!spec || !specPath) {
-		throw new UpdateStateError('Failed loading spec');
+		throw new UpdateStateError('Failed loading spec')
 	}
 
 	let state: ArgumentParserState = getInitialState(
 		convertSubcommand(spec, initializeDefault),
 		tokens[0].text,
 		specPath,
-	);
+	)
 
 	// let generatedSpec = false;
 
-	const substitutedAliases = new Set<string>();
-	let aliasError: Error | undefined;
+	const substitutedAliases = new Set<string>()
+	let aliasError: Error | undefined
 
 	// Returns true if we should return state immediately after calling.
 	// const updateStateForLoadSpec = async (
@@ -942,54 +896,51 @@ const parseArgumentsCached = async (
 
 		if (i === tokens.length - 1) {
 			// Don't update state for last token.
-			break;
+			break
 		}
 
-		const token = tokens[i].text;
+		const token = tokens[i].text
 
-		const lastArgObject = getCurrentArg(getArgState(state));
-		const lastArgType = preferOptionArg(state)
-			? TokenType.OptionArg
-			: TokenType.SubcommandArg;
+		const lastArgObject = getCurrentArg(getArgState(state))
+		const lastArgType = preferOptionArg(state) ? TokenType.OptionArg : TokenType.SubcommandArg
 
-		const lastState = state;
+		const lastState = state
 
-		state = updateState(state, token);
-		console.debug('Parser state update', { state });
+		state = updateState(state, token)
+		console.debug('Parser state update', { state })
 
-		const { annotations } = state;
-		const lastAnnotation = annotations[annotations.length - 1];
+		const { annotations } = state
+		const lastAnnotation = annotations[annotations.length - 1]
 		const lastType =
 			lastAnnotation.type === TokenType.Composite
 				? lastAnnotation.subtokens[lastAnnotation.subtokens.length - 1].type
-				: lastAnnotation.type;
+				: lastAnnotation.type
 
 		if (
 			lastType === lastArgType &&
 			lastArgObject?.parserDirectives?.alias &&
 			!substitutedAliases.has(token)
 		) {
-			const { alias } = lastArgObject.parserDirectives;
+			const { alias } = lastArgObject.parserDirectives
 			try {
-				const aliasValue =
-					typeof alias === 'string' ? alias : await alias(token, exec);
+				const aliasValue = typeof alias === 'string' ? alias : await alias(token, exec)
 				try {
-					currentCommand = substituteAlias(command, tokens[i], aliasValue);
+					currentCommand = substituteAlias(command, tokens[i], aliasValue)
 					// tokens[...i] should be the same, but tokens[i+1...] may be different.
-					substitutedAliases.add(token);
-					tokens = currentCommand.tokens.slice(startIndex);
-					state = lastState;
-					i -= 1;
-					continue;
+					substitutedAliases.add(token)
+					tokens = currentCommand.tokens.slice(startIndex)
+					state = lastState
+					i -= 1
+					continue
 				} catch (err) {
-					console.error('Error substituting alias:', err);
-					throw err;
+					console.error('Error substituting alias:', err)
+					throw err
 				}
 			} catch (err) {
 				if (substitutedAliases.size === 0) {
-					throw err;
+					throw err
 				}
-				aliasError = err as Error;
+				aliasError = err as Error
 			}
 		}
 
@@ -1033,10 +984,10 @@ const parseArgumentsCached = async (
 		// If error with alias and corresponding arg was not used in a loadSpec,
 		// throw the error.
 		if (aliasError) {
-			throw aliasError;
+			throw aliasError
 		}
 
-		substitutedAliases.clear();
+		substitutedAliases.clear()
 	}
 
 	// if (generatedSpec) {
@@ -1046,8 +997,8 @@ const parseArgumentsCached = async (
 	// 	parseArgumentsCache.set(cacheKey, state);
 	// }
 
-	return state;
-};
+	return state
+}
 
 const firstTokenSpec: Internal.Subcommand = {
 	name: ['firstTokenSpec'],
@@ -1061,44 +1012,40 @@ const firstTokenSpec: Internal.Subcommand = {
 			generators: [
 				{
 					custom: async (_tokens, _exec, context) => {
-						let result: Fig.Suggestion[] = [];
+						let result: Fig.Suggestion[] = []
 						if (context?.currentProcess.includes('fish')) {
 							const commands = await executeLoginShell({
 								command: 'complete -C ""',
 								executable: context.currentProcess,
-							});
+							})
 							result = commands.split('\n').map((commandString) => {
-								const splitIndex = commandString.indexOf('\t');
-								const name = commandString.slice(0, splitIndex + 1);
-								const description = commandString.slice(splitIndex + 1);
-								return { name, description, type: 'subcommand' };
-							});
+								const splitIndex = commandString.indexOf('\t')
+								const name = commandString.slice(0, splitIndex + 1)
+								const description = commandString.slice(splitIndex + 1)
+								return { name, description, type: 'subcommand' }
+							})
 						} else if (context?.currentProcess.includes('bash')) {
 							const commands = await executeLoginShell({
 								command: 'compgen -c',
 								executable: context.currentProcess,
-							});
-							result = commands
-								.split('\n')
-								.map((name) => ({ name, type: 'subcommand' }));
+							})
+							result = commands.split('\n').map((name) => ({ name, type: 'subcommand' }))
 						} else if (context?.currentProcess.includes('zsh')) {
 							const commands = await executeLoginShell({
 								command: `for key in \${(k)commands}; do echo $key; done && alias +r`,
 								executable: context.currentProcess,
-							});
-							result = commands
-								.split('\n')
-								.map((name) => ({ name, type: 'subcommand' }));
+							})
+							result = commands.split('\n').map((name) => ({ name, type: 'subcommand' }))
 						}
 
-						const names = new Set();
+						const names = new Set()
 						return result.filter((suggestion) => {
 							if (names.has(suggestion.name)) {
-								return false;
+								return false
 							}
-							names.add(suggestion.name);
-							return true;
-						});
+							names.add(suggestion.name)
+							return true
+						})
 					},
 					cache: {
 						strategy: 'stale-while-revalidate',
@@ -1109,25 +1056,28 @@ const firstTokenSpec: Internal.Subcommand = {
 		},
 	],
 	parserDirectives: {},
-};
+}
 
 const executeLoginShell = async ({
 	command,
 	executable,
 }: {
-	command: string;
-	executable: string;
+	command: string
+	executable: string
 }): Promise<string> => {
 	return new Promise((resolve, reject) => {
-		exec(`${executable} -c "${command}"`, (error: ExecException | null, stdout: string, stderr: string) => {
-			if (error) {
-				reject(stderr);
-			} else {
-				resolve(stdout);
-			}
-		});
-	});
-};
+		exec(
+			`${executable} -c "${command}"`,
+			(error: ExecException | null, stdout: string, stderr: string) => {
+				if (error) {
+					reject(stderr)
+				} else {
+					resolve(stdout)
+				}
+			},
+		)
+	})
+}
 
 export const parseArguments = async (
 	command: Command | null,
@@ -1138,28 +1088,26 @@ export const parseArguments = async (
 	isParsingHistory = false,
 	// localconsole: console.console = console,
 ): Promise<ArgumentParserResult> => {
-	const tokens = command?.tokens ?? [];
+	const tokens = command?.tokens ?? []
 	if (!command || tokens.length === 0) {
-		throw new ParseArgumentsError('Invalid token array');
+		throw new ParseArgumentsError('Invalid token array')
 	}
 
 	if (tokens.length === 1) {
-		const showFirstCommandCompletion = true;
-		const spec = showFirstCommandCompletion
-			? firstTokenSpec
-			: { ...firstTokenSpec, args: [] };
-		let specPath = { name: 'firstTokenSpec', type: SpecLocationSource.GLOBAL };
+		const showFirstCommandCompletion = true
+		const spec = showFirstCommandCompletion ? firstTokenSpec : { ...firstTokenSpec, args: [] }
+		let specPath = { name: 'firstTokenSpec', type: SpecLocationSource.GLOBAL }
 		if (tokens[0].text.includes('/')) {
 			// special-case: Symfony has "bin/console" which can be invoked directly
 			// and should not require a user to create script completions for it
 			if (tokens[0].text === 'bin/console') {
-				specPath = { name: 'php/bin-console', type: SpecLocationSource.GLOBAL };
+				specPath = { name: 'php/bin-console', type: SpecLocationSource.GLOBAL }
 			} else {
-				specPath = { name: 'dotslash', type: SpecLocationSource.GLOBAL };
+				specPath = { name: 'dotslash', type: SpecLocationSource.GLOBAL }
 			}
 			// spec = await loadSubcommandCached(specPath, context);
 		}
-		return getResultFromState(getInitialState(spec, tokens[0].text, specPath));
+		return getResultFromState(getInitialState(spec, tokens[0].text, specPath))
 	}
 
 	let state = await parseArgumentsCached(
@@ -1170,19 +1118,16 @@ export const parseArguments = async (
 		executeExternals,
 		isParsingHistory,
 		0,
-	);
+	)
 
-	const finalToken = tokens[tokens.length - 1].text;
+	const finalToken = tokens[tokens.length - 1].text
 	try {
-		state = updateState(state, finalToken, true);
+		state = updateState(state, finalToken, true)
 	} catch (_err) {
 		state = {
 			...state,
-			annotations: [
-				...state.annotations,
-				{ type: TokenType.None, text: finalToken },
-			],
-		};
+			annotations: [...state.annotations, { type: TokenType.None, text: finalToken }],
+		}
 	}
-	return getResultFromState(state);
-};
+	return getResultFromState(state)
+}

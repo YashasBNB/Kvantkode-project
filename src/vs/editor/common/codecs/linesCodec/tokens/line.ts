@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BaseToken } from '../../baseToken.js';
-import { assert } from '../../../../../base/common/assert.js';
-import { Range } from '../../../../../editor/common/core/range.js';
+import { BaseToken } from '../../baseToken.js'
+import { assert } from '../../../../../base/common/assert.js'
+import { Range } from '../../../../../editor/common/core/range.js'
 
 /**
  * Token representing a line of text with a `range` which
@@ -19,24 +19,11 @@ export class Line extends BaseToken {
 		// the line contents
 		public readonly text: string,
 	) {
-		assert(
-			!isNaN(lineNumber),
-			`The line number must not be a NaN.`,
-		);
+		assert(!isNaN(lineNumber), `The line number must not be a NaN.`)
 
-		assert(
-			lineNumber > 0,
-			`The line number must be >= 1, got "${lineNumber}".`,
-		);
+		assert(lineNumber > 0, `The line number must be >= 1, got "${lineNumber}".`)
 
-		super(
-			new Range(
-				lineNumber,
-				1,
-				lineNumber,
-				text.length + 1,
-			),
-		);
+		super(new Range(lineNumber, 1, lineNumber, text.length + 1))
 	}
 
 	/**
@@ -44,20 +31,20 @@ export class Line extends BaseToken {
 	 */
 	public override equals<T extends BaseToken>(other: T): boolean {
 		if (!super.equals(other)) {
-			return false;
+			return false
 		}
 
 		if (!(other instanceof Line)) {
-			return false;
+			return false
 		}
 
-		return this.text === other.text;
+		return this.text === other.text
 	}
 
 	/**
 	 * Returns a string representation of the token.
 	 */
 	public override toString(): string {
-		return `line("${this.text}")${this.range}`;
+		return `line("${this.text}")${this.range}`
 	}
 }

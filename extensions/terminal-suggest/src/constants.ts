@@ -46,8 +46,7 @@ export const upstreamSpecs = [
 	'pnpm',
 	'node',
 	'nvm',
-];
-
+]
 
 export const enum SettingsIds {
 	SuggestPrefix = 'terminal.integrated.suggest',

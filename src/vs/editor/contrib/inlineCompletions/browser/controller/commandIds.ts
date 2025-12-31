@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export const inlineSuggestCommitId = 'editor.action.inlineSuggest.commit';
+export const inlineSuggestCommitId = 'editor.action.inlineSuggest.commit'
 
-export const showPreviousInlineSuggestionActionId = 'editor.action.inlineSuggest.showPrevious';
+export const showPreviousInlineSuggestionActionId = 'editor.action.inlineSuggest.showPrevious'
 
-export const showNextInlineSuggestionActionId = 'editor.action.inlineSuggest.showNext';
+export const showNextInlineSuggestionActionId = 'editor.action.inlineSuggest.showNext'
 
-export const jumpToNextInlineEditId = 'editor.action.inlineSuggest.jump';
+export const jumpToNextInlineEditId = 'editor.action.inlineSuggest.jump'
 
-export const hideInlineCompletionId = 'editor.action.inlineSuggest.hide';
+export const hideInlineCompletionId = 'editor.action.inlineSuggest.hide'
 
-export const toggleShowCollapsedId = 'editor.action.inlineSuggest.toggleShowCollapsed';
+export const toggleShowCollapsedId = 'editor.action.inlineSuggest.toggleShowCollapsed'

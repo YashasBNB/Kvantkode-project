@@ -5,22 +5,21 @@
 
 //@ts-check
 
-'use strict';
+'use strict'
 
-const withBrowserDefaults = require('../shared.webpack.config').browser;
-const path = require('path');
+const withBrowserDefaults = require('../shared.webpack.config').browser
+const path = require('path')
 
 const mainConfig = withBrowserDefaults({
 	context: __dirname,
 	entry: {
-		extension: './src/ipynbMain.browser.ts'
+		extension: './src/ipynbMain.browser.ts',
 	},
 	output: {
 		filename: 'ipynbMain.browser.js',
-		path: path.join(__dirname, 'dist', 'browser')
-	}
-});
-
+		path: path.join(__dirname, 'dist', 'browser'),
+	},
+})
 
 const workerConfig = withBrowserDefaults({
 	context: __dirname,
@@ -31,8 +30,8 @@ const workerConfig = withBrowserDefaults({
 		filename: 'notebookSerializerWorker.js',
 		path: path.join(__dirname, 'dist', 'browser'),
 		libraryTarget: 'var',
-		library: 'serverExportVar'
+		library: 'serverExportVar',
 	},
-});
+})
 
-module.exports = [mainConfig, workerConfig];
+module.exports = [mainConfig, workerConfig]

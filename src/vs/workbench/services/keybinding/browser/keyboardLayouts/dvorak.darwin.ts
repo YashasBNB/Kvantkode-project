@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyboardLayoutContribution } from './_.contribution.js';
+import { KeyboardLayoutContribution } from './_.contribution.js'
 
 KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 	layout: { id: 'com.apple.keylayout.Dvorak', localizedName: 'Dvorak', lang: 'en' },
@@ -25,7 +25,7 @@ KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 		KeyN: ['b', 'B', '∫', 'ı', 0],
 		KeyO: ['r', 'R', '®', '‰', 0],
 		KeyP: ['l', 'L', '¬', 'Ò', 0],
-		KeyQ: ['\'', '"', 'æ', 'Æ', 0],
+		KeyQ: ["'", '"', 'æ', 'Æ', 0],
 		KeyR: ['p', 'P', 'π', '∏', 0],
 		KeyS: ['o', 'O', 'ø', 'Ø', 0],
 		KeyT: ['y', 'Y', '¥', 'Á', 0],
@@ -126,6 +126,6 @@ KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 		ControlRight: [],
 		ShiftRight: [],
 		AltRight: [],
-		MetaRight: []
-	}
-});
+		MetaRight: [],
+	},
+})

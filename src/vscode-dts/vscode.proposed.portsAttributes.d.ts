@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/115616 @alexr00
 
 	/**
@@ -30,7 +29,7 @@ declare module 'vscode' {
 		/**
 		 * Do not forward the port.
 		 */
-		Ignore = 5
+		Ignore = 5,
 	}
 
 	/**
@@ -40,14 +39,14 @@ declare module 'vscode' {
 		/**
 		 * The action to be taken when this port is detected for auto forwarding.
 		 */
-		autoForwardAction: PortAutoForwardAction;
+		autoForwardAction: PortAutoForwardAction
 
 		/**
 		 * Creates a new PortAttributes object
 		 * @param port the port number
 		 * @param autoForwardAction the action to take when this port is detected
 		 */
-		constructor(autoForwardAction: PortAutoForwardAction);
+		constructor(autoForwardAction: PortAutoForwardAction)
 	}
 
 	/**
@@ -63,7 +62,10 @@ declare module 'vscode' {
 		 * @param commandLine The command line of the process that is listening on the port. If the command line is unknown, undefined will be passed.
 		 * @param token A cancellation token that indicates the result is no longer needed.
 		 */
-		providePortAttributes(attributes: { port: number; pid?: number; commandLine?: string }, token: CancellationToken): ProviderResult<PortAttributes>;
+		providePortAttributes(
+			attributes: { port: number; pid?: number; commandLine?: string },
+			token: CancellationToken,
+		): ProviderResult<PortAttributes>
 	}
 
 	/**
@@ -74,12 +76,12 @@ declare module 'vscode' {
 		 * Specifying a port range will cause your provider to only be called for ports within the range.
 		 * The start is inclusive and the end is exclusive.
 		 */
-		portRange?: [number, number] | number;
+		portRange?: [number, number] | number
 
 		/**
 		 * Specifying a command pattern will cause your provider to only be called for processes whose command line matches the pattern.
 		 */
-		commandPattern?: RegExp;
+		commandPattern?: RegExp
 	}
 
 	export namespace workspace {
@@ -95,6 +97,9 @@ declare module 'vscode' {
 		 * If you don't specify a port selector your provider will be called for every port, which will result in slower port forwarding for the user.
 		 * @param provider The {@link PortAttributesProvider PortAttributesProvider}.
 		 */
-		export function registerPortAttributesProvider(portSelector: PortAttributesSelector, provider: PortAttributesProvider): Disposable;
+		export function registerPortAttributesProvider(
+			portSelector: PortAttributesSelector,
+			provider: PortAttributesProvider,
+		): Disposable
 	}
 }

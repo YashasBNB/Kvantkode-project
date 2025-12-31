@@ -2,17 +2,17 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { BugIndicatingError } from './errors.js';
+import { BugIndicatingError } from './errors.js'
 
 /*
  * This file contains helper classes to manage control flow.
-*/
+ */
 
 /**
  * Prevents code from being re-entrant.
-*/
+ */
 export class ReentrancyBarrier {
-	private _isOccupied = false;
+	private _isOccupied = false
 
 	/**
 	 * Calls `runner` if the barrier is not occupied.
@@ -20,13 +20,13 @@ export class ReentrancyBarrier {
 	 */
 	public runExclusivelyOrSkip(runner: () => void): void {
 		if (this._isOccupied) {
-			return;
+			return
 		}
-		this._isOccupied = true;
+		this._isOccupied = true
 		try {
-			runner();
+			runner()
 		} finally {
-			this._isOccupied = false;
+			this._isOccupied = false
 		}
 	}
 
@@ -36,34 +36,34 @@ export class ReentrancyBarrier {
 	 */
 	public runExclusivelyOrThrow(runner: () => void): void {
 		if (this._isOccupied) {
-			throw new BugIndicatingError(`ReentrancyBarrier: reentrant call detected!`);
+			throw new BugIndicatingError(`ReentrancyBarrier: reentrant call detected!`)
 		}
-		this._isOccupied = true;
+		this._isOccupied = true
 		try {
-			runner();
+			runner()
 		} finally {
-			this._isOccupied = false;
+			this._isOccupied = false
 		}
 	}
 
 	/**
 	 * Indicates if some runner occupies this barrier.
-	*/
+	 */
 	public get isOccupied() {
-		return this._isOccupied;
+		return this._isOccupied
 	}
 
 	public makeExclusiveOrSkip<TFunction extends Function>(fn: TFunction): TFunction {
 		return ((...args: any[]) => {
 			if (this._isOccupied) {
-				return;
+				return
 			}
-			this._isOccupied = true;
+			this._isOccupied = true
 			try {
-				return fn(...args);
+				return fn(...args)
 			} finally {
-				this._isOccupied = false;
+				this._isOccupied = false
 			}
-		}) as any;
+		}) as any
 	}
 }

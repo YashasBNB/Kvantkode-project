@@ -3,91 +3,99 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import electron from 'electron';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Event } from '../../../base/common/event.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { ISerializableCommandAction } from '../../action/common/action.js';
-import { NativeParsedArgs } from '../../environment/common/argv.js';
-import { IUserDataProfile } from '../../userDataProfile/common/userDataProfile.js';
-import { DEFAULT_AUX_WINDOW_SIZE, DEFAULT_WINDOW_SIZE, INativeWindowConfiguration } from '../common/window.js';
-import { ISingleFolderWorkspaceIdentifier, IWorkspaceIdentifier } from '../../workspace/common/workspace.js';
+import electron from 'electron'
+import { CancellationToken } from '../../../base/common/cancellation.js'
+import { Event } from '../../../base/common/event.js'
+import { IDisposable } from '../../../base/common/lifecycle.js'
+import { ISerializableCommandAction } from '../../action/common/action.js'
+import { NativeParsedArgs } from '../../environment/common/argv.js'
+import { IUserDataProfile } from '../../userDataProfile/common/userDataProfile.js'
+import {
+	DEFAULT_AUX_WINDOW_SIZE,
+	DEFAULT_WINDOW_SIZE,
+	INativeWindowConfiguration,
+} from '../common/window.js'
+import {
+	ISingleFolderWorkspaceIdentifier,
+	IWorkspaceIdentifier,
+} from '../../workspace/common/workspace.js'
 
 export interface IBaseWindow extends IDisposable {
+	readonly onDidMaximize: Event<void>
+	readonly onDidUnmaximize: Event<void>
+	readonly onDidTriggerSystemContextMenu: Event<{ readonly x: number; readonly y: number }>
+	readonly onDidEnterFullScreen: Event<void>
+	readonly onDidLeaveFullScreen: Event<void>
+	readonly onDidClose: Event<void>
 
-	readonly onDidMaximize: Event<void>;
-	readonly onDidUnmaximize: Event<void>;
-	readonly onDidTriggerSystemContextMenu: Event<{ readonly x: number; readonly y: number }>;
-	readonly onDidEnterFullScreen: Event<void>;
-	readonly onDidLeaveFullScreen: Event<void>;
-	readonly onDidClose: Event<void>;
+	readonly id: number
+	readonly win: electron.BrowserWindow | null
 
-	readonly id: number;
-	readonly win: electron.BrowserWindow | null;
+	readonly lastFocusTime: number
+	focus(options?: { force: boolean }): void
 
-	readonly lastFocusTime: number;
-	focus(options?: { force: boolean }): void;
+	setRepresentedFilename(name: string): void
+	getRepresentedFilename(): string | undefined
 
-	setRepresentedFilename(name: string): void;
-	getRepresentedFilename(): string | undefined;
+	setDocumentEdited(edited: boolean): void
+	isDocumentEdited(): boolean
 
-	setDocumentEdited(edited: boolean): void;
-	isDocumentEdited(): boolean;
+	readonly isFullScreen: boolean
+	toggleFullScreen(): void
 
-	readonly isFullScreen: boolean;
-	toggleFullScreen(): void;
+	updateWindowControls(options: {
+		height?: number
+		backgroundColor?: string
+		foregroundColor?: string
+	}): void
 
-	updateWindowControls(options: { height?: number; backgroundColor?: string; foregroundColor?: string }): void;
-
-	matches(webContents: electron.WebContents): boolean;
+	matches(webContents: electron.WebContents): boolean
 }
 
 export interface ICodeWindow extends IBaseWindow {
+	readonly onWillLoad: Event<ILoadEvent>
+	readonly onDidSignalReady: Event<void>
+	readonly onDidDestroy: Event<void>
 
-	readonly onWillLoad: Event<ILoadEvent>;
-	readonly onDidSignalReady: Event<void>;
-	readonly onDidDestroy: Event<void>;
+	readonly whenClosedOrLoaded: Promise<void>
 
-	readonly whenClosedOrLoaded: Promise<void>;
+	readonly config: INativeWindowConfiguration | undefined
 
-	readonly config: INativeWindowConfiguration | undefined;
+	readonly openedWorkspace?: IWorkspaceIdentifier | ISingleFolderWorkspaceIdentifier
 
-	readonly openedWorkspace?: IWorkspaceIdentifier | ISingleFolderWorkspaceIdentifier;
+	readonly profile?: IUserDataProfile
 
-	readonly profile?: IUserDataProfile;
+	readonly backupPath?: string
 
-	readonly backupPath?: string;
+	readonly remoteAuthority?: string
 
-	readonly remoteAuthority?: string;
+	readonly isExtensionDevelopmentHost: boolean
+	readonly isExtensionTestHost: boolean
 
-	readonly isExtensionDevelopmentHost: boolean;
-	readonly isExtensionTestHost: boolean;
+	readonly isReady: boolean
+	ready(): Promise<ICodeWindow>
+	setReady(): void
 
-	readonly isReady: boolean;
-	ready(): Promise<ICodeWindow>;
-	setReady(): void;
+	addTabbedWindow(window: ICodeWindow): void
 
-	addTabbedWindow(window: ICodeWindow): void;
+	load(config: INativeWindowConfiguration, options?: { isReload?: boolean }): void
+	reload(cli?: NativeParsedArgs): void
 
-	load(config: INativeWindowConfiguration, options?: { isReload?: boolean }): void;
-	reload(cli?: NativeParsedArgs): void;
+	close(): void
 
-	close(): void;
+	getBounds(): electron.Rectangle
 
-	getBounds(): electron.Rectangle;
+	send(channel: string, ...args: any[]): void
+	sendWhenReady(channel: string, token: CancellationToken, ...args: any[]): void
 
-	send(channel: string, ...args: any[]): void;
-	sendWhenReady(channel: string, token: CancellationToken, ...args: any[]): void;
+	updateTouchBar(items: ISerializableCommandAction[][]): void
 
-	updateTouchBar(items: ISerializableCommandAction[][]): void;
+	notifyZoomLevel(zoomLevel: number | undefined): void
 
-	notifyZoomLevel(zoomLevel: number | undefined): void;
-
-	serializeWindowState(): IWindowState;
+	serializeWindowState(): IWindowState
 }
 
 export const enum LoadReason {
-
 	/**
 	 * The window is loaded for the first time.
 	 */
@@ -101,11 +109,10 @@ export const enum LoadReason {
 	/**
 	 * The window is reloaded.
 	 */
-	RELOAD
+	RELOAD,
 }
 
 export const enum UnloadReason {
-
 	/**
 	 * The window is closed.
 	 */
@@ -124,29 +131,28 @@ export const enum UnloadReason {
 	/**
 	 * The window is loaded into a different workspace context.
 	 */
-	LOAD
+	LOAD,
 }
 
 export interface IWindowState {
-	width?: number;
-	height?: number;
-	x?: number;
-	y?: number;
-	mode?: WindowMode;
-	zoomLevel?: number;
-	readonly display?: number;
+	width?: number
+	height?: number
+	x?: number
+	y?: number
+	mode?: WindowMode
+	zoomLevel?: number
+	readonly display?: number
 }
 
 export const defaultWindowState = function (mode = WindowMode.Normal): IWindowState {
 	return {
 		width: DEFAULT_WINDOW_SIZE.width,
 		height: DEFAULT_WINDOW_SIZE.height,
-		mode
-	};
-};
+		mode,
+	}
+}
 
 export const defaultAuxWindowState = function (): IWindowState {
-
 	// Auxiliary windows are being created from a `window.open` call
 	// that sets `windowFeatures` that encode the desired size and
 	// position of the new window (`top`, `left`).
@@ -154,35 +160,34 @@ export const defaultAuxWindowState = function (): IWindowState {
 	// we need to set not only width and height but also x and y to
 	// a good location on the primary display.
 
-	const width = DEFAULT_AUX_WINDOW_SIZE.width;
-	const height = DEFAULT_AUX_WINDOW_SIZE.height;
-	const workArea = electron.screen.getPrimaryDisplay().workArea;
-	const x = Math.max(workArea.x + (workArea.width / 2) - (width / 2), 0);
-	const y = Math.max(workArea.y + (workArea.height / 2) - (height / 2), 0);
+	const width = DEFAULT_AUX_WINDOW_SIZE.width
+	const height = DEFAULT_AUX_WINDOW_SIZE.height
+	const workArea = electron.screen.getPrimaryDisplay().workArea
+	const x = Math.max(workArea.x + workArea.width / 2 - width / 2, 0)
+	const y = Math.max(workArea.y + workArea.height / 2 - height / 2, 0)
 
 	return {
 		x,
 		y,
 		width,
 		height,
-		mode: WindowMode.Normal
-	};
-};
+		mode: WindowMode.Normal,
+	}
+}
 
 export const enum WindowMode {
 	Maximized,
 	Normal,
 	Minimized, // not used anymore, but also cannot remove due to existing stored UI state (needs migration)
-	Fullscreen
+	Fullscreen,
 }
 
 export interface ILoadEvent {
-	readonly workspace: IWorkspaceIdentifier | ISingleFolderWorkspaceIdentifier | undefined;
-	readonly reason: LoadReason;
+	readonly workspace: IWorkspaceIdentifier | ISingleFolderWorkspaceIdentifier | undefined
+	readonly reason: LoadReason
 }
 
 export const enum WindowError {
-
 	/**
 	 * Maps to the `unresponsive` event on a `BrowserWindow`.
 	 */

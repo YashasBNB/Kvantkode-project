@@ -5,40 +5,38 @@
 
 declare module 'vscode' {
 	export class InlineEdit {
-
-
 		/**
 		 * The new text for this edit.
 		 */
-		readonly text: string;
+		readonly text: string
 
 		/**
 		 * A range that will be replaced by the text of the inline edit.
 		 * If the change is only additive, this can be empty (same start and end position).
 		 */
-		readonly range: Range;
+		readonly range: Range
 
 		/**
 		 * A range specifying when the edit can be shown based on the cursor position.
 		 * If the cursor is within this range, the inline edit can be displayed.
 		 */
-		readonly showRange?: Range;
+		readonly showRange?: Range
 
 		/**
 		 * An optional command that will be executed after applying the inline edit.
 		 */
-		accepted?: Command;
+		accepted?: Command
 
 		/**
 		 * An optional command that will be executed after rejecting the inline edit.
 		 */
-		rejected?: Command;
+		rejected?: Command
 
-		shown?: Command;
+		shown?: Command
 
-		commands?: Command[];
+		commands?: Command[]
 
-		action?: Command;
+		action?: Command
 
 		/**
 		 * Creates a new inline edit.
@@ -46,16 +44,16 @@ declare module 'vscode' {
 		 * @param text The new text for this edit.
 		 * @param range A range that will be replaced by the text of the inline edit.
 		 */
-		constructor(text: string, range: Range);
+		constructor(text: string, range: Range)
 	}
 
 	export interface InlineEditContext {
 		/**
 		 * Describes how the inline edit was triggered.
 		 */
-		triggerKind: InlineEditTriggerKind;
+		triggerKind: InlineEditTriggerKind
 
-		readonly requestUuid?: string;
+		readonly requestUuid?: string
 	}
 
 	export enum InlineEditTriggerKind {
@@ -73,8 +71,7 @@ declare module 'vscode' {
 	}
 
 	export interface InlineEditProvider {
-
-		readonly displayName?: string;
+		readonly displayName?: string
 
 		/**
 		 * Provide inline edit for the given document.
@@ -85,11 +82,14 @@ declare module 'vscode' {
 		 * @return An inline edit or a thenable that resolves to such. The lack of a result can be
 		 * signaled by returning `undefined` or `null`.
 		 */
-		provideInlineEdit(document: TextDocument, context: InlineEditContext, token: CancellationToken): ProviderResult<InlineEdit>;
+		provideInlineEdit(
+			document: TextDocument,
+			context: InlineEditContext,
+			token: CancellationToken,
+		): ProviderResult<InlineEdit>
 	}
 
 	export namespace languages {
-
 		/**
 		 * Register a provider that can handle inline edits.
 		 *
@@ -97,7 +97,9 @@ declare module 'vscode' {
 		 * @param provider A provider that can handle inline edits.
 		 * @return A {@link Disposable} that unregisters this provider when being disposed.
 		 */
-		export function registerInlineEditProvider(selector: DocumentSelector, provider: InlineEditProvider): Disposable;
-
+		export function registerInlineEditProvider(
+			selector: DocumentSelector,
+			provider: InlineEditProvider,
+		): Disposable
 	}
 }

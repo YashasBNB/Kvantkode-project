@@ -3,21 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { PromptToken } from './tokens/promptToken.js';
-import { VSBuffer } from '../../../../../../base/common/buffer.js';
-import { assertNever } from '../../../../../../base/common/assert.js';
-import { ReadableStream } from '../../../../../../base/common/stream.js';
-import { BaseDecoder } from '../../../../../../base/common/codecs/baseDecoder.js';
-import { PromptVariable, PromptVariableWithData } from './tokens/promptVariable.js';
-import { Hash } from '../../../../../../editor/common/codecs/simpleCodec/tokens/hash.js';
-import { MarkdownLink } from '../../../../../../editor/common/codecs/markdownCodec/tokens/markdownLink.js';
-import { PartialPromptVariableName, PartialPromptVariableWithData } from './parsers/promptVariableParser.js';
-import { MarkdownDecoder, TMarkdownToken } from '../../../../../../editor/common/codecs/markdownCodec/markdownDecoder.js';
+import { PromptToken } from './tokens/promptToken.js'
+import { VSBuffer } from '../../../../../../base/common/buffer.js'
+import { assertNever } from '../../../../../../base/common/assert.js'
+import { ReadableStream } from '../../../../../../base/common/stream.js'
+import { BaseDecoder } from '../../../../../../base/common/codecs/baseDecoder.js'
+import { PromptVariable, PromptVariableWithData } from './tokens/promptVariable.js'
+import { Hash } from '../../../../../../editor/common/codecs/simpleCodec/tokens/hash.js'
+import { MarkdownLink } from '../../../../../../editor/common/codecs/markdownCodec/tokens/markdownLink.js'
+import {
+	PartialPromptVariableName,
+	PartialPromptVariableWithData,
+} from './parsers/promptVariableParser.js'
+import {
+	MarkdownDecoder,
+	TMarkdownToken,
+} from '../../../../../../editor/common/codecs/markdownCodec/markdownDecoder.js'
 
 /**
  * Tokens produced by this decoder.
  */
-export type TChatPromptToken = MarkdownLink | PromptVariable | PromptVariableWithData;
+export type TChatPromptToken = MarkdownLink | PromptVariable | PromptVariableWithData
 
 /**
  * Decoder for the common chatbot prompt message syntax.
@@ -29,12 +35,10 @@ export class ChatPromptDecoder extends BaseDecoder<TChatPromptToken, TMarkdownTo
 	 * tokens, for instance, a `#file:/path/to/file.md` link that consists of `hash`,
 	 * `word`, and `colon` tokens sequence plus the `file path` part that follows.
 	 */
-	private current?: PartialPromptVariableName | PartialPromptVariableWithData;
+	private current?: PartialPromptVariableName | PartialPromptVariableWithData
 
-	constructor(
-		stream: ReadableStream<VSBuffer>,
-	) {
-		super(new MarkdownDecoder(stream));
+	constructor(stream: ReadableStream<VSBuffer>) {
+		super(new MarkdownDecoder(stream))
 	}
 
 	protected override onStreamData(token: TMarkdownToken): void {
@@ -42,9 +46,9 @@ export class ChatPromptDecoder extends BaseDecoder<TChatPromptToken, TMarkdownTo
 		// initiate a parser object if we encounter respective token and
 		// there is no active parser object present at the moment
 		if (token instanceof Hash && !this.current) {
-			this.current = new PartialPromptVariableName(token);
+			this.current = new PartialPromptVariableName(token)
 
-			return;
+			return
 		}
 
 		// if current parser was not yet initiated, - we are in the general
@@ -58,15 +62,15 @@ export class ChatPromptDecoder extends BaseDecoder<TChatPromptToken, TMarkdownTo
 			//  - collect all "text" sequences of tokens and emit them as a single
 			// 	  "text" sequence token
 			if (token instanceof MarkdownLink) {
-				this._onData.fire(token);
+				this._onData.fire(token)
 			}
 
-			return;
+			return
 		}
 
 		// if there is a current parser object, submit the token to it
 		// so it can progress with parsing the tokens sequence
-		const parseResult = this.current.accept(token);
+		const parseResult = this.current.accept(token)
 
 		// process the parse result next
 		switch (parseResult.result) {
@@ -77,25 +81,25 @@ export class ChatPromptDecoder extends BaseDecoder<TChatPromptToken, TMarkdownTo
 			//   2) parsing is still in progress and the next parser object is returned, hence
 			//      we need to replace the current parser object with a new one and continue
 			case 'success': {
-				const { nextParser } = parseResult;
+				const { nextParser } = parseResult
 
 				if (nextParser instanceof PromptToken) {
-					this._onData.fire(nextParser);
-					delete this.current;
+					this._onData.fire(nextParser)
+					delete this.current
 				} else {
-					this.current = nextParser;
+					this.current = nextParser
 				}
 
-				break;
+				break
 			}
 			// in the case of failure, reset the current parser object
 			case 'failure': {
-				delete this.current;
+				delete this.current
 
 				// note! when this decoder becomes consistent with other ones and hence starts emitting
 				// 		 all token types, not just links, we would need to re-emit all the tokens that
 				//       the parser object has accumulated so far
-				break;
+				break
 			}
 		}
 
@@ -103,7 +107,7 @@ export class ChatPromptDecoder extends BaseDecoder<TChatPromptToken, TMarkdownTo
 		// so the token is properly handled by the decoder in the case when a
 		// new sequence starts with this token
 		if (!parseResult.wasTokenConsumed) {
-			this.onStreamData(token);
+			this.onStreamData(token)
 		}
 	}
 
@@ -111,29 +115,26 @@ export class ChatPromptDecoder extends BaseDecoder<TChatPromptToken, TMarkdownTo
 		try {
 			// if there is no currently active parser object present, nothing to do
 			if (!this.current) {
-				return;
+				return
 			}
 
 			// otherwise try to convert incomplete parser object to a token
 			if (this.current instanceof PartialPromptVariableName) {
-				return this._onData.fire(this.current.asPromptVariable());
+				return this._onData.fire(this.current.asPromptVariable())
 			}
 
 			if (this.current instanceof PartialPromptVariableWithData) {
-				return this._onData.fire(this.current.asPromptVariableWithData());
+				return this._onData.fire(this.current.asPromptVariableWithData())
 			}
 
-			assertNever(
-				this.current,
-				`Unknown parser object '${this.current}'`,
-			);
+			assertNever(this.current, `Unknown parser object '${this.current}'`)
 		} catch (error) {
 			// note! when this decoder becomes consistent with other ones and hence starts emitting
 			// 		 all token types, not just links, we would need to re-emit all the tokens that
 			//       the parser object has accumulated so far
 		} finally {
-			delete this.current;
-			super.onStreamEnd();
+			delete this.current
+			super.onStreamEnd()
 		}
 	}
 }

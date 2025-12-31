@@ -1,0 +1,10 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { localize } from '../../../../nls.js';
+import { Codicon } from '../../../../base/common/codicons.js';
+import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
+export const gettingStartedUncheckedCodicon = registerIcon('getting-started-step-unchecked', Codicon.circleLargeOutline, localize('gettingStartedUnchecked', 'Used to represent walkthrough steps which have not been completed'));
+export const gettingStartedCheckedCodicon = registerIcon('getting-started-step-checked', Codicon.passFilled, localize('gettingStartedChecked', 'Used to represent walkthrough steps which have been completed'));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ2V0dGluZ1N0YXJ0ZWRJY29ucy5qcyIsInNvdXJjZVJvb3QiOiJmaWxlOi8vL1VzZXJzL3lhc2hhc25haWR1L0t2YW50Y29kZS92b2lkL3NyYy8iLCJzb3VyY2VzIjpbInZzL3dvcmtiZW5jaC9jb250cmliL3dlbGNvbWVHZXR0aW5nU3RhcnRlZC9icm93c2VyL2dldHRpbmdTdGFydGVkSWNvbnMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7OztnR0FHZ0c7QUFFaEcsT0FBTyxFQUFFLFFBQVEsRUFBRSxNQUFNLG9CQUFvQixDQUFBO0FBQzdDLE9BQU8sRUFBRSxPQUFPLEVBQUUsTUFBTSxxQ0FBcUMsQ0FBQTtBQUM3RCxPQUFPLEVBQUUsWUFBWSxFQUFFLE1BQU0sbURBQW1ELENBQUE7QUFFaEYsTUFBTSxDQUFDLE1BQU0sOEJBQThCLEdBQUcsWUFBWSxDQUN6RCxnQ0FBZ0MsRUFDaEMsT0FBTyxDQUFDLGtCQUFrQixFQUMxQixRQUFRLENBQ1AseUJBQXlCLEVBQ3pCLG1FQUFtRSxDQUNuRSxDQUNELENBQUE7QUFDRCxNQUFNLENBQUMsTUFBTSw0QkFBNEIsR0FBRyxZQUFZLENBQ3ZELDhCQUE4QixFQUM5QixPQUFPLENBQUMsVUFBVSxFQUNsQixRQUFRLENBQ1AsdUJBQXVCLEVBQ3ZCLCtEQUErRCxDQUMvRCxDQUNELENBQUEifQ==

@@ -11,8 +11,16 @@
 	--void-bg-1: var(--vscode-input-background);
 	--void-bg-1-alt: var(--vscode-badge-background);
 	--void-bg-2: var(--vscode-sideBar-background);
-	--void-bg-2-alt: color-mix(in srgb, var(--vscode-editor-background) 30%, var(--vscode-sideBar-background) 70%);
-	--void-bg-2-hover: color-mix(in srgb, var(--vscode-editor-foreground) 2%, var(--vscode-sideBar-background) 98%);
+	--void-bg-2-alt: color-mix(
+		in srgb,
+		var(--vscode-editor-background) 30%,
+		var(--vscode-sideBar-background) 70%
+	);
+	--void-bg-2-hover: color-mix(
+		in srgb,
+		var(--vscode-editor-foreground) 2%,
+		var(--vscode-sideBar-background) 98%
+	);
 	--void-bg-3: var(--vscode-editor-background);
 
 	--void-fg-0: color-mix(in srgb, var(--vscode-tab-activeForeground) 90%, black 10%);
@@ -29,8 +37,8 @@
 	--void-border-3: var(--vscode-commandCenter-inactiveBorder);
 	--void-border-4: var(--vscode-editorGroup-border);
 
-	--void-ring-color: #007FD4;
-	--void-link-color: #007FD4;
+	--void-ring-color: #007fd4;
+	--void-link-color: #007fd4;
 }
 
 .select-child-restyle select {
@@ -47,18 +55,13 @@
 	outline: none !important;
 }
 
-
-
 .inherit-bg-all-restyle > * {
 	background-color: inherit !important;
 }
 
-
 .bg-editor-style-override {
 	--vscode-sideBar-background: var(--vscode-editor-background);
 }
-
-
 
 /* html {
 	font-size: var(--vscode-font-size);

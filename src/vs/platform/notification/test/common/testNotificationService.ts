@@ -3,55 +3,71 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
-import { INotification, INotificationHandle, INotificationService, INotificationSource, INotificationSourceFilter, IPromptChoice, IPromptOptions, IStatusMessageOptions, NoOpNotification, NotificationsFilter, Severity } from '../../common/notification.js';
+import { Event } from '../../../../base/common/event.js'
+import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js'
+import {
+	INotification,
+	INotificationHandle,
+	INotificationService,
+	INotificationSource,
+	INotificationSourceFilter,
+	IPromptChoice,
+	IPromptOptions,
+	IStatusMessageOptions,
+	NoOpNotification,
+	NotificationsFilter,
+	Severity,
+} from '../../common/notification.js'
 
 export class TestNotificationService implements INotificationService {
+	readonly onDidAddNotification: Event<INotification> = Event.None
 
-	readonly onDidAddNotification: Event<INotification> = Event.None;
+	readonly onDidRemoveNotification: Event<INotification> = Event.None
 
-	readonly onDidRemoveNotification: Event<INotification> = Event.None;
+	readonly onDidChangeFilter: Event<void> = Event.None
 
-	readonly onDidChangeFilter: Event<void> = Event.None;
+	declare readonly _serviceBrand: undefined
 
-	declare readonly _serviceBrand: undefined;
-
-	private static readonly NO_OP: INotificationHandle = new NoOpNotification();
+	private static readonly NO_OP: INotificationHandle = new NoOpNotification()
 
 	info(message: string): INotificationHandle {
-		return this.notify({ severity: Severity.Info, message });
+		return this.notify({ severity: Severity.Info, message })
 	}
 
 	warn(message: string): INotificationHandle {
-		return this.notify({ severity: Severity.Warning, message });
+		return this.notify({ severity: Severity.Warning, message })
 	}
 
 	error(error: string | Error): INotificationHandle {
-		return this.notify({ severity: Severity.Error, message: error });
+		return this.notify({ severity: Severity.Error, message: error })
 	}
 
 	notify(notification: INotification): INotificationHandle {
-		return TestNotificationService.NO_OP;
+		return TestNotificationService.NO_OP
 	}
 
-	prompt(severity: Severity, message: string, choices: IPromptChoice[], options?: IPromptOptions): INotificationHandle {
-		return TestNotificationService.NO_OP;
+	prompt(
+		severity: Severity,
+		message: string,
+		choices: IPromptChoice[],
+		options?: IPromptOptions,
+	): INotificationHandle {
+		return TestNotificationService.NO_OP
 	}
 
 	status(message: string | Error, options?: IStatusMessageOptions): IDisposable {
-		return Disposable.None;
+		return Disposable.None
 	}
 
-	setFilter(): void { }
+	setFilter(): void {}
 
 	getFilter(source?: INotificationSource | undefined): NotificationsFilter {
-		return NotificationsFilter.OFF;
+		return NotificationsFilter.OFF
 	}
 
 	getFilters(): INotificationSourceFilter[] {
-		return [];
+		return []
 	}
 
-	removeFilter(sourceId: string): void { }
+	removeFilter(sourceId: string): void {}
 }

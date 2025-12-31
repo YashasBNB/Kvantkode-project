@@ -3,104 +3,121 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { RGBA, Color } from './color';
-import { ansiColorIdentifiers } from './colorMap';
-import { LinkOptions, linkify } from './linkify';
-
+import { RGBA, Color } from './color'
+import { ansiColorIdentifiers } from './colorMap'
+import { LinkOptions, linkify } from './linkify'
 
 export function handleANSIOutput(text: string, linkOptions: LinkOptions): HTMLSpanElement {
+	const root: HTMLSpanElement = document.createElement('span')
+	const textLength: number = text.length
 
-	const root: HTMLSpanElement = document.createElement('span');
-	const textLength: number = text.length;
-
-	let styleNames: string[] = [];
-	let customFgColor: RGBA | string | undefined;
-	let customBgColor: RGBA | string | undefined;
-	let customUnderlineColor: RGBA | string | undefined;
-	let colorsInverted: boolean = false;
-	let currentPos: number = 0;
-	let buffer: string = '';
+	let styleNames: string[] = []
+	let customFgColor: RGBA | string | undefined
+	let customBgColor: RGBA | string | undefined
+	let customUnderlineColor: RGBA | string | undefined
+	let colorsInverted: boolean = false
+	let currentPos: number = 0
+	let buffer: string = ''
 
 	while (currentPos < textLength) {
-
-		let sequenceFound: boolean = false;
+		let sequenceFound: boolean = false
 
 		// Potentially an ANSI escape sequence.
 		// See https://www.asciitable.com/ansi-escape-sequences.php & https://en.wikipedia.org/wiki/ANSI_escape_code
 		if (text.charCodeAt(currentPos) === 27 && text.charAt(currentPos + 1) === '[') {
+			const startPos: number = currentPos
+			currentPos += 2 // Ignore 'Esc[' as it's in every sequence.
 
-			const startPos: number = currentPos;
-			currentPos += 2; // Ignore 'Esc[' as it's in every sequence.
-
-			let ansiSequence: string = '';
+			let ansiSequence: string = ''
 
 			while (currentPos < textLength) {
-				const char: string = text.charAt(currentPos);
-				ansiSequence += char;
+				const char: string = text.charAt(currentPos)
+				ansiSequence += char
 
-				currentPos++;
+				currentPos++
 
 				// Look for a known sequence terminating character.
 				if (char.match(/^[ABCDHIJKfhmpsu]$/)) {
-					sequenceFound = true;
-					break;
+					sequenceFound = true
+					break
 				}
-
 			}
 
 			if (sequenceFound) {
-
 				// Flush buffer with previous styles.
-				appendStylizedStringToContainer(root, buffer, linkOptions, styleNames, customFgColor, customBgColor, customUnderlineColor);
+				appendStylizedStringToContainer(
+					root,
+					buffer,
+					linkOptions,
+					styleNames,
+					customFgColor,
+					customBgColor,
+					customUnderlineColor,
+				)
 
-				buffer = '';
+				buffer = ''
 
 				/*
 				 * Certain ranges that are matched here do not contain real graphics rendition sequences. For
 				 * the sake of having a simpler expression, they have been included anyway.
 				 */
-				if (ansiSequence.match(/^(?:[34][0-8]|9[0-7]|10[0-7]|[0-9]|2[1-5,7-9]|[34]9|5[8,9]|1[0-9])(?:;[349][0-7]|10[0-7]|[013]|[245]|[34]9)?(?:;[012]?[0-9]?[0-9])*;?m$/)) {
-
-					const styleCodes: number[] = ansiSequence.slice(0, -1) // Remove final 'm' character.
-						.split(';')										   // Separate style codes.
-						.filter(elem => elem !== '')			           // Filter empty elems as '34;m' -> ['34', ''].
-						.map(elem => parseInt(elem, 10));		           // Convert to numbers.
+				if (
+					ansiSequence.match(
+						/^(?:[34][0-8]|9[0-7]|10[0-7]|[0-9]|2[1-5,7-9]|[34]9|5[8,9]|1[0-9])(?:;[349][0-7]|10[0-7]|[013]|[245]|[34]9)?(?:;[012]?[0-9]?[0-9])*;?m$/,
+					)
+				) {
+					const styleCodes: number[] = ansiSequence
+						.slice(0, -1) // Remove final 'm' character.
+						.split(';') // Separate style codes.
+						.filter((elem) => elem !== '') // Filter empty elems as '34;m' -> ['34', ''].
+						.map((elem) => parseInt(elem, 10)) // Convert to numbers.
 
 					if (styleCodes[0] === 38 || styleCodes[0] === 48 || styleCodes[0] === 58) {
 						// Advanced color code - can't be combined with formatting codes like simple colors can
 						// Ignores invalid colors and additional info beyond what is necessary
-						const colorType = (styleCodes[0] === 38) ? 'foreground' : ((styleCodes[0] === 48) ? 'background' : 'underline');
+						const colorType =
+							styleCodes[0] === 38
+								? 'foreground'
+								: styleCodes[0] === 48
+									? 'background'
+									: 'underline'
 
 						if (styleCodes[1] === 5) {
-							set8BitColor(styleCodes, colorType);
+							set8BitColor(styleCodes, colorType)
 						} else if (styleCodes[1] === 2) {
-							set24BitColor(styleCodes, colorType);
+							set24BitColor(styleCodes, colorType)
 						}
 					} else {
-						setBasicFormatters(styleCodes);
+						setBasicFormatters(styleCodes)
 					}
-
 				} else {
 					// Unsupported sequence so simply hide it.
 				}
-
 			} else {
-				currentPos = startPos;
+				currentPos = startPos
 			}
 		}
 
 		if (sequenceFound === false) {
-			buffer += text.charAt(currentPos);
-			currentPos++;
+			buffer += text.charAt(currentPos)
+			currentPos++
 		}
 	}
 
 	// Flush remaining text buffer if not empty.
 	if (buffer) {
-		appendStylizedStringToContainer(root, buffer, linkOptions, styleNames, customFgColor, customBgColor, customUnderlineColor);
+		appendStylizedStringToContainer(
+			root,
+			buffer,
+			linkOptions,
+			styleNames,
+			customFgColor,
+			customBgColor,
+			customUnderlineColor,
+		)
 	}
 
-	return root;
+	return root
 
 	/**
 	 * Change the foreground or background color by clearing the current color
@@ -111,17 +128,20 @@ export function handleANSIOutput(text: string, linkOptions: LinkOptions): HTMLSp
 	 * @param color Color to change to. If `undefined` or not provided,
 	 * will clear current color without adding a new one.
 	 */
-	function changeColor(colorType: 'foreground' | 'background' | 'underline', color?: RGBA | string | undefined): void {
+	function changeColor(
+		colorType: 'foreground' | 'background' | 'underline',
+		color?: RGBA | string | undefined,
+	): void {
 		if (colorType === 'foreground') {
-			customFgColor = color;
+			customFgColor = color
 		} else if (colorType === 'background') {
-			customBgColor = color;
+			customBgColor = color
 		} else if (colorType === 'underline') {
-			customUnderlineColor = color;
+			customUnderlineColor = color
 		}
-		styleNames = styleNames.filter(style => style !== `code-${colorType}-colored`);
+		styleNames = styleNames.filter((style) => style !== `code-${colorType}-colored`)
 		if (color !== undefined) {
-			styleNames.push(`code-${colorType}-colored`);
+			styleNames.push(`code-${colorType}-colored`)
 		}
 	}
 
@@ -130,9 +150,9 @@ export function handleANSIOutput(text: string, linkOptions: LinkOptions): HTMLSp
 	 * [] flag to make sure it is appropriate to turn ON or OFF (if it is already inverted don't call
 	 */
 	function reverseForegroundAndBackgroundColors(): void {
-		const oldFgColor: RGBA | string | undefined = customFgColor;
-		changeColor('foreground', customBgColor);
-		changeColor('background', oldFgColor);
+		const oldFgColor: RGBA | string | undefined = customFgColor
+		changeColor('foreground', customBgColor)
+		changeColor('background', oldFgColor)
 	}
 
 	/**
@@ -151,142 +171,195 @@ export function handleANSIOutput(text: string, linkOptions: LinkOptions): HTMLSp
 	function setBasicFormatters(styleCodes: number[]): void {
 		for (const code of styleCodes) {
 			switch (code) {
-				case 0: {  // reset (everything)
-					styleNames = [];
-					customFgColor = undefined;
-					customBgColor = undefined;
-					break;
+				case 0: {
+					// reset (everything)
+					styleNames = []
+					customFgColor = undefined
+					customBgColor = undefined
+					break
 				}
-				case 1: { // bold
-					styleNames = styleNames.filter(style => style !== `code-bold`);
-					styleNames.push('code-bold');
-					break;
+				case 1: {
+					// bold
+					styleNames = styleNames.filter((style) => style !== `code-bold`)
+					styleNames.push('code-bold')
+					break
 				}
-				case 2: { // dim
-					styleNames = styleNames.filter(style => style !== `code-dim`);
-					styleNames.push('code-dim');
-					break;
+				case 2: {
+					// dim
+					styleNames = styleNames.filter((style) => style !== `code-dim`)
+					styleNames.push('code-dim')
+					break
 				}
-				case 3: { // italic
-					styleNames = styleNames.filter(style => style !== `code-italic`);
-					styleNames.push('code-italic');
-					break;
+				case 3: {
+					// italic
+					styleNames = styleNames.filter((style) => style !== `code-italic`)
+					styleNames.push('code-italic')
+					break
 				}
-				case 4: { // underline
-					styleNames = styleNames.filter(style => (style !== `code-underline` && style !== `code-double-underline`));
-					styleNames.push('code-underline');
-					break;
+				case 4: {
+					// underline
+					styleNames = styleNames.filter(
+						(style) => style !== `code-underline` && style !== `code-double-underline`,
+					)
+					styleNames.push('code-underline')
+					break
 				}
-				case 5: { // blink
-					styleNames = styleNames.filter(style => style !== `code-blink`);
-					styleNames.push('code-blink');
-					break;
+				case 5: {
+					// blink
+					styleNames = styleNames.filter((style) => style !== `code-blink`)
+					styleNames.push('code-blink')
+					break
 				}
-				case 6: { // rapid blink
-					styleNames = styleNames.filter(style => style !== `code-rapid-blink`);
-					styleNames.push('code-rapid-blink');
-					break;
+				case 6: {
+					// rapid blink
+					styleNames = styleNames.filter((style) => style !== `code-rapid-blink`)
+					styleNames.push('code-rapid-blink')
+					break
 				}
-				case 7: { // invert foreground and background
+				case 7: {
+					// invert foreground and background
 					if (!colorsInverted) {
-						colorsInverted = true;
-						reverseForegroundAndBackgroundColors();
+						colorsInverted = true
+						reverseForegroundAndBackgroundColors()
 					}
-					break;
+					break
 				}
-				case 8: { // hidden
-					styleNames = styleNames.filter(style => style !== `code-hidden`);
-					styleNames.push('code-hidden');
-					break;
+				case 8: {
+					// hidden
+					styleNames = styleNames.filter((style) => style !== `code-hidden`)
+					styleNames.push('code-hidden')
+					break
 				}
-				case 9: { // strike-through/crossed-out
-					styleNames = styleNames.filter(style => style !== `code-strike-through`);
-					styleNames.push('code-strike-through');
-					break;
+				case 9: {
+					// strike-through/crossed-out
+					styleNames = styleNames.filter((style) => style !== `code-strike-through`)
+					styleNames.push('code-strike-through')
+					break
 				}
-				case 10: { // normal default font
-					styleNames = styleNames.filter(style => !style.startsWith('code-font'));
-					break;
+				case 10: {
+					// normal default font
+					styleNames = styleNames.filter((style) => !style.startsWith('code-font'))
+					break
 				}
-				case 11: case 12: case 13: case 14: case 15: case 16: case 17: case 18: case 19: case 20: { // font codes (and 20 is 'blackletter' font code)
-					styleNames = styleNames.filter(style => !style.startsWith('code-font'));
-					styleNames.push(`code-font-${code - 10}`);
-					break;
+				case 11:
+				case 12:
+				case 13:
+				case 14:
+				case 15:
+				case 16:
+				case 17:
+				case 18:
+				case 19:
+				case 20: {
+					// font codes (and 20 is 'blackletter' font code)
+					styleNames = styleNames.filter((style) => !style.startsWith('code-font'))
+					styleNames.push(`code-font-${code - 10}`)
+					break
 				}
-				case 21: { // double underline
-					styleNames = styleNames.filter(style => (style !== `code-underline` && style !== `code-double-underline`));
-					styleNames.push('code-double-underline');
-					break;
+				case 21: {
+					// double underline
+					styleNames = styleNames.filter(
+						(style) => style !== `code-underline` && style !== `code-double-underline`,
+					)
+					styleNames.push('code-double-underline')
+					break
 				}
-				case 22: { // normal intensity (bold off and dim off)
-					styleNames = styleNames.filter(style => (style !== `code-bold` && style !== `code-dim`));
-					break;
+				case 22: {
+					// normal intensity (bold off and dim off)
+					styleNames = styleNames.filter((style) => style !== `code-bold` && style !== `code-dim`)
+					break
 				}
-				case 23: { // Neither italic or blackletter (font 10)
-					styleNames = styleNames.filter(style => (style !== `code-italic` && style !== `code-font-10`));
-					break;
+				case 23: {
+					// Neither italic or blackletter (font 10)
+					styleNames = styleNames.filter(
+						(style) => style !== `code-italic` && style !== `code-font-10`,
+					)
+					break
 				}
-				case 24: { // not underlined (Neither singly nor doubly underlined)
-					styleNames = styleNames.filter(style => (style !== `code-underline` && style !== `code-double-underline`));
-					break;
+				case 24: {
+					// not underlined (Neither singly nor doubly underlined)
+					styleNames = styleNames.filter(
+						(style) => style !== `code-underline` && style !== `code-double-underline`,
+					)
+					break
 				}
-				case 25: { // not blinking
-					styleNames = styleNames.filter(style => (style !== `code-blink` && style !== `code-rapid-blink`));
-					break;
+				case 25: {
+					// not blinking
+					styleNames = styleNames.filter(
+						(style) => style !== `code-blink` && style !== `code-rapid-blink`,
+					)
+					break
 				}
-				case 27: { // not reversed/inverted
+				case 27: {
+					// not reversed/inverted
 					if (colorsInverted) {
-						colorsInverted = false;
-						reverseForegroundAndBackgroundColors();
+						colorsInverted = false
+						reverseForegroundAndBackgroundColors()
 					}
-					break;
+					break
 				}
-				case 28: { // not hidden (reveal)
-					styleNames = styleNames.filter(style => style !== `code-hidden`);
-					break;
+				case 28: {
+					// not hidden (reveal)
+					styleNames = styleNames.filter((style) => style !== `code-hidden`)
+					break
 				}
-				case 29: { // not crossed-out
-					styleNames = styleNames.filter(style => style !== `code-strike-through`);
-					break;
+				case 29: {
+					// not crossed-out
+					styleNames = styleNames.filter((style) => style !== `code-strike-through`)
+					break
 				}
-				case 53: { // overlined
-					styleNames = styleNames.filter(style => style !== `code-overline`);
-					styleNames.push('code-overline');
-					break;
+				case 53: {
+					// overlined
+					styleNames = styleNames.filter((style) => style !== `code-overline`)
+					styleNames.push('code-overline')
+					break
 				}
-				case 55: { // not overlined
-					styleNames = styleNames.filter(style => style !== `code-overline`);
-					break;
+				case 55: {
+					// not overlined
+					styleNames = styleNames.filter((style) => style !== `code-overline`)
+					break
 				}
-				case 39: {  // default foreground color
-					changeColor('foreground', undefined);
-					break;
+				case 39: {
+					// default foreground color
+					changeColor('foreground', undefined)
+					break
 				}
-				case 49: {  // default background color
-					changeColor('background', undefined);
-					break;
+				case 49: {
+					// default background color
+					changeColor('background', undefined)
+					break
 				}
-				case 59: {  // default underline color
-					changeColor('underline', undefined);
-					break;
+				case 59: {
+					// default underline color
+					changeColor('underline', undefined)
+					break
 				}
-				case 73: { // superscript
-					styleNames = styleNames.filter(style => (style !== `code-superscript` && style !== `code-subscript`));
-					styleNames.push('code-superscript');
-					break;
+				case 73: {
+					// superscript
+					styleNames = styleNames.filter(
+						(style) => style !== `code-superscript` && style !== `code-subscript`,
+					)
+					styleNames.push('code-superscript')
+					break
 				}
-				case 74: { // subscript
-					styleNames = styleNames.filter(style => (style !== `code-superscript` && style !== `code-subscript`));
-					styleNames.push('code-subscript');
-					break;
+				case 74: {
+					// subscript
+					styleNames = styleNames.filter(
+						(style) => style !== `code-superscript` && style !== `code-subscript`,
+					)
+					styleNames.push('code-subscript')
+					break
 				}
-				case 75: { // neither superscript or subscript
-					styleNames = styleNames.filter(style => (style !== `code-superscript` && style !== `code-subscript`));
-					break;
+				case 75: {
+					// neither superscript or subscript
+					styleNames = styleNames.filter(
+						(style) => style !== `code-superscript` && style !== `code-subscript`,
+					)
+					break
 				}
 				default: {
-					setBasicColor(code);
-					break;
+					setBasicColor(code)
+					break
 				}
 			}
 		}
@@ -301,13 +374,21 @@ export function handleANSIOutput(text: string, linkOptions: LinkOptions): HTMLSp
 	 * will set the underline color.
 	 * @see {@link https://en.wikipedia.org/wiki/ANSI_escape_code#24-bit }
 	 */
-	function set24BitColor(styleCodes: number[], colorType: 'foreground' | 'background' | 'underline'): void {
-		if (styleCodes.length >= 5 &&
-			styleCodes[2] >= 0 && styleCodes[2] <= 255 &&
-			styleCodes[3] >= 0 && styleCodes[3] <= 255 &&
-			styleCodes[4] >= 0 && styleCodes[4] <= 255) {
-			const customColor = new RGBA(styleCodes[2], styleCodes[3], styleCodes[4]);
-			changeColor(colorType, customColor);
+	function set24BitColor(
+		styleCodes: number[],
+		colorType: 'foreground' | 'background' | 'underline',
+	): void {
+		if (
+			styleCodes.length >= 5 &&
+			styleCodes[2] >= 0 &&
+			styleCodes[2] <= 255 &&
+			styleCodes[3] >= 0 &&
+			styleCodes[3] <= 255 &&
+			styleCodes[4] >= 0 &&
+			styleCodes[4] <= 255
+		) {
+			const customColor = new RGBA(styleCodes[2], styleCodes[3], styleCodes[4])
+			changeColor(colorType, customColor)
 		}
 	}
 
@@ -320,28 +401,31 @@ export function handleANSIOutput(text: string, linkOptions: LinkOptions): HTMLSp
 	 * will set the underline color.
 	 * @see {@link https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit }
 	 */
-	function set8BitColor(styleCodes: number[], colorType: 'foreground' | 'background' | 'underline'): void {
-		let colorNumber = styleCodes[2];
-		const color = calcANSI8bitColor(colorNumber);
+	function set8BitColor(
+		styleCodes: number[],
+		colorType: 'foreground' | 'background' | 'underline',
+	): void {
+		let colorNumber = styleCodes[2]
+		const color = calcANSI8bitColor(colorNumber)
 
 		if (color) {
-			changeColor(colorType, color);
+			changeColor(colorType, color)
 		} else if (colorNumber >= 0 && colorNumber <= 15) {
 			if (colorType === 'underline') {
 				// for underline colors we just decode the 0-15 color number to theme color, set and return
-				changeColor(colorType, ansiColorIdentifiers[colorNumber].colorValue);
-				return;
+				changeColor(colorType, ansiColorIdentifiers[colorNumber].colorValue)
+				return
 			}
 			// Need to map to one of the four basic color ranges (30-37, 90-97, 40-47, 100-107)
-			colorNumber += 30;
+			colorNumber += 30
 			if (colorNumber >= 38) {
 				// Bright colors
-				colorNumber += 52;
+				colorNumber += 52
 			}
 			if (colorType === 'background') {
-				colorNumber += 10;
+				colorNumber += 10
 			}
-			setBasicColor(colorNumber);
+			setBasicColor(colorNumber)
 		}
 	}
 
@@ -355,25 +439,25 @@ export function handleANSIOutput(text: string, linkOptions: LinkOptions): HTMLSp
 	 */
 	function setBasicColor(styleCode: number): void {
 		// const theme = themeService.getColorTheme();
-		let colorType: 'foreground' | 'background' | undefined;
-		let colorIndex: number | undefined;
+		let colorType: 'foreground' | 'background' | undefined
+		let colorIndex: number | undefined
 
 		if (styleCode >= 30 && styleCode <= 37) {
-			colorIndex = styleCode - 30;
-			colorType = 'foreground';
+			colorIndex = styleCode - 30
+			colorType = 'foreground'
 		} else if (styleCode >= 90 && styleCode <= 97) {
-			colorIndex = (styleCode - 90) + 8; // High-intensity (bright)
-			colorType = 'foreground';
+			colorIndex = styleCode - 90 + 8 // High-intensity (bright)
+			colorType = 'foreground'
 		} else if (styleCode >= 40 && styleCode <= 47) {
-			colorIndex = styleCode - 40;
-			colorType = 'background';
+			colorIndex = styleCode - 40
+			colorType = 'background'
 		} else if (styleCode >= 100 && styleCode <= 107) {
-			colorIndex = (styleCode - 100) + 8; // High-intensity (bright)
-			colorType = 'background';
+			colorIndex = styleCode - 100 + 8 // High-intensity (bright)
+			colorType = 'background'
 		}
 
 		if (colorIndex !== undefined && colorType) {
-			changeColor(colorType, ansiColorIdentifiers[colorIndex]?.colorValue);
+			changeColor(colorType, ansiColorIdentifiers[colorIndex]?.colorValue)
 		}
 	}
 }
@@ -385,30 +469,39 @@ function appendStylizedStringToContainer(
 	cssClasses: string[],
 	customTextColor?: RGBA | string,
 	customBackgroundColor?: RGBA | string,
-	customUnderlineColor?: RGBA | string
+	customUnderlineColor?: RGBA | string,
 ): void {
 	if (!root || !stringContent) {
-		return;
+		return
 	}
 
-	let container = document.createElement('span');
+	let container = document.createElement('span')
 
 	if (container.childElementCount === 0) {
 		// plain text
-		container = linkify(stringContent, linkOptions, true);
+		container = linkify(stringContent, linkOptions, true)
 	}
 
-	container.className = cssClasses.join(' ');
+	container.className = cssClasses.join(' ')
 	if (customTextColor) {
-		container.style.color = typeof customTextColor === 'string' ? customTextColor : Color.Format.CSS.formatRGB(new Color(customTextColor));
+		container.style.color =
+			typeof customTextColor === 'string'
+				? customTextColor
+				: Color.Format.CSS.formatRGB(new Color(customTextColor))
 	}
 	if (customBackgroundColor) {
-		container.style.backgroundColor = typeof customBackgroundColor === 'string' ? customBackgroundColor : Color.Format.CSS.formatRGB(new Color(customBackgroundColor));
+		container.style.backgroundColor =
+			typeof customBackgroundColor === 'string'
+				? customBackgroundColor
+				: Color.Format.CSS.formatRGB(new Color(customBackgroundColor))
 	}
 	if (customUnderlineColor) {
-		container.style.textDecorationColor = typeof customUnderlineColor === 'string' ? customUnderlineColor : Color.Format.CSS.formatRGB(new Color(customUnderlineColor));
+		container.style.textDecorationColor =
+			typeof customUnderlineColor === 'string'
+				? customUnderlineColor
+				: Color.Format.CSS.formatRGB(new Color(customUnderlineColor))
 	}
-	root.appendChild(container);
+	root.appendChild(container)
 }
 
 /**
@@ -422,30 +515,31 @@ function appendStylizedStringToContainer(
 export function calcANSI8bitColor(colorNumber: number): RGBA | undefined {
 	if (colorNumber % 1 !== 0) {
 		// Should be integer
-		return;
-	} if (colorNumber >= 16 && colorNumber <= 231) {
+		return
+	}
+	if (colorNumber >= 16 && colorNumber <= 231) {
 		// Converts to one of 216 RGB colors
-		colorNumber -= 16;
+		colorNumber -= 16
 
-		let blue: number = colorNumber % 6;
-		colorNumber = (colorNumber - blue) / 6;
-		let green: number = colorNumber % 6;
-		colorNumber = (colorNumber - green) / 6;
-		let red: number = colorNumber;
+		let blue: number = colorNumber % 6
+		colorNumber = (colorNumber - blue) / 6
+		let green: number = colorNumber % 6
+		colorNumber = (colorNumber - green) / 6
+		let red: number = colorNumber
 
 		// red, green, blue now range on [0, 5], need to map to [0,255]
-		const convFactor: number = 255 / 5;
-		blue = Math.round(blue * convFactor);
-		green = Math.round(green * convFactor);
-		red = Math.round(red * convFactor);
+		const convFactor: number = 255 / 5
+		blue = Math.round(blue * convFactor)
+		green = Math.round(green * convFactor)
+		red = Math.round(red * convFactor)
 
-		return new RGBA(red, green, blue);
+		return new RGBA(red, green, blue)
 	} else if (colorNumber >= 232 && colorNumber <= 255) {
 		// Converts to a grayscale value
-		colorNumber -= 232;
-		const colorLevel: number = Math.round(colorNumber / 23 * 255);
-		return new RGBA(colorLevel, colorLevel, colorLevel);
+		colorNumber -= 232
+		const colorLevel: number = Math.round((colorNumber / 23) * 255)
+		return new RGBA(colorLevel, colorLevel, colorLevel)
 	} else {
-		return;
+		return
 	}
 }

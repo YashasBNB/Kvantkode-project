@@ -4,14 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/157734
 
 	export namespace workspace {
 		/**
 		 * An event that is emitted when an edit session identity is about to be requested.
 		 */
-		export const onWillCreateEditSessionIdentity: Event<EditSessionIdentityWillCreateEvent>;
+		export const onWillCreateEditSessionIdentity: Event<EditSessionIdentityWillCreateEvent>
 
 		/**
 		 *
@@ -19,7 +18,10 @@ declare module 'vscode' {
 		 * @param provider A provider which can convert URIs for workspace folders of scheme @param scheme to
 		 * an edit session identifier which is stable across machines. This enables edit sessions to be resolved.
 		 */
-		export function registerEditSessionIdentityProvider(scheme: string, provider: EditSessionIdentityProvider): Disposable;
+		export function registerEditSessionIdentityProvider(
+			scheme: string,
+			provider: EditSessionIdentityProvider,
+		): Disposable
 	}
 
 	export interface EditSessionIdentityProvider {
@@ -29,7 +31,10 @@ declare module 'vscode' {
 		 * @param token A cancellation token for the request.
 		 * @returns A string representing the edit session identity for the requested workspace folder.
 		 */
-		provideEditSessionIdentity(workspaceFolder: WorkspaceFolder, token: CancellationToken): ProviderResult<string>;
+		provideEditSessionIdentity(
+			workspaceFolder: WorkspaceFolder,
+			token: CancellationToken,
+		): ProviderResult<string>
 
 		/**
 		 *
@@ -38,26 +43,29 @@ declare module 'vscode' {
 		 * @param token A cancellation token for the request.
 		 * @returns An {@link EditSessionIdentityMatch} representing the edit session identity match confidence for the provided identities.
 		 */
-		provideEditSessionIdentityMatch(identity1: string, identity2: string, token: CancellationToken): ProviderResult<EditSessionIdentityMatch>;
+		provideEditSessionIdentityMatch(
+			identity1: string,
+			identity2: string,
+			token: CancellationToken,
+		): ProviderResult<EditSessionIdentityMatch>
 	}
 
 	export enum EditSessionIdentityMatch {
 		Complete = 100,
 		Partial = 50,
-		None = 0
+		None = 0,
 	}
 
 	export interface EditSessionIdentityWillCreateEvent {
-
 		/**
 		 * A cancellation token.
 		 */
-		readonly token: CancellationToken;
+		readonly token: CancellationToken
 
 		/**
 		 * The workspace folder to create an edit session identity for.
 		 */
-		readonly workspaceFolder: WorkspaceFolder;
+		readonly workspaceFolder: WorkspaceFolder
 
 		/**
 		 * Allows to pause the event until the provided thenable resolves.
@@ -66,6 +74,6 @@ declare module 'vscode' {
 		 *
 		 * @param thenable A thenable that delays saving.
 		 */
-		waitUntil(thenable: Thenable<any>): void;
+		waitUntil(thenable: Thenable<any>): void
 	}
 }

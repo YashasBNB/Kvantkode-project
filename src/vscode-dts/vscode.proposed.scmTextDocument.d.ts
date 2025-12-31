@@ -10,10 +10,9 @@ declare module 'vscode' {
 	 * Represents the input box in the Source Control viewlet.
 	 */
 	export interface SourceControlInputBox {
-
 		/**
 		 * The {@link TextDocument text} of the input box.
 		 */
-		readonly document: TextDocument;
+		readonly document: TextDocument
 	}
 }

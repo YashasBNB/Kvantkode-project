@@ -23,4 +23,4 @@ export const defaultTerminalFindCommandToSkipShell = [
 	TerminalFindCommandId.ToggleFindWholeWord,
 	TerminalFindCommandId.ToggleFindCaseSensitive,
 	TerminalFindCommandId.SearchWorkspace,
-];
+]

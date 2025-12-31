@@ -1,4 +1,4 @@
-import { ReadableStream } from '../../stream.js';
+import { ReadableStream } from '../../stream.js'
 
 /**
  * A codec is an object capable of encoding/decoding a stream of data transforming its messages.
@@ -13,10 +13,10 @@ export interface ICodec<T, K> {
 	/**
 	 * Encode a stream of `K`s into a stream of `T`s.
 	 */
-	encode: (value: ReadableStream<K>) => ReadableStream<T>;
+	encode: (value: ReadableStream<K>) => ReadableStream<T>
 
 	/**
 	 * Decode a stream of `T`s into a stream of `K`s.
 	 */
-	decode: (value: ReadableStream<T>) => ReadableStream<K>;
+	decode: (value: ReadableStream<T>) => ReadableStream<K>
 }

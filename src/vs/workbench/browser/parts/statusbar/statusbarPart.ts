@@ -3,46 +3,101 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/statusbarpart.css';
-import { localize } from '../../../../nls.js';
-import { Disposable, DisposableStore, disposeIfDisposable, IDisposable, MutableDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { MultiWindowParts, Part } from '../../part.js';
-import { EventType as TouchEventType, Gesture, GestureEvent } from '../../../../base/browser/touch.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { StatusbarAlignment, IStatusbarService, IStatusbarEntry, IStatusbarEntryAccessor, IStatusbarStyleOverride, isStatusbarEntryLocation, IStatusbarEntryLocation, isStatusbarEntryPriority, IStatusbarEntryPriority } from '../../../services/statusbar/browser/statusbar.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { IAction, Separator, toAction } from '../../../../base/common/actions.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { STATUS_BAR_BACKGROUND, STATUS_BAR_FOREGROUND, STATUS_BAR_NO_FOLDER_BACKGROUND, STATUS_BAR_ITEM_HOVER_BACKGROUND, STATUS_BAR_BORDER, STATUS_BAR_NO_FOLDER_FOREGROUND, STATUS_BAR_NO_FOLDER_BORDER, STATUS_BAR_ITEM_COMPACT_HOVER_BACKGROUND, STATUS_BAR_ITEM_FOCUS_BORDER, STATUS_BAR_FOCUS_BORDER } from '../../../common/theme.js';
-import { IWorkspaceContextService, WorkbenchState } from '../../../../platform/workspace/common/workspace.js';
-import { contrastBorder, activeContrastBorder } from '../../../../platform/theme/common/colorRegistry.js';
-import { EventHelper, addDisposableListener, EventType, clearNode, getWindow, isHTMLElement, $ } from '../../../../base/browser/dom.js';
-import { createStyleSheet } from '../../../../base/browser/domStylesheets.js';
-import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { Parts, IWorkbenchLayoutService } from '../../../services/layout/browser/layoutService.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { equals } from '../../../../base/common/arrays.js';
-import { StandardMouseEvent } from '../../../../base/browser/mouseEvent.js';
-import { ToggleStatusbarVisibilityAction } from '../../actions/layoutActions.js';
-import { assertIsDefined } from '../../../../base/common/types.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { isHighContrast } from '../../../../platform/theme/common/theme.js';
-import { hash } from '../../../../base/common/hash.js';
-import { WorkbenchHoverDelegate } from '../../../../platform/hover/browser/hover.js';
-import { HideStatusbarEntryAction, ManageExtensionAction, ToggleStatusbarEntryVisibilityAction } from './statusbarActions.js';
-import { IStatusbarViewModelEntry, StatusbarViewModel } from './statusbarModel.js';
-import { StatusbarEntryItem } from './statusbarItem.js';
-import { StatusBarFocused } from '../../../common/contextkeys.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { IView } from '../../../../base/browser/ui/grid/grid.js';
-import { isManagedHoverTooltipHTMLElement, isManagedHoverTooltipMarkdownString } from '../../../../base/browser/ui/hover/hover.js';
+import './media/statusbarpart.css'
+import { localize } from '../../../../nls.js'
+import {
+	Disposable,
+	DisposableStore,
+	disposeIfDisposable,
+	IDisposable,
+	MutableDisposable,
+	toDisposable,
+} from '../../../../base/common/lifecycle.js'
+import { MultiWindowParts, Part } from '../../part.js'
+import {
+	EventType as TouchEventType,
+	Gesture,
+	GestureEvent,
+} from '../../../../base/browser/touch.js'
+import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js'
+import {
+	StatusbarAlignment,
+	IStatusbarService,
+	IStatusbarEntry,
+	IStatusbarEntryAccessor,
+	IStatusbarStyleOverride,
+	isStatusbarEntryLocation,
+	IStatusbarEntryLocation,
+	isStatusbarEntryPriority,
+	IStatusbarEntryPriority,
+} from '../../../services/statusbar/browser/statusbar.js'
+import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js'
+import { IAction, Separator, toAction } from '../../../../base/common/actions.js'
+import { IThemeService } from '../../../../platform/theme/common/themeService.js'
+import {
+	STATUS_BAR_BACKGROUND,
+	STATUS_BAR_FOREGROUND,
+	STATUS_BAR_NO_FOLDER_BACKGROUND,
+	STATUS_BAR_ITEM_HOVER_BACKGROUND,
+	STATUS_BAR_BORDER,
+	STATUS_BAR_NO_FOLDER_FOREGROUND,
+	STATUS_BAR_NO_FOLDER_BORDER,
+	STATUS_BAR_ITEM_COMPACT_HOVER_BACKGROUND,
+	STATUS_BAR_ITEM_FOCUS_BORDER,
+	STATUS_BAR_FOCUS_BORDER,
+} from '../../../common/theme.js'
+import {
+	IWorkspaceContextService,
+	WorkbenchState,
+} from '../../../../platform/workspace/common/workspace.js'
+import {
+	contrastBorder,
+	activeContrastBorder,
+} from '../../../../platform/theme/common/colorRegistry.js'
+import {
+	EventHelper,
+	addDisposableListener,
+	EventType,
+	clearNode,
+	getWindow,
+	isHTMLElement,
+	$,
+} from '../../../../base/browser/dom.js'
+import { createStyleSheet } from '../../../../base/browser/domStylesheets.js'
+import { IStorageService } from '../../../../platform/storage/common/storage.js'
+import { Parts, IWorkbenchLayoutService } from '../../../services/layout/browser/layoutService.js'
+import {
+	InstantiationType,
+	registerSingleton,
+} from '../../../../platform/instantiation/common/extensions.js'
+import { equals } from '../../../../base/common/arrays.js'
+import { StandardMouseEvent } from '../../../../base/browser/mouseEvent.js'
+import { ToggleStatusbarVisibilityAction } from '../../actions/layoutActions.js'
+import { assertIsDefined } from '../../../../base/common/types.js'
+import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js'
+import { isHighContrast } from '../../../../platform/theme/common/theme.js'
+import { hash } from '../../../../base/common/hash.js'
+import { WorkbenchHoverDelegate } from '../../../../platform/hover/browser/hover.js'
+import {
+	HideStatusbarEntryAction,
+	ManageExtensionAction,
+	ToggleStatusbarEntryVisibilityAction,
+} from './statusbarActions.js'
+import { IStatusbarViewModelEntry, StatusbarViewModel } from './statusbarModel.js'
+import { StatusbarEntryItem } from './statusbarItem.js'
+import { StatusBarFocused } from '../../../common/contextkeys.js'
+import { Emitter, Event } from '../../../../base/common/event.js'
+import { IView } from '../../../../base/browser/ui/grid/grid.js'
+import {
+	isManagedHoverTooltipHTMLElement,
+	isManagedHoverTooltipMarkdownString,
+} from '../../../../base/browser/ui/hover/hover.js'
 
 export interface IStatusbarEntryContainer extends IDisposable {
-
 	/**
 	 * An event that is triggered when an entry's visibility is changed.
 	 */
-	readonly onDidChangeEntryVisibility: Event<{ id: string; visible: boolean }>;
+	readonly onDidChangeEntryVisibility: Event<{ id: string; visible: boolean }>
 
 	/**
 	 * Adds an entry to the statusbar with the given alignment and priority. Use the returned accessor
@@ -53,8 +108,18 @@ export interface IStatusbarEntryContainer extends IDisposable {
 	 * @param priority items get arranged from highest priority to lowest priority from left to right
 	 * in their respective alignment slot
 	 */
-	addEntry(entry: IStatusbarEntry, id: string, alignment: StatusbarAlignment, priority?: number | IStatusbarEntryPriority): IStatusbarEntryAccessor;
-	addEntry(entry: IStatusbarEntry, id: string, alignment: StatusbarAlignment, priority?: number | IStatusbarEntryPriority | IStatusbarEntryLocation): IStatusbarEntryAccessor;
+	addEntry(
+		entry: IStatusbarEntry,
+		id: string,
+		alignment: StatusbarAlignment,
+		priority?: number | IStatusbarEntryPriority,
+	): IStatusbarEntryAccessor
+	addEntry(
+		entry: IStatusbarEntry,
+		id: string,
+		alignment: StatusbarAlignment,
+		priority?: number | IStatusbarEntryPriority | IStatusbarEntryLocation,
+	): IStatusbarEntryAccessor
 
 	/**
 	 * Adds an entry to the statusbar with the given alignment relative to another entry. Use the returned
@@ -64,92 +129,98 @@ export interface IStatusbarEntryContainer extends IDisposable {
 	 * @param alignment either LEFT or RIGHT side in the status bar
 	 * @param location a reference to another entry to position relative to
 	 */
-	addEntry(entry: IStatusbarEntry, id: string, alignment: StatusbarAlignment, location?: IStatusbarEntryLocation): IStatusbarEntryAccessor;
+	addEntry(
+		entry: IStatusbarEntry,
+		id: string,
+		alignment: StatusbarAlignment,
+		location?: IStatusbarEntryLocation,
+	): IStatusbarEntryAccessor
 
 	/**
 	 * Return if an entry is visible or not.
 	 */
-	isEntryVisible(id: string): boolean;
+	isEntryVisible(id: string): boolean
 
 	/**
 	 * Allows to update an entry's visibility with the provided ID.
 	 */
-	updateEntryVisibility(id: string, visible: boolean): void;
+	updateEntryVisibility(id: string, visible: boolean): void
 
 	/**
 	 * Allows to override the appearance of an entry with the provided ID.
 	 */
-	overrideEntry(id: string, override: Partial<IStatusbarEntry>): IDisposable;
+	overrideEntry(id: string, override: Partial<IStatusbarEntry>): IDisposable
 
 	/**
 	 * Focused the status bar. If one of the status bar entries was focused, focuses it directly.
 	 */
-	focus(preserveEntryFocus?: boolean): void;
+	focus(preserveEntryFocus?: boolean): void
 
 	/**
 	 * Focuses the next status bar entry. If none focused, focuses the first.
 	 */
-	focusNextEntry(): void;
+	focusNextEntry(): void
 
 	/**
 	 * Focuses the previous status bar entry. If none focused, focuses the last.
 	 */
-	focusPreviousEntry(): void;
+	focusPreviousEntry(): void
 
 	/**
 	 *	Returns true if a status bar entry is focused.
 	 */
-	isEntryFocused(): boolean;
+	isEntryFocused(): boolean
 
 	/**
 	 * Temporarily override statusbar style.
 	 */
-	overrideStyle(style: IStatusbarStyleOverride): IDisposable;
+	overrideStyle(style: IStatusbarStyleOverride): IDisposable
 }
 
 interface IPendingStatusbarEntry {
-	readonly id: string;
-	readonly alignment: StatusbarAlignment;
-	readonly priority: IStatusbarEntryPriority;
+	readonly id: string
+	readonly alignment: StatusbarAlignment
+	readonly priority: IStatusbarEntryPriority
 
-	entry: IStatusbarEntry;
-	accessor?: IStatusbarEntryAccessor;
+	entry: IStatusbarEntry
+	accessor?: IStatusbarEntryAccessor
 }
 
 class StatusbarPart extends Part implements IStatusbarEntryContainer {
-
-	static readonly HEIGHT = 22;
+	static readonly HEIGHT = 22
 
 	//#region IView
 
-	readonly minimumWidth: number = 0;
-	readonly maximumWidth: number = Number.POSITIVE_INFINITY;
-	readonly minimumHeight: number = StatusbarPart.HEIGHT;
-	readonly maximumHeight: number = StatusbarPart.HEIGHT;
+	readonly minimumWidth: number = 0
+	readonly maximumWidth: number = Number.POSITIVE_INFINITY
+	readonly minimumHeight: number = StatusbarPart.HEIGHT
+	readonly maximumHeight: number = StatusbarPart.HEIGHT
 
 	//#endregion
 
-	private styleElement: HTMLStyleElement | undefined;
+	private styleElement: HTMLStyleElement | undefined
 
-	private pendingEntries: IPendingStatusbarEntry[] = [];
+	private pendingEntries: IPendingStatusbarEntry[] = []
 
-	private readonly viewModel: StatusbarViewModel;
+	private readonly viewModel: StatusbarViewModel
 
-	readonly onDidChangeEntryVisibility: Event<{ id: string; visible: boolean }>;
+	readonly onDidChangeEntryVisibility: Event<{ id: string; visible: boolean }>
 
-	private readonly _onWillDispose = this._register(new Emitter<void>());
-	readonly onWillDispose = this._onWillDispose.event;
+	private readonly _onWillDispose = this._register(new Emitter<void>())
+	readonly onWillDispose = this._onWillDispose.event
 
-	private readonly onDidOverrideEntry = this._register(new Emitter<string>());
-	private readonly entryOverrides = new Map<string, Partial<IStatusbarEntry>>();
+	private readonly onDidOverrideEntry = this._register(new Emitter<string>())
+	private readonly entryOverrides = new Map<string, Partial<IStatusbarEntry>>()
 
-	private leftItemsContainer: HTMLElement | undefined;
-	private rightItemsContainer: HTMLElement | undefined;
+	private leftItemsContainer: HTMLElement | undefined
+	private rightItemsContainer: HTMLElement | undefined
 
-	private readonly hoverDelegate: WorkbenchHoverDelegate;
+	private readonly hoverDelegate: WorkbenchHoverDelegate
 
-	private readonly compactEntriesDisposable = this._register(new MutableDisposable<DisposableStore>());
-	private readonly styleOverrides = new Set<IStatusbarStyleOverride>();
+	private readonly compactEntriesDisposable = this._register(
+		new MutableDisposable<DisposableStore>(),
+	)
+	private readonly styleOverrides = new Set<IStatusbarStyleOverride>()
 
 	constructor(
 		id: string,
@@ -161,503 +232,612 @@ class StatusbarPart extends Part implements IStatusbarEntryContainer {
 		@IContextMenuService private readonly contextMenuService: IContextMenuService,
 		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 	) {
-		super(id, { hasTitle: false }, themeService, storageService, layoutService);
+		super(id, { hasTitle: false }, themeService, storageService, layoutService)
 
-		this.viewModel = this._register(new StatusbarViewModel(storageService));
-		this.onDidChangeEntryVisibility = this.viewModel.onDidChangeEntryVisibility;
+		this.viewModel = this._register(new StatusbarViewModel(storageService))
+		this.onDidChangeEntryVisibility = this.viewModel.onDidChangeEntryVisibility
 
-		this.hoverDelegate = this._register(this.instantiationService.createInstance(WorkbenchHoverDelegate, 'element', {
-			instantHover: true,
-			dynamicDelay(content) {
-				if (
-					typeof content === 'function' ||
-					isHTMLElement(content) ||
-					(isManagedHoverTooltipMarkdownString(content) && typeof content.markdown === 'function') ||
-					isManagedHoverTooltipHTMLElement(content)
-				) {
-					// override the delay for content that is rich (e.g. html or long running)
-					// so that it appears more instantly. these hovers carry more important
-					// information and should not be delayed by preference.
-					return 500;
-				}
+		this.hoverDelegate = this._register(
+			this.instantiationService.createInstance(
+				WorkbenchHoverDelegate,
+				'element',
+				{
+					instantHover: true,
+					dynamicDelay(content) {
+						if (
+							typeof content === 'function' ||
+							isHTMLElement(content) ||
+							(isManagedHoverTooltipMarkdownString(content) &&
+								typeof content.markdown === 'function') ||
+							isManagedHoverTooltipHTMLElement(content)
+						) {
+							// override the delay for content that is rich (e.g. html or long running)
+							// so that it appears more instantly. these hovers carry more important
+							// information and should not be delayed by preference.
+							return 500
+						}
 
-				return undefined;
-			}
-		}, (_, focus?: boolean) => (
-			{
-				persistence: {
-					hideOnKeyDown: true,
-					sticky: focus
-				}
-			}
-		)));
+						return undefined
+					},
+				},
+				(_, focus?: boolean) => ({
+					persistence: {
+						hideOnKeyDown: true,
+						sticky: focus,
+					},
+				}),
+			),
+		)
 
-		this.registerListeners();
+		this.registerListeners()
 	}
 
 	private registerListeners(): void {
-
 		// Entry visibility changes
-		this._register(this.onDidChangeEntryVisibility(() => this.updateCompactEntries()));
+		this._register(this.onDidChangeEntryVisibility(() => this.updateCompactEntries()))
 
 		// Workbench state changes
-		this._register(this.contextService.onDidChangeWorkbenchState(() => this.updateStyles()));
+		this._register(this.contextService.onDidChangeWorkbenchState(() => this.updateStyles()))
 	}
 
 	overrideEntry(id: string, override: Partial<IStatusbarEntry>): IDisposable {
-		this.entryOverrides.set(id, override);
-		this.onDidOverrideEntry.fire(id);
+		this.entryOverrides.set(id, override)
+		this.onDidOverrideEntry.fire(id)
 
 		return toDisposable(() => {
-			const currentOverride = this.entryOverrides.get(id);
+			const currentOverride = this.entryOverrides.get(id)
 			if (currentOverride === override) {
-				this.entryOverrides.delete(id);
-				this.onDidOverrideEntry.fire(id);
+				this.entryOverrides.delete(id)
+				this.onDidOverrideEntry.fire(id)
 			}
-		});
+		})
 	}
 
 	private withEntryOverride(entry: IStatusbarEntry, id: string): IStatusbarEntry {
-		const override = this.entryOverrides.get(id);
+		const override = this.entryOverrides.get(id)
 		if (override) {
-			entry = { ...entry, ...override };
+			entry = { ...entry, ...override }
 		}
 
-		return entry;
+		return entry
 	}
 
-	addEntry(entry: IStatusbarEntry, id: string, alignment: StatusbarAlignment, priorityOrLocation: number | IStatusbarEntryLocation | IStatusbarEntryPriority = 0): IStatusbarEntryAccessor {
-		let priority: IStatusbarEntryPriority;
+	addEntry(
+		entry: IStatusbarEntry,
+		id: string,
+		alignment: StatusbarAlignment,
+		priorityOrLocation: number | IStatusbarEntryLocation | IStatusbarEntryPriority = 0,
+	): IStatusbarEntryAccessor {
+		let priority: IStatusbarEntryPriority
 		if (isStatusbarEntryPriority(priorityOrLocation)) {
-			priority = priorityOrLocation;
+			priority = priorityOrLocation
 		} else {
 			priority = {
 				primary: priorityOrLocation,
-				secondary: hash(id) // derive from identifier to accomplish uniqueness
-			};
+				secondary: hash(id), // derive from identifier to accomplish uniqueness
+			}
 		}
 
 		// As long as we have not been created into a container yet, record all entries
 		// that are pending so that they can get created at a later point
 		if (!this.element) {
-			return this.doAddPendingEntry(entry, id, alignment, priority);
+			return this.doAddPendingEntry(entry, id, alignment, priority)
 		}
 
 		// Otherwise add to view
-		return this.doAddEntry(entry, id, alignment, priority);
+		return this.doAddEntry(entry, id, alignment, priority)
 	}
 
-	private doAddPendingEntry(entry: IStatusbarEntry, id: string, alignment: StatusbarAlignment, priority: IStatusbarEntryPriority): IStatusbarEntryAccessor {
-		const pendingEntry: IPendingStatusbarEntry = { entry, id, alignment, priority };
-		this.pendingEntries.push(pendingEntry);
+	private doAddPendingEntry(
+		entry: IStatusbarEntry,
+		id: string,
+		alignment: StatusbarAlignment,
+		priority: IStatusbarEntryPriority,
+	): IStatusbarEntryAccessor {
+		const pendingEntry: IPendingStatusbarEntry = { entry, id, alignment, priority }
+		this.pendingEntries.push(pendingEntry)
 
 		const accessor: IStatusbarEntryAccessor = {
 			update: (entry: IStatusbarEntry) => {
 				if (pendingEntry.accessor) {
-					pendingEntry.accessor.update(entry);
+					pendingEntry.accessor.update(entry)
 				} else {
-					pendingEntry.entry = entry;
+					pendingEntry.entry = entry
 				}
 			},
 
 			dispose: () => {
 				if (pendingEntry.accessor) {
-					pendingEntry.accessor.dispose();
+					pendingEntry.accessor.dispose()
 				} else {
-					this.pendingEntries = this.pendingEntries.filter(entry => entry !== pendingEntry);
+					this.pendingEntries = this.pendingEntries.filter((entry) => entry !== pendingEntry)
 				}
-			}
-		};
-
-		return accessor;
-	}
-
-	private doAddEntry(entry: IStatusbarEntry, id: string, alignment: StatusbarAlignment, priority: IStatusbarEntryPriority): IStatusbarEntryAccessor {
-		const disposables = new DisposableStore();
-
-		// View model item
-		const itemContainer = this.doCreateStatusItem(id, alignment);
-		const item = disposables.add(this.instantiationService.createInstance(StatusbarEntryItem, itemContainer, this.withEntryOverride(entry, id), this.hoverDelegate));
-
-		// View model entry
-		const viewModelEntry: IStatusbarViewModelEntry = new class implements IStatusbarViewModelEntry {
-			readonly id = id;
-			readonly extensionId = entry.extensionId;
-			readonly alignment = alignment;
-			readonly priority = priority;
-			readonly container = itemContainer;
-			readonly labelContainer = item.labelContainer;
-
-			get name() { return item.name; }
-			get hasCommand() { return item.hasCommand; }
-		};
-
-		// Add to view model
-		const { needsFullRefresh } = this.doAddOrRemoveModelEntry(viewModelEntry, true);
-		if (needsFullRefresh) {
-			this.appendStatusbarEntries();
-		} else {
-			this.appendStatusbarEntry(viewModelEntry);
+			},
 		}
 
-		let lastEntry = entry;
-		const accessor: IStatusbarEntryAccessor = {
-			update: entry => {
-				lastEntry = entry;
-				item.update(this.withEntryOverride(entry, id));
-			},
-			dispose: () => {
-				const { needsFullRefresh } = this.doAddOrRemoveModelEntry(viewModelEntry, false);
-				if (needsFullRefresh) {
-					this.appendStatusbarEntries();
-				} else {
-					itemContainer.remove();
-					this.updateCompactEntries();
-				}
-				disposables.dispose();
-			}
-		};
-
-		// React to overrides
-		disposables.add(this.onDidOverrideEntry.event(overrideEntryId => {
-			if (overrideEntryId === id) {
-				accessor.update(lastEntry);
-			}
-		}));
-
-		return accessor;
+		return accessor
 	}
 
-	private doCreateStatusItem(id: string, alignment: StatusbarAlignment, ...extraClasses: string[]): HTMLElement {
-		const itemContainer = $('.statusbar-item', { id });
+	private doAddEntry(
+		entry: IStatusbarEntry,
+		id: string,
+		alignment: StatusbarAlignment,
+		priority: IStatusbarEntryPriority,
+	): IStatusbarEntryAccessor {
+		const disposables = new DisposableStore()
+
+		// View model item
+		const itemContainer = this.doCreateStatusItem(id, alignment)
+		const item = disposables.add(
+			this.instantiationService.createInstance(
+				StatusbarEntryItem,
+				itemContainer,
+				this.withEntryOverride(entry, id),
+				this.hoverDelegate,
+			),
+		)
+
+		// View model entry
+		const viewModelEntry: IStatusbarViewModelEntry = new (class
+			implements IStatusbarViewModelEntry
+		{
+			readonly id = id
+			readonly extensionId = entry.extensionId
+			readonly alignment = alignment
+			readonly priority = priority
+			readonly container = itemContainer
+			readonly labelContainer = item.labelContainer
+
+			get name() {
+				return item.name
+			}
+			get hasCommand() {
+				return item.hasCommand
+			}
+		})()
+
+		// Add to view model
+		const { needsFullRefresh } = this.doAddOrRemoveModelEntry(viewModelEntry, true)
+		if (needsFullRefresh) {
+			this.appendStatusbarEntries()
+		} else {
+			this.appendStatusbarEntry(viewModelEntry)
+		}
+
+		let lastEntry = entry
+		const accessor: IStatusbarEntryAccessor = {
+			update: (entry) => {
+				lastEntry = entry
+				item.update(this.withEntryOverride(entry, id))
+			},
+			dispose: () => {
+				const { needsFullRefresh } = this.doAddOrRemoveModelEntry(viewModelEntry, false)
+				if (needsFullRefresh) {
+					this.appendStatusbarEntries()
+				} else {
+					itemContainer.remove()
+					this.updateCompactEntries()
+				}
+				disposables.dispose()
+			},
+		}
+
+		// React to overrides
+		disposables.add(
+			this.onDidOverrideEntry.event((overrideEntryId) => {
+				if (overrideEntryId === id) {
+					accessor.update(lastEntry)
+				}
+			}),
+		)
+
+		return accessor
+	}
+
+	private doCreateStatusItem(
+		id: string,
+		alignment: StatusbarAlignment,
+		...extraClasses: string[]
+	): HTMLElement {
+		const itemContainer = $('.statusbar-item', { id })
 
 		if (extraClasses) {
-			itemContainer.classList.add(...extraClasses);
+			itemContainer.classList.add(...extraClasses)
 		}
 
 		if (alignment === StatusbarAlignment.RIGHT) {
-			itemContainer.classList.add('right');
+			itemContainer.classList.add('right')
 		} else {
-			itemContainer.classList.add('left');
+			itemContainer.classList.add('left')
 		}
 
-		return itemContainer;
+		return itemContainer
 	}
 
 	private doAddOrRemoveModelEntry(entry: IStatusbarViewModelEntry, add: boolean) {
-
 		// Update model but remember previous entries
-		const entriesBefore = this.viewModel.entries;
+		const entriesBefore = this.viewModel.entries
 		if (add) {
-			this.viewModel.add(entry);
+			this.viewModel.add(entry)
 		} else {
-			this.viewModel.remove(entry);
+			this.viewModel.remove(entry)
 		}
-		const entriesAfter = this.viewModel.entries;
+		const entriesAfter = this.viewModel.entries
 
 		// Apply operation onto the entries from before
 		if (add) {
-			entriesBefore.splice(entriesAfter.indexOf(entry), 0, entry);
+			entriesBefore.splice(entriesAfter.indexOf(entry), 0, entry)
 		} else {
-			entriesBefore.splice(entriesBefore.indexOf(entry), 1);
+			entriesBefore.splice(entriesBefore.indexOf(entry), 1)
 		}
 
 		// Figure out if a full refresh is needed by comparing arrays
-		const needsFullRefresh = !equals(entriesBefore, entriesAfter);
+		const needsFullRefresh = !equals(entriesBefore, entriesAfter)
 
-		return { needsFullRefresh };
+		return { needsFullRefresh }
 	}
 
 	isEntryVisible(id: string): boolean {
-		return !this.viewModel.isHidden(id);
+		return !this.viewModel.isHidden(id)
 	}
 
 	updateEntryVisibility(id: string, visible: boolean): void {
 		if (visible) {
-			this.viewModel.show(id);
+			this.viewModel.show(id)
 		} else {
-			this.viewModel.hide(id);
+			this.viewModel.hide(id)
 		}
 	}
 
 	focusNextEntry(): void {
-		this.viewModel.focusNextEntry();
+		this.viewModel.focusNextEntry()
 	}
 
 	focusPreviousEntry(): void {
-		this.viewModel.focusPreviousEntry();
+		this.viewModel.focusPreviousEntry()
 	}
 
 	isEntryFocused(): boolean {
-		return this.viewModel.isEntryFocused();
+		return this.viewModel.isEntryFocused()
 	}
 
 	focus(preserveEntryFocus = true): void {
-		this.getContainer()?.focus();
-		const lastFocusedEntry = this.viewModel.lastFocusedEntry;
+		this.getContainer()?.focus()
+		const lastFocusedEntry = this.viewModel.lastFocusedEntry
 		if (preserveEntryFocus && lastFocusedEntry) {
-			setTimeout(() => lastFocusedEntry.labelContainer.focus(), 0); // Need a timeout, for some reason without it the inner label container will not get focused
+			setTimeout(() => lastFocusedEntry.labelContainer.focus(), 0) // Need a timeout, for some reason without it the inner label container will not get focused
 		}
 	}
 
 	protected override createContentArea(parent: HTMLElement): HTMLElement {
-		this.element = parent;
+		this.element = parent
 
 		// Track focus within container
-		const scopedContextKeyService = this._register(this.contextKeyService.createScoped(this.element));
-		StatusBarFocused.bindTo(scopedContextKeyService).set(true);
+		const scopedContextKeyService = this._register(
+			this.contextKeyService.createScoped(this.element),
+		)
+		StatusBarFocused.bindTo(scopedContextKeyService).set(true)
 
 		// Left items container
-		this.leftItemsContainer = $('.left-items.items-container');
-		this.element.appendChild(this.leftItemsContainer);
-		this.element.tabIndex = 0;
+		this.leftItemsContainer = $('.left-items.items-container')
+		this.element.appendChild(this.leftItemsContainer)
+		this.element.tabIndex = 0
 
 		// Right items container
-		this.rightItemsContainer = $('.right-items.items-container');
-		this.element.appendChild(this.rightItemsContainer);
+		this.rightItemsContainer = $('.right-items.items-container')
+		this.element.appendChild(this.rightItemsContainer)
 
 		// Context menu support
-		this._register(addDisposableListener(parent, EventType.CONTEXT_MENU, e => this.showContextMenu(e)));
-		this._register(Gesture.addTarget(parent));
-		this._register(addDisposableListener(parent, TouchEventType.Contextmenu, e => this.showContextMenu(e)));
+		this._register(
+			addDisposableListener(parent, EventType.CONTEXT_MENU, (e) => this.showContextMenu(e)),
+		)
+		this._register(Gesture.addTarget(parent))
+		this._register(
+			addDisposableListener(parent, TouchEventType.Contextmenu, (e) => this.showContextMenu(e)),
+		)
 
 		// Initial status bar entries
-		this.createInitialStatusbarEntries();
+		this.createInitialStatusbarEntries()
 
-		return this.element;
+		return this.element
 	}
 
 	private createInitialStatusbarEntries(): void {
-
 		// Add items in order according to alignment
-		this.appendStatusbarEntries();
+		this.appendStatusbarEntries()
 
 		// Fill in pending entries if any
 		while (this.pendingEntries.length) {
-			const pending = this.pendingEntries.shift();
+			const pending = this.pendingEntries.shift()
 			if (pending) {
-				pending.accessor = this.addEntry(pending.entry, pending.id, pending.alignment, pending.priority.primary);
+				pending.accessor = this.addEntry(
+					pending.entry,
+					pending.id,
+					pending.alignment,
+					pending.priority.primary,
+				)
 			}
 		}
 	}
 
 	private appendStatusbarEntries(): void {
-		const leftItemsContainer = assertIsDefined(this.leftItemsContainer);
-		const rightItemsContainer = assertIsDefined(this.rightItemsContainer);
+		const leftItemsContainer = assertIsDefined(this.leftItemsContainer)
+		const rightItemsContainer = assertIsDefined(this.rightItemsContainer)
 
 		// Clear containers
-		clearNode(leftItemsContainer);
-		clearNode(rightItemsContainer);
+		clearNode(leftItemsContainer)
+		clearNode(rightItemsContainer)
 
 		// Append all
 		for (const entry of [
 			...this.viewModel.getEntries(StatusbarAlignment.LEFT),
-			...this.viewModel.getEntries(StatusbarAlignment.RIGHT).reverse() // reversing due to flex: row-reverse
+			...this.viewModel.getEntries(StatusbarAlignment.RIGHT).reverse(), // reversing due to flex: row-reverse
 		]) {
-			const target = entry.alignment === StatusbarAlignment.LEFT ? leftItemsContainer : rightItemsContainer;
+			const target =
+				entry.alignment === StatusbarAlignment.LEFT ? leftItemsContainer : rightItemsContainer
 
-			target.appendChild(entry.container);
+			target.appendChild(entry.container)
 		}
 
 		// Update compact entries
-		this.updateCompactEntries();
+		this.updateCompactEntries()
 	}
 
 	private appendStatusbarEntry(entry: IStatusbarViewModelEntry): void {
-		const entries = this.viewModel.getEntries(entry.alignment);
+		const entries = this.viewModel.getEntries(entry.alignment)
 
 		if (entry.alignment === StatusbarAlignment.RIGHT) {
-			entries.reverse(); // reversing due to flex: row-reverse
+			entries.reverse() // reversing due to flex: row-reverse
 		}
 
-		const target = assertIsDefined(entry.alignment === StatusbarAlignment.LEFT ? this.leftItemsContainer : this.rightItemsContainer);
+		const target = assertIsDefined(
+			entry.alignment === StatusbarAlignment.LEFT
+				? this.leftItemsContainer
+				: this.rightItemsContainer,
+		)
 
-		const index = entries.indexOf(entry);
+		const index = entries.indexOf(entry)
 		if (index + 1 === entries.length) {
-			target.appendChild(entry.container); // append at the end if last
+			target.appendChild(entry.container) // append at the end if last
 		} else {
-			target.insertBefore(entry.container, entries[index + 1].container); // insert before next element otherwise
+			target.insertBefore(entry.container, entries[index + 1].container) // insert before next element otherwise
 		}
 
 		// Update compact entries
-		this.updateCompactEntries();
+		this.updateCompactEntries()
 	}
 
 	private updateCompactEntries(): void {
-		const entries = this.viewModel.entries;
+		const entries = this.viewModel.entries
 
 		// Find visible entries and clear compact related CSS classes if any
-		const mapIdToVisibleEntry = new Map<string, IStatusbarViewModelEntry>();
+		const mapIdToVisibleEntry = new Map<string, IStatusbarViewModelEntry>()
 		for (const entry of entries) {
 			if (!this.viewModel.isHidden(entry.id)) {
-				mapIdToVisibleEntry.set(entry.id, entry);
+				mapIdToVisibleEntry.set(entry.id, entry)
 			}
 
-			entry.container.classList.remove('compact-left', 'compact-right');
+			entry.container.classList.remove('compact-left', 'compact-right')
 		}
 
 		// Figure out groups of entries with `compact` alignment
-		const compactEntryGroups = new Map<string, Map<string, IStatusbarViewModelEntry>>();
+		const compactEntryGroups = new Map<string, Map<string, IStatusbarViewModelEntry>>()
 		for (const entry of mapIdToVisibleEntry.values()) {
 			if (
 				isStatusbarEntryLocation(entry.priority.primary) && // entry references another entry as location
-				entry.priority.primary.compact						// entry wants to be compact
+				entry.priority.primary.compact // entry wants to be compact
 			) {
-				const locationId = entry.priority.primary.location.id;
-				const location = mapIdToVisibleEntry.get(locationId);
+				const locationId = entry.priority.primary.location.id
+				const location = mapIdToVisibleEntry.get(locationId)
 				if (!location) {
-					continue; // skip if location does not exist
+					continue // skip if location does not exist
 				}
 
 				// Build a map of entries that are compact among each other
-				let compactEntryGroup = compactEntryGroups.get(locationId);
+				let compactEntryGroup = compactEntryGroups.get(locationId)
 				if (!compactEntryGroup) {
-
 					// It is possible that this entry references another entry
 					// that itself references an entry. In that case, we want
 					// to add it to the entries of the referenced entry.
 
 					for (const group of compactEntryGroups.values()) {
 						if (group.has(locationId)) {
-							compactEntryGroup = group;
-							break;
+							compactEntryGroup = group
+							break
 						}
 					}
 
 					if (!compactEntryGroup) {
-						compactEntryGroup = new Map<string, IStatusbarViewModelEntry>();
-						compactEntryGroups.set(locationId, compactEntryGroup);
+						compactEntryGroup = new Map<string, IStatusbarViewModelEntry>()
+						compactEntryGroups.set(locationId, compactEntryGroup)
 					}
 				}
-				compactEntryGroup.set(entry.id, entry);
-				compactEntryGroup.set(location.id, location);
+				compactEntryGroup.set(entry.id, entry)
+				compactEntryGroup.set(location.id, location)
 
 				// Adjust CSS classes to move compact items closer together
 				if (entry.priority.primary.alignment === StatusbarAlignment.LEFT) {
-					location.container.classList.add('compact-left');
-					entry.container.classList.add('compact-right');
+					location.container.classList.add('compact-left')
+					entry.container.classList.add('compact-right')
 				} else {
-					location.container.classList.add('compact-right');
-					entry.container.classList.add('compact-left');
+					location.container.classList.add('compact-right')
+					entry.container.classList.add('compact-left')
 				}
 			}
 		}
 
 		// Install mouse listeners to update hover feedback for
 		// all compact entries that belong to each other
-		const statusBarItemHoverBackground = this.getColor(STATUS_BAR_ITEM_HOVER_BACKGROUND);
-		const statusBarItemCompactHoverBackground = this.getColor(STATUS_BAR_ITEM_COMPACT_HOVER_BACKGROUND);
-		this.compactEntriesDisposable.value = new DisposableStore();
-		if (statusBarItemHoverBackground && statusBarItemCompactHoverBackground && !isHighContrast(this.theme.type)) {
+		const statusBarItemHoverBackground = this.getColor(STATUS_BAR_ITEM_HOVER_BACKGROUND)
+		const statusBarItemCompactHoverBackground = this.getColor(
+			STATUS_BAR_ITEM_COMPACT_HOVER_BACKGROUND,
+		)
+		this.compactEntriesDisposable.value = new DisposableStore()
+		if (
+			statusBarItemHoverBackground &&
+			statusBarItemCompactHoverBackground &&
+			!isHighContrast(this.theme.type)
+		) {
 			for (const [, compactEntryGroup] of compactEntryGroups) {
 				for (const compactEntry of compactEntryGroup.values()) {
 					if (!compactEntry.hasCommand) {
-						continue; // only show hover feedback when we have a command
+						continue // only show hover feedback when we have a command
 					}
 
-					this.compactEntriesDisposable.value.add(addDisposableListener(compactEntry.labelContainer, EventType.MOUSE_OVER, () => {
-						compactEntryGroup.forEach(compactEntry => compactEntry.labelContainer.style.backgroundColor = statusBarItemHoverBackground);
-						compactEntry.labelContainer.style.backgroundColor = statusBarItemCompactHoverBackground;
-					}));
+					this.compactEntriesDisposable.value.add(
+						addDisposableListener(compactEntry.labelContainer, EventType.MOUSE_OVER, () => {
+							compactEntryGroup.forEach(
+								(compactEntry) =>
+									(compactEntry.labelContainer.style.backgroundColor =
+										statusBarItemHoverBackground),
+							)
+							compactEntry.labelContainer.style.backgroundColor =
+								statusBarItemCompactHoverBackground
+						}),
+					)
 
-					this.compactEntriesDisposable.value.add(addDisposableListener(compactEntry.labelContainer, EventType.MOUSE_OUT, () => {
-						compactEntryGroup.forEach(compactEntry => compactEntry.labelContainer.style.backgroundColor = '');
-					}));
+					this.compactEntriesDisposable.value.add(
+						addDisposableListener(compactEntry.labelContainer, EventType.MOUSE_OUT, () => {
+							compactEntryGroup.forEach(
+								(compactEntry) => (compactEntry.labelContainer.style.backgroundColor = ''),
+							)
+						}),
+					)
 				}
 			}
 		}
 	}
 
 	private showContextMenu(e: MouseEvent | GestureEvent): void {
-		EventHelper.stop(e, true);
+		EventHelper.stop(e, true)
 
-		const event = new StandardMouseEvent(getWindow(this.element), e);
+		const event = new StandardMouseEvent(getWindow(this.element), e)
 
-		let actions: IAction[] | undefined = undefined;
+		let actions: IAction[] | undefined = undefined
 		this.contextMenuService.showContextMenu({
 			getAnchor: () => event,
 			getActions: () => {
-				actions = this.getContextMenuActions(event);
+				actions = this.getContextMenuActions(event)
 
-				return actions;
+				return actions
 			},
 			onHide: () => {
 				if (actions) {
-					disposeIfDisposable(actions);
+					disposeIfDisposable(actions)
 				}
-			}
-		});
+			},
+		})
 	}
 
 	private getContextMenuActions(event: StandardMouseEvent): IAction[] {
-		const actions: IAction[] = [];
+		const actions: IAction[] = []
 
 		// Provide an action to hide the status bar at last
-		actions.push(toAction({ id: ToggleStatusbarVisibilityAction.ID, label: localize('hideStatusBar', "Hide Status Bar"), run: () => this.instantiationService.invokeFunction(accessor => new ToggleStatusbarVisibilityAction().run(accessor)) }));
-		actions.push(new Separator());
+		actions.push(
+			toAction({
+				id: ToggleStatusbarVisibilityAction.ID,
+				label: localize('hideStatusBar', 'Hide Status Bar'),
+				run: () =>
+					this.instantiationService.invokeFunction((accessor) =>
+						new ToggleStatusbarVisibilityAction().run(accessor),
+					),
+			}),
+		)
+		actions.push(new Separator())
 
 		// Show an entry per known status entry
 		// Note: even though entries have an identifier, there can be multiple entries
 		// having the same identifier (e.g. from extensions). So we make sure to only
 		// show a single entry per identifier we handled.
-		const handledEntries = new Set<string>();
+		const handledEntries = new Set<string>()
 		for (const entry of this.viewModel.entries) {
 			if (!handledEntries.has(entry.id)) {
-				actions.push(new ToggleStatusbarEntryVisibilityAction(entry.id, entry.name, this.viewModel));
-				handledEntries.add(entry.id);
+				actions.push(new ToggleStatusbarEntryVisibilityAction(entry.id, entry.name, this.viewModel))
+				handledEntries.add(entry.id)
 			}
 		}
 
 		// Figure out if mouse is over an entry
-		let statusEntryUnderMouse: IStatusbarViewModelEntry | undefined = undefined;
+		let statusEntryUnderMouse: IStatusbarViewModelEntry | undefined = undefined
 		for (let element: HTMLElement | null = event.target; element; element = element.parentElement) {
-			const entry = this.viewModel.findEntry(element);
+			const entry = this.viewModel.findEntry(element)
 			if (entry) {
-				statusEntryUnderMouse = entry;
-				break;
+				statusEntryUnderMouse = entry
+				break
 			}
 		}
 
 		if (statusEntryUnderMouse) {
-			actions.push(new Separator());
+			actions.push(new Separator())
 			if (statusEntryUnderMouse.extensionId) {
-				actions.push(this.instantiationService.createInstance(ManageExtensionAction, statusEntryUnderMouse.extensionId));
+				actions.push(
+					this.instantiationService.createInstance(
+						ManageExtensionAction,
+						statusEntryUnderMouse.extensionId,
+					),
+				)
 			}
-			actions.push(new HideStatusbarEntryAction(statusEntryUnderMouse.id, statusEntryUnderMouse.name, this.viewModel));
+			actions.push(
+				new HideStatusbarEntryAction(
+					statusEntryUnderMouse.id,
+					statusEntryUnderMouse.name,
+					this.viewModel,
+				),
+			)
 		}
 
-		return actions;
+		return actions
 	}
 
 	override updateStyles(): void {
-		super.updateStyles();
+		super.updateStyles()
 
-		const container = assertIsDefined(this.getContainer());
-		const styleOverride: IStatusbarStyleOverride | undefined = [...this.styleOverrides].sort((a, b) => a.priority - b.priority)[0];
+		const container = assertIsDefined(this.getContainer())
+		const styleOverride: IStatusbarStyleOverride | undefined = [...this.styleOverrides].sort(
+			(a, b) => a.priority - b.priority,
+		)[0]
 
 		// Background / foreground colors
-		const backgroundColor = this.getColor(styleOverride?.background ?? (this.contextService.getWorkbenchState() !== WorkbenchState.EMPTY ? STATUS_BAR_BACKGROUND : STATUS_BAR_NO_FOLDER_BACKGROUND)) || '';
-		container.style.backgroundColor = backgroundColor;
-		const foregroundColor = this.getColor(styleOverride?.foreground ?? (this.contextService.getWorkbenchState() !== WorkbenchState.EMPTY ? STATUS_BAR_FOREGROUND : STATUS_BAR_NO_FOLDER_FOREGROUND)) || '';
-		container.style.color = foregroundColor;
-		const itemBorderColor = this.getColor(STATUS_BAR_ITEM_FOCUS_BORDER);
+		const backgroundColor =
+			this.getColor(
+				styleOverride?.background ??
+					(this.contextService.getWorkbenchState() !== WorkbenchState.EMPTY
+						? STATUS_BAR_BACKGROUND
+						: STATUS_BAR_NO_FOLDER_BACKGROUND),
+			) || ''
+		container.style.backgroundColor = backgroundColor
+		const foregroundColor =
+			this.getColor(
+				styleOverride?.foreground ??
+					(this.contextService.getWorkbenchState() !== WorkbenchState.EMPTY
+						? STATUS_BAR_FOREGROUND
+						: STATUS_BAR_NO_FOLDER_FOREGROUND),
+			) || ''
+		container.style.color = foregroundColor
+		const itemBorderColor = this.getColor(STATUS_BAR_ITEM_FOCUS_BORDER)
 
 		// Border color
-		const borderColor = this.getColor(styleOverride?.border ?? (this.contextService.getWorkbenchState() !== WorkbenchState.EMPTY ? STATUS_BAR_BORDER : STATUS_BAR_NO_FOLDER_BORDER)) || this.getColor(contrastBorder);
+		const borderColor =
+			this.getColor(
+				styleOverride?.border ??
+					(this.contextService.getWorkbenchState() !== WorkbenchState.EMPTY
+						? STATUS_BAR_BORDER
+						: STATUS_BAR_NO_FOLDER_BORDER),
+			) || this.getColor(contrastBorder)
 		if (borderColor) {
-			container.classList.add('status-border-top');
-			container.style.setProperty('--status-border-top-color', borderColor);
+			container.classList.add('status-border-top')
+			container.style.setProperty('--status-border-top-color', borderColor)
 		} else {
-			container.classList.remove('status-border-top');
-			container.style.removeProperty('--status-border-top-color');
+			container.classList.remove('status-border-top')
+			container.style.removeProperty('--status-border-top-color')
 		}
 
 		// Colors and focus outlines via dynamic stylesheet
 
-		const statusBarFocusColor = this.getColor(STATUS_BAR_FOCUS_BORDER);
+		const statusBarFocusColor = this.getColor(STATUS_BAR_FOCUS_BORDER)
 
 		if (!this.styleElement) {
-			this.styleElement = createStyleSheet(container);
+			this.styleElement = createStyleSheet(container)
 		}
 
 		this.styleElement.textContent = `
@@ -677,39 +857,38 @@ class StatusbarPart extends Part implements IStatusbarEntryContainer {
 				.monaco-workbench .part.statusbar > .items-container > .statusbar-item.has-beak > .status-bar-item-beak-container:before {
 					border-bottom-color: ${backgroundColor};
 				}
-			`;
+			`
 	}
 
 	override layout(width: number, height: number, top: number, left: number): void {
-		super.layout(width, height, top, left);
-		super.layoutContents(width, height);
+		super.layout(width, height, top, left)
+		super.layoutContents(width, height)
 	}
 
 	overrideStyle(style: IStatusbarStyleOverride): IDisposable {
-		this.styleOverrides.add(style);
-		this.updateStyles();
+		this.styleOverrides.add(style)
+		this.updateStyles()
 
 		return toDisposable(() => {
-			this.styleOverrides.delete(style);
-			this.updateStyles();
-		});
+			this.styleOverrides.delete(style)
+			this.updateStyles()
+		})
 	}
 
 	toJSON(): object {
 		return {
-			type: Parts.STATUSBAR_PART
-		};
+			type: Parts.STATUSBAR_PART,
+		}
 	}
 
 	override dispose(): void {
-		this._onWillDispose.fire();
+		this._onWillDispose.fire()
 
-		super.dispose();
+		super.dispose()
 	}
 }
 
 export class MainStatusbarPart extends StatusbarPart {
-
 	constructor(
 		@IInstantiationService instantiationService: IInstantiationService,
 		@IThemeService themeService: IThemeService,
@@ -719,20 +898,28 @@ export class MainStatusbarPart extends StatusbarPart {
 		@IContextMenuService contextMenuService: IContextMenuService,
 		@IContextKeyService contextKeyService: IContextKeyService,
 	) {
-		super(Parts.STATUSBAR_PART, instantiationService, themeService, contextService, storageService, layoutService, contextMenuService, contextKeyService);
+		super(
+			Parts.STATUSBAR_PART,
+			instantiationService,
+			themeService,
+			contextService,
+			storageService,
+			layoutService,
+			contextMenuService,
+			contextKeyService,
+		)
 	}
 }
 
 export interface IAuxiliaryStatusbarPart extends IStatusbarEntryContainer, IView {
-	readonly container: HTMLElement;
-	readonly height: number;
+	readonly container: HTMLElement
+	readonly height: number
 }
 
 export class AuxiliaryStatusbarPart extends StatusbarPart implements IAuxiliaryStatusbarPart {
+	private static COUNTER = 1
 
-	private static COUNTER = 1;
-
-	readonly height = StatusbarPart.HEIGHT;
+	readonly height = StatusbarPart.HEIGHT
 
 	constructor(
 		readonly container: HTMLElement,
@@ -744,225 +931,259 @@ export class AuxiliaryStatusbarPart extends StatusbarPart implements IAuxiliaryS
 		@IContextMenuService contextMenuService: IContextMenuService,
 		@IContextKeyService contextKeyService: IContextKeyService,
 	) {
-		const id = AuxiliaryStatusbarPart.COUNTER++;
-		super(`workbench.parts.auxiliaryStatus.${id}`, instantiationService, themeService, contextService, storageService, layoutService, contextMenuService, contextKeyService);
+		const id = AuxiliaryStatusbarPart.COUNTER++
+		super(
+			`workbench.parts.auxiliaryStatus.${id}`,
+			instantiationService,
+			themeService,
+			contextService,
+			storageService,
+			layoutService,
+			contextMenuService,
+			contextKeyService,
+		)
 	}
 }
 
 export class StatusbarService extends MultiWindowParts<StatusbarPart> implements IStatusbarService {
+	declare readonly _serviceBrand: undefined
 
-	declare readonly _serviceBrand: undefined;
+	readonly mainPart: MainStatusbarPart
 
-	readonly mainPart: MainStatusbarPart;
-
-	private readonly _onDidCreateAuxiliaryStatusbarPart = this._register(new Emitter<AuxiliaryStatusbarPart>());
-	private readonly onDidCreateAuxiliaryStatusbarPart = this._onDidCreateAuxiliaryStatusbarPart.event;
+	private readonly _onDidCreateAuxiliaryStatusbarPart = this._register(
+		new Emitter<AuxiliaryStatusbarPart>(),
+	)
+	private readonly onDidCreateAuxiliaryStatusbarPart = this._onDidCreateAuxiliaryStatusbarPart.event
 
 	constructor(
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
 		@IStorageService storageService: IStorageService,
-		@IThemeService themeService: IThemeService
+		@IThemeService themeService: IThemeService,
 	) {
-		super('workbench.statusBarService', themeService, storageService);
+		super('workbench.statusBarService', themeService, storageService)
 
-		this.mainPart = this._register(this.instantiationService.createInstance(MainStatusbarPart));
-		this._register(this.registerPart(this.mainPart));
+		this.mainPart = this._register(this.instantiationService.createInstance(MainStatusbarPart))
+		this._register(this.registerPart(this.mainPart))
 
-		this.onDidChangeEntryVisibility = this.mainPart.onDidChangeEntryVisibility;
+		this.onDidChangeEntryVisibility = this.mainPart.onDidChangeEntryVisibility
 	}
 
 	//#region Auxiliary Statusbar Parts
 
 	createAuxiliaryStatusbarPart(container: HTMLElement): IAuxiliaryStatusbarPart {
-
 		// Container
 		const statusbarPartContainer = $('footer.part.statusbar', {
-			'role': 'status',
+			role: 'status',
 			'aria-live': 'off',
-			'tabIndex': '0'
-		});
-		statusbarPartContainer.style.position = 'relative';
-		container.appendChild(statusbarPartContainer);
+			tabIndex: '0',
+		})
+		statusbarPartContainer.style.position = 'relative'
+		container.appendChild(statusbarPartContainer)
 
 		// Statusbar Part
-		const statusbarPart = this.instantiationService.createInstance(AuxiliaryStatusbarPart, statusbarPartContainer);
-		const disposable = this.registerPart(statusbarPart);
+		const statusbarPart = this.instantiationService.createInstance(
+			AuxiliaryStatusbarPart,
+			statusbarPartContainer,
+		)
+		const disposable = this.registerPart(statusbarPart)
 
-		statusbarPart.create(statusbarPartContainer);
+		statusbarPart.create(statusbarPartContainer)
 
-		Event.once(statusbarPart.onWillDispose)(() => disposable.dispose());
+		Event.once(statusbarPart.onWillDispose)(() => disposable.dispose())
 
 		// Emit internal event
-		this._onDidCreateAuxiliaryStatusbarPart.fire(statusbarPart);
+		this._onDidCreateAuxiliaryStatusbarPart.fire(statusbarPart)
 
-		return statusbarPart;
+		return statusbarPart
 	}
 
-	createScoped(statusbarEntryContainer: IStatusbarEntryContainer, disposables: DisposableStore): IStatusbarService {
-		return disposables.add(this.instantiationService.createInstance(ScopedStatusbarService, statusbarEntryContainer));
+	createScoped(
+		statusbarEntryContainer: IStatusbarEntryContainer,
+		disposables: DisposableStore,
+	): IStatusbarService {
+		return disposables.add(
+			this.instantiationService.createInstance(ScopedStatusbarService, statusbarEntryContainer),
+		)
 	}
 
 	//#endregion
 
 	//#region Service Implementation
 
-	readonly onDidChangeEntryVisibility: Event<{ id: string; visible: boolean }>;
+	readonly onDidChangeEntryVisibility: Event<{ id: string; visible: boolean }>
 
-	addEntry(entry: IStatusbarEntry, id: string, alignment: StatusbarAlignment, priorityOrLocation: number | IStatusbarEntryLocation | IStatusbarEntryPriority = 0): IStatusbarEntryAccessor {
+	addEntry(
+		entry: IStatusbarEntry,
+		id: string,
+		alignment: StatusbarAlignment,
+		priorityOrLocation: number | IStatusbarEntryLocation | IStatusbarEntryPriority = 0,
+	): IStatusbarEntryAccessor {
 		if (entry.showInAllWindows) {
-			return this.doAddEntryToAllWindows(entry, id, alignment, priorityOrLocation);
+			return this.doAddEntryToAllWindows(entry, id, alignment, priorityOrLocation)
 		}
 
-		return this.mainPart.addEntry(entry, id, alignment, priorityOrLocation);
+		return this.mainPart.addEntry(entry, id, alignment, priorityOrLocation)
 	}
 
-	private doAddEntryToAllWindows(originalEntry: IStatusbarEntry, id: string, alignment: StatusbarAlignment, priorityOrLocation: number | IStatusbarEntryLocation | IStatusbarEntryPriority = 0): IStatusbarEntryAccessor {
-		const entryDisposables = new DisposableStore();
+	private doAddEntryToAllWindows(
+		originalEntry: IStatusbarEntry,
+		id: string,
+		alignment: StatusbarAlignment,
+		priorityOrLocation: number | IStatusbarEntryLocation | IStatusbarEntryPriority = 0,
+	): IStatusbarEntryAccessor {
+		const entryDisposables = new DisposableStore()
 
-		const accessors = new Set<IStatusbarEntryAccessor>();
+		const accessors = new Set<IStatusbarEntryAccessor>()
 
-		let entry = originalEntry;
+		let entry = originalEntry
 		function addEntry(part: StatusbarPart | AuxiliaryStatusbarPart): void {
-			const partDisposables = new DisposableStore();
-			partDisposables.add(part.onWillDispose(() => partDisposables.dispose()));
+			const partDisposables = new DisposableStore()
+			partDisposables.add(part.onWillDispose(() => partDisposables.dispose()))
 
-			const accessor = partDisposables.add(part.addEntry(entry, id, alignment, priorityOrLocation));
-			accessors.add(accessor);
-			partDisposables.add(toDisposable(() => accessors.delete(accessor)));
+			const accessor = partDisposables.add(part.addEntry(entry, id, alignment, priorityOrLocation))
+			accessors.add(accessor)
+			partDisposables.add(toDisposable(() => accessors.delete(accessor)))
 
-			entryDisposables.add(partDisposables);
-			partDisposables.add(toDisposable(() => entryDisposables.delete(partDisposables)));
+			entryDisposables.add(partDisposables)
+			partDisposables.add(toDisposable(() => entryDisposables.delete(partDisposables)))
 		}
 
 		for (const part of this.parts) {
-			addEntry(part);
+			addEntry(part)
 		}
 
-		entryDisposables.add(this.onDidCreateAuxiliaryStatusbarPart(part => addEntry(part)));
+		entryDisposables.add(this.onDidCreateAuxiliaryStatusbarPart((part) => addEntry(part)))
 
 		return {
 			update: (updatedEntry: IStatusbarEntry) => {
-				entry = updatedEntry;
+				entry = updatedEntry
 
 				for (const update of accessors) {
-					update.update(updatedEntry);
+					update.update(updatedEntry)
 				}
 			},
-			dispose: () => entryDisposables.dispose()
-		};
+			dispose: () => entryDisposables.dispose(),
+		}
 	}
 
 	isEntryVisible(id: string): boolean {
-		return this.mainPart.isEntryVisible(id);
+		return this.mainPart.isEntryVisible(id)
 	}
 
 	updateEntryVisibility(id: string, visible: boolean): void {
 		for (const part of this.parts) {
-			part.updateEntryVisibility(id, visible);
+			part.updateEntryVisibility(id, visible)
 		}
 	}
 
 	overrideEntry(id: string, override: Partial<IStatusbarEntry>): IDisposable {
-		const disposables = new DisposableStore();
+		const disposables = new DisposableStore()
 
 		for (const part of this.parts) {
-			disposables.add(part.overrideEntry(id, override));
+			disposables.add(part.overrideEntry(id, override))
 		}
 
-		return disposables;
+		return disposables
 	}
 
 	focus(preserveEntryFocus?: boolean): void {
-		this.activePart.focus(preserveEntryFocus);
+		this.activePart.focus(preserveEntryFocus)
 	}
 
 	focusNextEntry(): void {
-		this.activePart.focusNextEntry();
+		this.activePart.focusNextEntry()
 	}
 
 	focusPreviousEntry(): void {
-		this.activePart.focusPreviousEntry();
+		this.activePart.focusPreviousEntry()
 	}
 
 	isEntryFocused(): boolean {
-		return this.activePart.isEntryFocused();
+		return this.activePart.isEntryFocused()
 	}
 
 	overrideStyle(style: IStatusbarStyleOverride): IDisposable {
-		const disposables = new DisposableStore();
+		const disposables = new DisposableStore()
 
 		for (const part of this.parts) {
-			disposables.add(part.overrideStyle(style));
+			disposables.add(part.overrideStyle(style))
 		}
 
-		return disposables;
+		return disposables
 	}
 
 	//#endregion
 }
 
 export class ScopedStatusbarService extends Disposable implements IStatusbarService {
-
-	declare readonly _serviceBrand: undefined;
+	declare readonly _serviceBrand: undefined
 
 	constructor(
 		private readonly statusbarEntryContainer: IStatusbarEntryContainer,
-		@IStatusbarService private readonly statusbarService: IStatusbarService
+		@IStatusbarService private readonly statusbarService: IStatusbarService,
 	) {
-		super();
+		super()
 
-		this.onDidChangeEntryVisibility = this.statusbarEntryContainer.onDidChangeEntryVisibility;
+		this.onDidChangeEntryVisibility = this.statusbarEntryContainer.onDidChangeEntryVisibility
 	}
 
 	createAuxiliaryStatusbarPart(container: HTMLElement): IAuxiliaryStatusbarPart {
-		return this.statusbarService.createAuxiliaryStatusbarPart(container);
+		return this.statusbarService.createAuxiliaryStatusbarPart(container)
 	}
 
-	createScoped(statusbarEntryContainer: IStatusbarEntryContainer, disposables: DisposableStore): IStatusbarService {
-		return this.statusbarService.createScoped(statusbarEntryContainer, disposables);
+	createScoped(
+		statusbarEntryContainer: IStatusbarEntryContainer,
+		disposables: DisposableStore,
+	): IStatusbarService {
+		return this.statusbarService.createScoped(statusbarEntryContainer, disposables)
 	}
 
 	getPart(): IStatusbarEntryContainer {
-		return this.statusbarEntryContainer;
+		return this.statusbarEntryContainer
 	}
 
-	readonly onDidChangeEntryVisibility: Event<{ id: string; visible: boolean }>;
+	readonly onDidChangeEntryVisibility: Event<{ id: string; visible: boolean }>
 
-	addEntry(entry: IStatusbarEntry, id: string, alignment: StatusbarAlignment, priorityOrLocation: number | IStatusbarEntryLocation | IStatusbarEntryPriority = 0): IStatusbarEntryAccessor {
-		return this.statusbarEntryContainer.addEntry(entry, id, alignment, priorityOrLocation);
+	addEntry(
+		entry: IStatusbarEntry,
+		id: string,
+		alignment: StatusbarAlignment,
+		priorityOrLocation: number | IStatusbarEntryLocation | IStatusbarEntryPriority = 0,
+	): IStatusbarEntryAccessor {
+		return this.statusbarEntryContainer.addEntry(entry, id, alignment, priorityOrLocation)
 	}
 
 	isEntryVisible(id: string): boolean {
-		return this.statusbarEntryContainer.isEntryVisible(id);
+		return this.statusbarEntryContainer.isEntryVisible(id)
 	}
 
 	updateEntryVisibility(id: string, visible: boolean): void {
-		this.statusbarEntryContainer.updateEntryVisibility(id, visible);
+		this.statusbarEntryContainer.updateEntryVisibility(id, visible)
 	}
 
 	overrideEntry(id: string, override: Partial<IStatusbarEntry>): IDisposable {
-		return this.statusbarEntryContainer.overrideEntry(id, override);
+		return this.statusbarEntryContainer.overrideEntry(id, override)
 	}
 
 	focus(preserveEntryFocus?: boolean): void {
-		this.statusbarEntryContainer.focus(preserveEntryFocus);
+		this.statusbarEntryContainer.focus(preserveEntryFocus)
 	}
 
 	focusNextEntry(): void {
-		this.statusbarEntryContainer.focusNextEntry();
+		this.statusbarEntryContainer.focusNextEntry()
 	}
 
 	focusPreviousEntry(): void {
-		this.statusbarEntryContainer.focusPreviousEntry();
+		this.statusbarEntryContainer.focusPreviousEntry()
 	}
 
 	isEntryFocused(): boolean {
-		return this.statusbarEntryContainer.isEntryFocused();
+		return this.statusbarEntryContainer.isEntryFocused()
 	}
 
 	overrideStyle(style: IStatusbarStyleOverride): IDisposable {
-		return this.statusbarEntryContainer.overrideStyle(style);
+		return this.statusbarEntryContainer.overrideStyle(style)
 	}
 }
 
-registerSingleton(IStatusbarService, StatusbarService, InstantiationType.Eager);
+registerSingleton(IStatusbarService, StatusbarService, InstantiationType.Eager)

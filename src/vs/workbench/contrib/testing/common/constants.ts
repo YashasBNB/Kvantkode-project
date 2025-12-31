@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { stripIcons } from '../../../../base/common/iconLabels.js';
-import { localize } from '../../../../nls.js';
-import { TestResultState, TestRunProfileBitset } from './testTypes.js';
+import { stripIcons } from '../../../../base/common/iconLabels.js'
+import { localize } from '../../../../nls.js'
+import { TestResultState, TestRunProfileBitset } from './testTypes.js'
 
 export const enum Testing {
 	// marked as "extension" so that any existing test extensions are assigned to it.
@@ -19,12 +19,12 @@ export const enum Testing {
 	ResultsPanelId = 'workbench.panel.testResults',
 	ResultsViewId = 'workbench.panel.testResults.view',
 
-	MessageLanguageId = 'vscodeInternalTestMessage'
+	MessageLanguageId = 'vscodeInternalTestMessage',
 }
 
 export const enum TestExplorerViewMode {
 	List = 'list',
-	Tree = 'true'
+	Tree = 'true',
 }
 
 export const enum TestExplorerViewSorting {
@@ -41,18 +41,26 @@ const testStateNames: { [K in TestResultState]: string } = {
 	[TestResultState.Running]: localize('testState.running', 'Running'),
 	[TestResultState.Skipped]: localize('testState.skipped', 'Skipped'),
 	[TestResultState.Unset]: localize('testState.unset', 'Not yet run'),
-};
+}
 
-export const labelForTestInState = (label: string, state: TestResultState) => localize({
-	key: 'testing.treeElementLabel',
-	comment: ['label then the unit tests state, for example "Addition Tests (Running)"'],
-}, '{0} ({1})', stripIcons(label), testStateNames[state]);
+export const labelForTestInState = (label: string, state: TestResultState) =>
+	localize(
+		{
+			key: 'testing.treeElementLabel',
+			comment: ['label then the unit tests state, for example "Addition Tests (Running)"'],
+		},
+		'{0} ({1})',
+		stripIcons(label),
+		testStateNames[state],
+	)
 
-export const testConfigurationGroupNames: Partial<Record<TestRunProfileBitset, string | undefined>> = {
+export const testConfigurationGroupNames: Partial<
+	Record<TestRunProfileBitset, string | undefined>
+> = {
 	[TestRunProfileBitset.Debug]: localize('testGroup.debug', 'Debug'),
 	[TestRunProfileBitset.Run]: localize('testGroup.run', 'Run'),
 	[TestRunProfileBitset.Coverage]: localize('testGroup.coverage', 'Coverage'),
-};
+}
 
 export const enum TestCommandId {
 	CancelTestRefreshAction = 'testing.cancelTestRefresh',

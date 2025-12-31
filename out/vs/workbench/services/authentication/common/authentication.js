@@ -1,0 +1,9 @@
+import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+/**
+ * Use this if you don't want the onDidChangeSessions event to fire in the extension host
+ */
+export const INTERNAL_AUTH_PROVIDER_PREFIX = '__';
+export const IAuthenticationService = createDecorator('IAuthenticationService');
+// TODO: Move this into MainThreadAuthentication
+export const IAuthenticationExtensionsService = createDecorator('IAuthenticationExtensionsService');
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYXV0aGVudGljYXRpb24uanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9Vc2Vycy95YXNoYXNuYWlkdS9LdmFudGNvZGUvdm9pZC9zcmMvIiwic291cmNlcyI6WyJ2cy93b3JrYmVuY2gvc2VydmljZXMvYXV0aGVudGljYXRpb24vY29tbW9uL2F1dGhlbnRpY2F0aW9uLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUtBLE9BQU8sRUFBRSxlQUFlLEVBQUUsTUFBTSw0REFBNEQsQ0FBQTtBQUU1Rjs7R0FFRztBQUNILE1BQU0sQ0FBQyxNQUFNLDZCQUE2QixHQUFHLElBQUksQ0FBQTtBQWlEakQsTUFBTSxDQUFDLE1BQU0sc0JBQXNCLEdBQ2xDLGVBQWUsQ0FBeUIsd0JBQXdCLENBQUMsQ0FBQTtBQW9IbEUsZ0RBQWdEO0FBQ2hELE1BQU0sQ0FBQyxNQUFNLGdDQUFnQyxHQUFHLGVBQWUsQ0FDOUQsa0NBQWtDLENBQ2xDLENBQUEifQ==

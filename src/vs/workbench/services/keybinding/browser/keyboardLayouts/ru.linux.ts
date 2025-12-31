@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyboardLayoutContribution } from './_.contribution.js';
-
+import { KeyboardLayoutContribution } from './_.contribution.js'
 
 KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 	layout: { model: 'pc104', group: 0, layout: 'ru', variant: ',', options: '', rules: 'base' },
@@ -182,6 +181,6 @@ KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 		BrowserFavorites: [],
 		MailReply: [],
 		MailForward: [],
-		MailSend: []
-	}
-});
+		MailSend: [],
+	},
+})

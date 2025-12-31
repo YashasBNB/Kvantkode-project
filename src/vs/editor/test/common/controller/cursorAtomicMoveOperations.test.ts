@@ -3,13 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { AtomicTabMoveOperations, Direction } from '../../../common/cursor/cursorAtomicMoveOperations.js';
+import assert from 'assert'
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js'
+import {
+	AtomicTabMoveOperations,
+	Direction,
+} from '../../../common/cursor/cursorAtomicMoveOperations.js'
 
 suite('Cursor move command test', () => {
-
-	ensureNoDisposablesAreLeakedInTestSuite();
+	ensureNoDisposablesAreLeakedInTestSuite()
 
 	test('Test whitespaceVisibleColumn', () => {
 		const testCases = [
@@ -69,21 +71,25 @@ suite('Cursor move command test', () => {
 				expectedPrevTabStopVisibleColumn: [-1, -1],
 				expectedVisibleColumn: [0, -1],
 			},
-		];
+		]
 
 		for (const testCase of testCases) {
-			const maxPosition = testCase.expectedVisibleColumn.length;
+			const maxPosition = testCase.expectedVisibleColumn.length
 			for (let position = 0; position < maxPosition; position++) {
-				const actual = AtomicTabMoveOperations.whitespaceVisibleColumn(testCase.lineContent, position, testCase.tabSize);
+				const actual = AtomicTabMoveOperations.whitespaceVisibleColumn(
+					testCase.lineContent,
+					position,
+					testCase.tabSize,
+				)
 				const expected = [
 					testCase.expectedPrevTabStopPosition[position],
 					testCase.expectedPrevTabStopVisibleColumn[position],
-					testCase.expectedVisibleColumn[position]
-				];
-				assert.deepStrictEqual(actual, expected);
+					testCase.expectedVisibleColumn[position],
+				]
+				assert.deepStrictEqual(actual, expected)
 			}
 		}
-	});
+	})
 
 	test('Test atomicPosition', () => {
 		const testCases = [
@@ -129,7 +135,7 @@ suite('Cursor move command test', () => {
 				expectedRight: [4, 4, 4, 4, -1, -1, -1, -1, -1, -1, -1],
 				expectedNearest: [0, 0, 0, 4, 4, -1, -1, -1, -1, -1, -1],
 			},
-		];
+		]
 
 		for (const testCase of testCases) {
 			for (const { direction, expected } of [
@@ -146,10 +152,16 @@ suite('Cursor move command test', () => {
 					expected: testCase.expectedNearest,
 				},
 			]) {
-
-				const actual = expected.map((_, i) => AtomicTabMoveOperations.atomicPosition(testCase.lineContent, i, testCase.tabSize, direction));
-				assert.deepStrictEqual(actual, expected);
+				const actual = expected.map((_, i) =>
+					AtomicTabMoveOperations.atomicPosition(
+						testCase.lineContent,
+						i,
+						testCase.tabSize,
+						direction,
+					),
+				)
+				assert.deepStrictEqual(actual, expected)
 			}
 		}
-	});
-});
+	})
+})

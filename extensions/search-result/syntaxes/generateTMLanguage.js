@@ -57,7 +57,7 @@ const mappings = [
 	['vb', 'source.asp.vb.net'],
 	['xml', 'text.xml'],
 	['yaml', 'source.yaml', '\\.(?:ya?ml)'],
-];
+]
 
 const scopes = {
 	root: 'text.searchResult',
@@ -75,7 +75,7 @@ const scopes = {
 		query: {
 			escape: 'constant.character.escape',
 			invalid: 'invalid.illegal',
-		}
+		},
 	},
 	resultBlock: {
 		meta: 'meta.resultBlock.search',
@@ -96,156 +96,167 @@ const scopes = {
 				metaMatch: 'meta.resultLinePrefix.matchLinePrefix.search',
 				lineNumber: 'meta.resultLinePrefix.lineNumber.search',
 				colon: 'punctuation.separator',
-			}
-		}
-	}
-};
-
-const repository = {};
-mappings.forEach(([ext, scope, regexp]) =>
-	repository[ext] = {
-		name: scopes.resultBlock.meta,
-		begin: `^(?!\\s)(.*?)([^\\\\\\/\\n]*${regexp || `\\.${ext}`})(:)$`,
-		end: '^(?!\\s)',
-		beginCaptures: {
-			'0': { name: scopes.resultBlock.path.meta },
-			'1': { name: scopes.resultBlock.path.dirname },
-			'2': { name: scopes.resultBlock.path.basename },
-			'3': { name: scopes.resultBlock.path.colon },
-		},
-		patterns: [
-			{
-				name: [scopes.resultBlock.result.meta, scopes.resultBlock.result.metaMultiLine].join(' '),
-				begin: '^  (?:\\s*)((\\d+) )',
-				while: '^  (?:\\s*)(?:((\\d+)(:))|((\\d+) ))',
-				beginCaptures: {
-					'0': { name: scopes.resultBlock.result.prefix.meta },
-					'1': { name: scopes.resultBlock.result.prefix.metaContext },
-					'2': { name: scopes.resultBlock.result.prefix.lineNumber },
-				},
-				whileCaptures: {
-					'0': { name: scopes.resultBlock.result.prefix.meta },
-					'1': { name: scopes.resultBlock.result.prefix.metaMatch },
-					'2': { name: scopes.resultBlock.result.prefix.lineNumber },
-					'3': { name: scopes.resultBlock.result.prefix.colon },
-
-					'4': { name: scopes.resultBlock.result.prefix.metaContext },
-					'5': { name: scopes.resultBlock.result.prefix.lineNumber },
-				},
-				patterns: [{ include: scope }]
 			},
-			{
-				begin: '^  (?:\\s*)((\\d+)(:))',
-				while: '(?=not)possible',
-				name: [scopes.resultBlock.result.meta, scopes.resultBlock.result.metaSingleLine].join(' '),
-				beginCaptures: {
-					'0': { name: scopes.resultBlock.result.prefix.meta },
-					'1': { name: scopes.resultBlock.result.prefix.metaMatch },
-					'2': { name: scopes.resultBlock.result.prefix.lineNumber },
-					'3': { name: scopes.resultBlock.result.prefix.colon },
+		},
+	},
+}
+
+const repository = {}
+mappings.forEach(
+	([ext, scope, regexp]) =>
+		(repository[ext] = {
+			name: scopes.resultBlock.meta,
+			begin: `^(?!\\s)(.*?)([^\\\\\\/\\n]*${regexp || `\\.${ext}`})(:)$`,
+			end: '^(?!\\s)',
+			beginCaptures: {
+				0: { name: scopes.resultBlock.path.meta },
+				1: { name: scopes.resultBlock.path.dirname },
+				2: { name: scopes.resultBlock.path.basename },
+				3: { name: scopes.resultBlock.path.colon },
+			},
+			patterns: [
+				{
+					name: [scopes.resultBlock.result.meta, scopes.resultBlock.result.metaMultiLine].join(' '),
+					begin: '^  (?:\\s*)((\\d+) )',
+					while: '^  (?:\\s*)(?:((\\d+)(:))|((\\d+) ))',
+					beginCaptures: {
+						0: { name: scopes.resultBlock.result.prefix.meta },
+						1: { name: scopes.resultBlock.result.prefix.metaContext },
+						2: { name: scopes.resultBlock.result.prefix.lineNumber },
+					},
+					whileCaptures: {
+						0: { name: scopes.resultBlock.result.prefix.meta },
+						1: { name: scopes.resultBlock.result.prefix.metaMatch },
+						2: { name: scopes.resultBlock.result.prefix.lineNumber },
+						3: { name: scopes.resultBlock.result.prefix.colon },
+
+						4: { name: scopes.resultBlock.result.prefix.metaContext },
+						5: { name: scopes.resultBlock.result.prefix.lineNumber },
+					},
+					patterns: [{ include: scope }],
 				},
-				patterns: [{ include: scope }]
-			}
-		]
-	});
+				{
+					begin: '^  (?:\\s*)((\\d+)(:))',
+					while: '(?=not)possible',
+					name: [scopes.resultBlock.result.meta, scopes.resultBlock.result.metaSingleLine].join(
+						' ',
+					),
+					beginCaptures: {
+						0: { name: scopes.resultBlock.result.prefix.meta },
+						1: { name: scopes.resultBlock.result.prefix.metaMatch },
+						2: { name: scopes.resultBlock.result.prefix.lineNumber },
+						3: { name: scopes.resultBlock.result.prefix.colon },
+					},
+					patterns: [{ include: scope }],
+				},
+			],
+		}),
+)
 
 const header = [
 	{
 		begin: '^(# Query): ',
 		end: '\n',
 		name: scopes.header.meta,
-		beginCaptures: { '1': { name: scopes.header.key }, },
+		beginCaptures: { 1: { name: scopes.header.key } },
 		patterns: [
 			{
 				match: '(\\\\n)|(\\\\\\\\)',
-				name: [scopes.header.value, scopes.header.query.escape].join(' ')
+				name: [scopes.header.value, scopes.header.query.escape].join(' '),
 			},
 			{
 				match: '\\\\.|\\\\$',
-				name: [scopes.header.value, scopes.header.query.invalid].join(' ')
+				name: [scopes.header.value, scopes.header.query.invalid].join(' '),
 			},
 			{
 				match: '[^\\\\\\\n]+',
-				name: [scopes.header.value].join(' ')
+				name: [scopes.header.value].join(' '),
 			},
-		]
+		],
 	},
 	{
 		begin: '^(# Flags): ',
 		end: '\n',
 		name: scopes.header.meta,
-		beginCaptures: { '1': { name: scopes.header.key }, },
+		beginCaptures: { 1: { name: scopes.header.key } },
 		patterns: [
 			{
 				match: '(RegExp|CaseSensitive|IgnoreExcludeSettings|WordMatch)',
-				name: [scopes.header.value, 'keyword.other'].join(' ')
+				name: [scopes.header.value, 'keyword.other'].join(' '),
 			},
 			{ match: '.' },
-		]
+		],
 	},
 	{
 		begin: '^(# ContextLines): ',
 		end: '\n',
 		name: scopes.header.meta,
-		beginCaptures: { '1': { name: scopes.header.key }, },
+		beginCaptures: { 1: { name: scopes.header.key } },
 		patterns: [
 			{
 				match: '\\d',
-				name: [scopes.header.value, scopes.header.contextLines.number].join(' ')
+				name: [scopes.header.value, scopes.header.contextLines.number].join(' '),
 			},
 			{ match: '.', name: scopes.header.contextLines.invalid },
-		]
+		],
 	},
 	{
 		match: '^(# (?:Including|Excluding)): (.*)$',
 		name: scopes.header.meta,
 		captures: {
-			'1': { name: scopes.header.key },
-			'2': { name: scopes.header.value }
-		}
+			1: { name: scopes.header.key },
+			2: { name: scopes.header.value },
+		},
 	},
-];
+]
 
 const plainText = [
 	{
 		match: '^(?!\\s)(.*?)([^\\\\\\/\\n]*)(:)$',
 		name: [scopes.resultBlock.meta, scopes.resultBlock.path.meta].join(' '),
 		captures: {
-			'1': { name: scopes.resultBlock.path.dirname },
-			'2': { name: scopes.resultBlock.path.basename },
-			'3': { name: scopes.resultBlock.path.colon }
-		}
+			1: { name: scopes.resultBlock.path.dirname },
+			2: { name: scopes.resultBlock.path.basename },
+			3: { name: scopes.resultBlock.path.colon },
+		},
 	},
 	{
 		match: '^  (?:\\s*)(?:((\\d+)(:))|((\\d+)( ))(.*))',
 		name: [scopes.resultBlock.meta, scopes.resultBlock.result.meta].join(' '),
 		captures: {
-			'1': { name: [scopes.resultBlock.result.prefix.meta, scopes.resultBlock.result.prefix.metaMatch].join(' ') },
-			'2': { name: scopes.resultBlock.result.prefix.lineNumber },
-			'3': { name: scopes.resultBlock.result.prefix.colon },
+			1: {
+				name: [
+					scopes.resultBlock.result.prefix.meta,
+					scopes.resultBlock.result.prefix.metaMatch,
+				].join(' '),
+			},
+			2: { name: scopes.resultBlock.result.prefix.lineNumber },
+			3: { name: scopes.resultBlock.result.prefix.colon },
 
-			'4': { name: [scopes.resultBlock.result.prefix.meta, scopes.resultBlock.result.prefix.metaContext].join(' ') },
-			'5': { name: scopes.resultBlock.result.prefix.lineNumber },
-		}
+			4: {
+				name: [
+					scopes.resultBlock.result.prefix.meta,
+					scopes.resultBlock.result.prefix.metaContext,
+				].join(' '),
+			},
+			5: { name: scopes.resultBlock.result.prefix.lineNumber },
+		},
 	},
 	{
 		match: '⟪ [0-9]+ characters skipped ⟫',
 		name: [scopes.resultBlock.meta, scopes.resultBlock.result.elision].join(' '),
-	}
-];
+	},
+]
 
 const tmLanguage = {
-	'information_for_contributors': 'This file is generated from ./generateTMLanguage.js.',
+	information_for_contributors: 'This file is generated from ./generateTMLanguage.js.',
 	name: 'Search Results',
 	scopeName: scopes.root,
-	patterns: [
-		...header,
-		...mappings.map(([ext]) => ({ include: `#${ext}` })),
-		...plainText
-	],
-	repository
-};
+	patterns: [...header, ...mappings.map(([ext]) => ({ include: `#${ext}` })), ...plainText],
+	repository,
+}
 
 require('fs').writeFileSync(
 	require('path').join(__dirname, './searchResult.tmLanguage.json'),
-	JSON.stringify(tmLanguage, null, 2));
+	JSON.stringify(tmLanguage, null, 2),
+)

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { create } from './textMateTokenizationWorker.worker.js';
-import { bootstrapWebWorker } from '../../../../../../base/common/worker/webWorkerBootstrap.js';
+import { create } from './textMateTokenizationWorker.worker.js'
+import { bootstrapWebWorker } from '../../../../../../base/common/worker/webWorkerBootstrap.js'
 
-bootstrapWebWorker(create);
+bootstrapWebWorker(create)

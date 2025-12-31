@@ -4,19 +4,28 @@
  *--------------------------------------------------------------------------------------*/
 
 import { generateUuid } from '../../../../../base/common/uuid.js'
-import { endsWithAnyPrefixOf, SurroundingsRemover } from '../../common/helpers/extractCodeFromResult.js'
+import {
+	endsWithAnyPrefixOf,
+	SurroundingsRemover,
+} from '../../common/helpers/extractCodeFromResult.js'
 import { availableTools, InternalToolInfo } from '../../common/prompt/prompts.js'
-import { OnFinalMessage, OnText, RawToolCallObj, RawToolParamsObj } from '../../common/sendLLMMessageTypes.js'
+import {
+	OnFinalMessage,
+	OnText,
+	RawToolCallObj,
+	RawToolParamsObj,
+} from '../../common/sendLLMMessageTypes.js'
 import { ToolName, ToolParamName } from '../../common/toolsServiceTypes.js'
 import { ChatMode } from '../../common/voidSettingsTypes.js'
-
 
 // =============== reasoning ===============
 
 // could simplify this - this assumes we can never add a tag without committing it to the user's screen, but that's not true
 export const extractReasoningWrapper = (
-	onText: OnText, onFinalMessage: OnFinalMessage, thinkTags: [string, string]
-): { newOnText: OnText, newOnFinalMessage: OnFinalMessage } => {
+	onText: OnText,
+	onFinalMessage: OnFinalMessage,
+	thinkTags: [string, string],
+): { newOnText: OnText; newOnFinalMessage: OnFinalMessage } => {
 	let latestAddIdx = 0 // exclusive index in fullText_
 	let foundTag1 = false
 	let foundTag2 = false
@@ -24,8 +33,8 @@ export const extractReasoningWrapper = (
 	let fullTextSoFar = ''
 	let fullReasoningSoFar = ''
 
-
-	if (!thinkTags[0] || !thinkTags[1]) throw new Error(`thinkTags must not be empty if provided. Got ${JSON.stringify(thinkTags)}.`)
+	if (!thinkTags[0] || !thinkTags[1])
+		throw new Error(`thinkTags must not be empty if provided. Got ${JSON.stringify(thinkTags)}.`)
 
 	let onText_ = onText
 	onText = (params) => {
@@ -33,7 +42,6 @@ export const extractReasoningWrapper = (
 	}
 
 	const newOnText: OnText = ({ fullText: fullText_, ...p }) => {
-
 		// until found the first think tag, keep adding to fullText
 		if (!foundTag1) {
 			const endsWithTag1 = endsWithAnyPrefixOf(fullText_, thinkTags[0])
@@ -68,7 +76,8 @@ export const extractReasoningWrapper = (
 		// until found the second think tag, keep adding to fullReasoning
 		if (!foundTag2) {
 			const endsWithTag2 = endsWithAnyPrefixOf(fullText_, thinkTags[1])
-			if (endsWithTag2 && endsWithTag2 !== thinkTags[1]) { // if ends with any partial part (full is fine)
+			if (endsWithTag2 && endsWithTag2 !== thinkTags[1]) {
+				// if ends with any partial part (full is fine)
 				// console.log('endsWith2', { fullTextSoFar, fullReasoningSoFar })
 				// wait until we get the full tag or know more
 				return
@@ -112,7 +121,6 @@ export const extractReasoningWrapper = (
 		onText({ ...p, fullText: fullTextSoFar, fullReasoning: fullReasoningSoFar })
 	}
 
-
 	const getOnFinalMessageParams = () => {
 		const fullText_ = fullTextSoFar
 		const tag1Idx = fullText_.indexOf(thinkTags[0])
@@ -121,13 +129,13 @@ export const extractReasoningWrapper = (
 		if (tag2Idx === -1) return { fullText: '', fullReasoning: fullText_ } // never stopped reasoning
 
 		const fullReasoning = fullText_.substring(tag1Idx + thinkTags[0].length, tag2Idx)
-		const fullText = fullText_.substring(0, tag1Idx) + fullText_.substring(tag2Idx + thinkTags[1].length, Infinity)
+		const fullText =
+			fullText_.substring(0, tag1Idx) + fullText_.substring(tag2Idx + thinkTags[1].length, Infinity)
 
 		return { fullText, fullReasoning }
 	}
 
 	const newOnFinalMessage: OnFinalMessage = (params) => {
-
 		// treat like just got text before calling onFinalMessage (or else we sometimes miss the final chunk that's new to finalMessage)
 		newOnText({ ...params })
 
@@ -138,10 +146,7 @@ export const extractReasoningWrapper = (
 	return { newOnText, newOnFinalMessage }
 }
 
-
 // =============== tools (XML) ===============
-
-
 
 const findPartiallyWrittenToolTagAtEnd = (fullText: string, toolTags: string[]) => {
 	for (const toolTag of toolTags) {
@@ -155,7 +160,7 @@ const findPartiallyWrittenToolTagAtEnd = (fullText: string, toolTags: string[]) 
 
 const findIndexOfAny = (fullText: string, matches: string[]) => {
 	for (const str of matches) {
-		const idx = fullText.indexOf(str);
+		const idx = fullText.indexOf(str)
 		if (idx !== -1) {
 			return [idx, str] as const
 		}
@@ -163,9 +168,13 @@ const findIndexOfAny = (fullText: string, matches: string[]) => {
 	return null
 }
 
-
 type ToolOfToolName = { [toolName: string]: InternalToolInfo | undefined }
-const parseXMLPrefixToToolCall = <T extends ToolName,>(toolName: T, toolId: string, str: string, toolOfToolName: ToolOfToolName): RawToolCallObj => {
+const parseXMLPrefixToToolCall = <T extends ToolName>(
+	toolName: T,
+	toolId: string,
+	str: string,
+	toolOfToolName: ToolOfToolName,
+): RawToolCallObj => {
 	const paramsObj: RawToolParamsObj = {}
 	const doneParams: ToolParamName<T>[] = []
 	let isDone = false
@@ -198,7 +207,6 @@ const parseXMLPrefixToToolCall = <T extends ToolName,>(toolName: T, toolId: stri
 	if (j === -1) j = Infinity
 	else isDone = true
 
-
 	str = str.substring(i + openToolTag.length, j)
 
 	const pm = new SurroundingsRemover(str)
@@ -226,8 +234,7 @@ const parseXMLPrefixToToolCall = <T extends ToolName,>(toolName: T, toolId: stri
 				paramsObj[latestMatchedOpenParam] += pm.value()
 			}
 			return getAnswer()
-		}
-		else {
+		} else {
 			latestMatchedOpenParam = matchedOpenParam
 		}
 
@@ -251,8 +258,7 @@ const parseXMLPrefixToToolCall = <T extends ToolName,>(toolName: T, toolId: stri
 		if (!matchedCloseParam) {
 			paramsObj[latestMatchedOpenParam] += pm.value()
 			return getAnswer()
-		}
-		else {
+		} else {
 			doneParams.push(latestMatchedOpenParam)
 		}
 
@@ -265,24 +271,25 @@ export const extractXMLToolsWrapper = (
 	onFinalMessage: OnFinalMessage,
 	chatMode: ChatMode | null,
 	mcpTools: InternalToolInfo[] | undefined,
-): { newOnText: OnText, newOnFinalMessage: OnFinalMessage } => {
-
+): { newOnText: OnText; newOnFinalMessage: OnFinalMessage } => {
 	if (!chatMode) return { newOnText: onText, newOnFinalMessage: onFinalMessage }
 	const tools = availableTools(chatMode, mcpTools)
 	if (!tools) return { newOnText: onText, newOnFinalMessage: onFinalMessage }
 
 	const toolOfToolName: ToolOfToolName = {}
-	const toolOpenTags = tools.map(t => `<${t.name}>`)
-	for (const t of tools) { toolOfToolName[t.name] = t }
+	const toolOpenTags = tools.map((t) => `<${t.name}>`)
+	for (const t of tools) {
+		toolOfToolName[t.name] = t
+	}
 
 	const toolId = generateUuid()
 
 	// detect <availableTools[0]></availableTools[0]>, etc
-	let fullText = '';
+	let fullText = ''
 	let trueFullText = ''
 	let latestToolCall: RawToolCallObj | undefined = undefined
 
-	let foundOpenTag: { idx: number, toolName: ToolName } | null = null
+	let foundOpenTag: { idx: number; toolName: ToolName } | null = null
 	let openToolTagBuffer = '' // the characters we've seen so far that come after a < with no space afterwards, not yet added to fullText
 
 	let prevFullTextLen = 0
@@ -292,7 +299,6 @@ export const extractXMLToolsWrapper = (
 		trueFullText = params.fullText
 
 		// console.log('NEWTEXT', JSON.stringify(newText))
-
 
 		if (foundOpenTag === null) {
 			const newFullText = openToolTagBuffer + newText
@@ -319,8 +325,6 @@ export const extractXMLToolsWrapper = (
 					// do not count anything at or after i in fullText
 					fullText = fullText.substring(0, idx)
 				}
-
-
 			}
 		}
 
@@ -338,9 +342,8 @@ export const extractXMLToolsWrapper = (
 			...params,
 			fullText,
 			toolCall: latestToolCall,
-		});
-	};
-
+		})
+	}
 
 	const newOnFinalMessage: OnFinalMessage = (params) => {
 		// treat like just got text before calling onFinalMessage (or else we sometimes miss the final chunk that's new to finalMessage)
@@ -356,22 +359,20 @@ export const extractXMLToolsWrapper = (
 
 		onFinalMessage({ ...params, fullText, toolCall: toolCall })
 	}
-	return { newOnText, newOnFinalMessage };
+	return { newOnText, newOnFinalMessage }
 }
-
-
 
 // trim all whitespace up until the first newline, and all whitespace up until the last newline
 const trimBeforeAndAfterNewLines = (s: string) => {
-	if (!s) return s;
+	if (!s) return s
 
-	const firstNewLineIndex = s.indexOf('\n');
+	const firstNewLineIndex = s.indexOf('\n')
 
 	if (firstNewLineIndex !== -1 && s.substring(0, firstNewLineIndex).trim() === '') {
 		s = s.substring(firstNewLineIndex + 1, Infinity)
 	}
 
-	const lastNewLineIndex = s.lastIndexOf('\n');
+	const lastNewLineIndex = s.lastIndexOf('\n')
 	if (lastNewLineIndex !== -1 && s.substring(lastNewLineIndex + 1, Infinity).trim() === '') {
 		s = s.substring(0, lastNewLineIndex)
 	}

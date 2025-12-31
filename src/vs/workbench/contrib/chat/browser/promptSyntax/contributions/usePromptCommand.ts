@@ -3,34 +3,44 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../../../nls.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { CHAT_CATEGORY } from '../../actions/chatActions.js';
-import { IChatWidget, IChatWidgetService } from '../../chat.js';
-import { ChatContextKeys } from '../../../common/chatContextKeys.js';
-import { KeyMod, KeyCode } from '../../../../../../base/common/keyCodes.js';
-import { PromptsConfig } from '../../../../../../platform/prompts/common/config.js';
-import { isPromptFile } from '../../../../../../platform/prompts/common/constants.js';
-import { IEditorService } from '../../../../../services/editor/common/editorService.js';
-import { ICommandService } from '../../../../../../platform/commands/common/commands.js';
-import { ContextKeyExpr } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { MenuId, MenuRegistry } from '../../../../../../platform/actions/common/actions.js';
-import { ServicesAccessor } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { IActiveCodeEditor, isCodeEditor, isDiffEditor } from '../../../../../../editor/browser/editorBrowser.js';
-import { KeybindingsRegistry, KeybindingWeight } from '../../../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { IChatAttachPromptActionOptions, ATTACH_PROMPT_ACTION_ID } from '../../actions/chatAttachPromptAction/chatAttachPromptAction.js';
+import { localize } from '../../../../../../nls.js'
+import { URI } from '../../../../../../base/common/uri.js'
+import { CHAT_CATEGORY } from '../../actions/chatActions.js'
+import { IChatWidget, IChatWidgetService } from '../../chat.js'
+import { ChatContextKeys } from '../../../common/chatContextKeys.js'
+import { KeyMod, KeyCode } from '../../../../../../base/common/keyCodes.js'
+import { PromptsConfig } from '../../../../../../platform/prompts/common/config.js'
+import { isPromptFile } from '../../../../../../platform/prompts/common/constants.js'
+import { IEditorService } from '../../../../../services/editor/common/editorService.js'
+import { ICommandService } from '../../../../../../platform/commands/common/commands.js'
+import { ContextKeyExpr } from '../../../../../../platform/contextkey/common/contextkey.js'
+import { MenuId, MenuRegistry } from '../../../../../../platform/actions/common/actions.js'
+import { ServicesAccessor } from '../../../../../../platform/instantiation/common/instantiation.js'
+import {
+	IActiveCodeEditor,
+	isCodeEditor,
+	isDiffEditor,
+} from '../../../../../../editor/browser/editorBrowser.js'
+import {
+	KeybindingsRegistry,
+	KeybindingWeight,
+} from '../../../../../../platform/keybinding/common/keybindingsRegistry.js'
+import {
+	IChatAttachPromptActionOptions,
+	ATTACH_PROMPT_ACTION_ID,
+} from '../../actions/chatAttachPromptAction/chatAttachPromptAction.js'
 
 /**
  * Command ID of the "Use Prompt" command.
  */
-export const COMMAND_ID = 'workbench.command.prompts.use';
+export const COMMAND_ID = 'workbench.command.prompts.use'
 
 /**
  * Keybinding of the "Use Prompt" command.
  * The `cmd + /` is the current keybinding for 'attachment', so we use
  * the `alt` key modifier to convey the "prompt attachment" action.
  */
-const COMMAND_KEY_BINDING = KeyMod.CtrlCmd | KeyCode.Slash | KeyMod.Alt;
+const COMMAND_KEY_BINDING = KeyMod.CtrlCmd | KeyCode.Slash | KeyMod.Alt
 
 /**
  * Implementation of the "Use Prompt" command. The command works in the following way.
@@ -50,79 +60,75 @@ const COMMAND_KEY_BINDING = KeyMod.CtrlCmd | KeyCode.Slash | KeyMod.Alt;
  * was pressed when the prompt was selected, a `chat edits` panel is used instead
  * (likewise either the last focused or a new one).
  */
-const command = async (
-	accessor: ServicesAccessor,
-): Promise<void> => {
-	const commandService = accessor.get(ICommandService);
+const command = async (accessor: ServicesAccessor): Promise<void> => {
+	const commandService = accessor.get(ICommandService)
 
 	const options: IChatAttachPromptActionOptions = {
 		resource: getActivePromptUri(accessor),
 		widget: getFocusedChatWidget(accessor),
-	};
+	}
 
-	await commandService.executeCommand(ATTACH_PROMPT_ACTION_ID, options);
-};
+	await commandService.executeCommand(ATTACH_PROMPT_ACTION_ID, options)
+}
 
 /**
  * Get chat widget reference to attach prompt to.
  */
 export function getFocusedChatWidget(accessor: ServicesAccessor): IChatWidget | undefined {
-	const chatWidgetService = accessor.get(IChatWidgetService);
+	const chatWidgetService = accessor.get(IChatWidgetService)
 
-	const { lastFocusedWidget } = chatWidgetService;
+	const { lastFocusedWidget } = chatWidgetService
 	if (!lastFocusedWidget) {
-		return undefined;
+		return undefined
 	}
 
 	// the widget input `must` be focused at the time when command run
 	if (!lastFocusedWidget.hasInputFocus()) {
-		return undefined;
+		return undefined
 	}
 
-	return lastFocusedWidget;
+	return lastFocusedWidget
 }
 
 /**
  * Gets active editor instance, if any.
  */
 export function getActiveCodeEditor(accessor: ServicesAccessor): IActiveCodeEditor | undefined {
-	const editorService = accessor.get(IEditorService);
-	const { activeTextEditorControl } = editorService;
+	const editorService = accessor.get(IEditorService)
+	const { activeTextEditorControl } = editorService
 
 	if (isCodeEditor(activeTextEditorControl) && activeTextEditorControl.hasModel()) {
-		return activeTextEditorControl;
+		return activeTextEditorControl
 	}
 
 	if (isDiffEditor(activeTextEditorControl)) {
-		const originalEditor = activeTextEditorControl.getOriginalEditor();
+		const originalEditor = activeTextEditorControl.getOriginalEditor()
 		if (!originalEditor.hasModel()) {
-			return undefined;
+			return undefined
 		}
 
-		return originalEditor;
+		return originalEditor
 	}
 
-	return undefined;
+	return undefined
 }
 
 /**
  * Gets `URI` of a prompt file open in an active editor instance, if any.
  */
-const getActivePromptUri = (
-	accessor: ServicesAccessor,
-): URI | undefined => {
-	const activeEditor = getActiveCodeEditor(accessor);
+const getActivePromptUri = (accessor: ServicesAccessor): URI | undefined => {
+	const activeEditor = getActiveCodeEditor(accessor)
 	if (!activeEditor) {
-		return undefined;
+		return undefined
 	}
 
-	const { uri } = activeEditor.getModel();
+	const { uri } = activeEditor.getModel()
 	if (isPromptFile(uri)) {
-		return uri;
+		return uri
 	}
 
-	return undefined;
-};
+	return undefined
+}
 
 /**
  * Register the "Use Prompt" command with its keybinding.
@@ -133,7 +139,7 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
 	primary: COMMAND_KEY_BINDING,
 	handler: command,
 	when: ContextKeyExpr.and(PromptsConfig.enabledCtx, ChatContextKeys.enabled),
-});
+})
 
 /**
  * Register the "Use Prompt" command in the `command palette`.
@@ -141,8 +147,8 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
 MenuRegistry.appendMenuItem(MenuId.CommandPalette, {
 	command: {
 		id: COMMAND_ID,
-		title: localize('commands.prompts.use.title', "Use Prompt"),
-		category: CHAT_CATEGORY
+		title: localize('commands.prompts.use.title', 'Use Prompt'),
+		category: CHAT_CATEGORY,
 	},
-	when: ContextKeyExpr.and(PromptsConfig.enabledCtx, ChatContextKeys.enabled)
-});
+	when: ContextKeyExpr.and(PromptsConfig.enabledCtx, ChatContextKeys.enabled),
+})

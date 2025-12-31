@@ -6,27 +6,31 @@
 export const Mime = {
 	textUriList: 'text/uri-list',
 	textPlain: 'text/plain',
-} as const;
+} as const
 
 export const rootMediaMimesTypes = Object.freeze({
 	image: 'image',
 	audio: 'audio',
 	video: 'video',
-});
+})
 
 export enum MediaKind {
 	Image = 1,
 	Video,
-	Audio
+	Audio,
 }
 
 export function getMediaKindForMime(mime: string): MediaKind | undefined {
-	const root = mime.toLowerCase().split('/').at(0);
+	const root = mime.toLowerCase().split('/').at(0)
 	switch (root) {
-		case 'image': return MediaKind.Image;
-		case 'video': return MediaKind.Video;
-		case 'audio': return MediaKind.Audio;
-		default: return undefined;
+		case 'image':
+			return MediaKind.Image
+		case 'video':
+			return MediaKind.Video
+		case 'audio':
+			return MediaKind.Audio
+		default:
+			return undefined
 	}
 }
 
@@ -56,4 +60,4 @@ export const mediaFileExtensions = new Map<string, MediaKind>([
 	['mp3', MediaKind.Audio],
 	['aac', MediaKind.Audio],
 	['wav', MediaKind.Audio],
-]);
+])

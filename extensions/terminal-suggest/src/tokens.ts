@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TerminalShellType } from './terminalSuggestMain';
-
+import { TerminalShellType } from './terminalSuggestMain'
 
 export const enum TokenType {
 	Command,
@@ -12,22 +11,85 @@ export const enum TokenType {
 }
 
 const shellTypeResetChars = new Map<TerminalShellType, string[]>([
-	[TerminalShellType.Bash, ['>', '>>', '<', '2>', '2>>', '&>', '&>>', '|', '|&', '&&', '||', '&', ';', '(', '{', '<<']],
-	[TerminalShellType.Zsh, ['>', '>>', '<', '2>', '2>>', '&>', '&>>', '<>', '|', '|&', '&&', '||', '&', ';', '(', '{', '<<', '<<<', '<(']],
-	[TerminalShellType.PowerShell, ['>', '>>', '<', '2>', '2>>', '*>', '*>>', '|', '-and', '-or', '-not', '!', '&', '-eq', '-ne', '-gt', '-lt', '-ge', '-le', '-like', '-notlike', '-match', '-notmatch', '-contains', '-notcontains', '-in', '-notin']]
-]);
+	[
+		TerminalShellType.Bash,
+		['>', '>>', '<', '2>', '2>>', '&>', '&>>', '|', '|&', '&&', '||', '&', ';', '(', '{', '<<'],
+	],
+	[
+		TerminalShellType.Zsh,
+		[
+			'>',
+			'>>',
+			'<',
+			'2>',
+			'2>>',
+			'&>',
+			'&>>',
+			'<>',
+			'|',
+			'|&',
+			'&&',
+			'||',
+			'&',
+			';',
+			'(',
+			'{',
+			'<<',
+			'<<<',
+			'<(',
+		],
+	],
+	[
+		TerminalShellType.PowerShell,
+		[
+			'>',
+			'>>',
+			'<',
+			'2>',
+			'2>>',
+			'*>',
+			'*>>',
+			'|',
+			'-and',
+			'-or',
+			'-not',
+			'!',
+			'&',
+			'-eq',
+			'-ne',
+			'-gt',
+			'-lt',
+			'-ge',
+			'-le',
+			'-like',
+			'-notlike',
+			'-match',
+			'-notmatch',
+			'-contains',
+			'-notcontains',
+			'-in',
+			'-notin',
+		],
+	],
+])
 
-const defaultShellTypeResetChars = shellTypeResetChars.get(TerminalShellType.Bash)!;
+const defaultShellTypeResetChars = shellTypeResetChars.get(TerminalShellType.Bash)!
 
-export function getTokenType(ctx: { commandLine: string; cursorPosition: number }, shellType: TerminalShellType | undefined): TokenType {
-	const spaceIndex = ctx.commandLine.substring(0, ctx.cursorPosition).lastIndexOf(' ');
+export function getTokenType(
+	ctx: { commandLine: string; cursorPosition: number },
+	shellType: TerminalShellType | undefined,
+): TokenType {
+	const spaceIndex = ctx.commandLine.substring(0, ctx.cursorPosition).lastIndexOf(' ')
 	if (spaceIndex === -1) {
-		return TokenType.Command;
+		return TokenType.Command
 	}
-	const previousTokens = ctx.commandLine.substring(0, spaceIndex + 1).trim();
-	const commandResetChars = shellType === undefined ? defaultShellTypeResetChars : shellTypeResetChars.get(shellType) ?? defaultShellTypeResetChars;
-	if (commandResetChars.some(e => previousTokens.endsWith(e))) {
-		return TokenType.Command;
+	const previousTokens = ctx.commandLine.substring(0, spaceIndex + 1).trim()
+	const commandResetChars =
+		shellType === undefined
+			? defaultShellTypeResetChars
+			: (shellTypeResetChars.get(shellType) ?? defaultShellTypeResetChars)
+	if (commandResetChars.some((e) => previousTokens.endsWith(e))) {
+		return TokenType.Command
 	}
-	return TokenType.Argument;
+	return TokenType.Argument
 }

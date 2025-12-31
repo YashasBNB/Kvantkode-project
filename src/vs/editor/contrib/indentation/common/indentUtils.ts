@@ -4,34 +4,34 @@
  *--------------------------------------------------------------------------------------------*/
 
 export function getSpaceCnt(str: string, tabSize: number) {
-	let spacesCnt = 0;
+	let spacesCnt = 0
 
 	for (let i = 0; i < str.length; i++) {
 		if (str.charAt(i) === '\t') {
-			spacesCnt += tabSize;
+			spacesCnt += tabSize
 		} else {
-			spacesCnt++;
+			spacesCnt++
 		}
 	}
 
-	return spacesCnt;
+	return spacesCnt
 }
 
 export function generateIndent(spacesCnt: number, tabSize: number, insertSpaces: boolean) {
-	spacesCnt = spacesCnt < 0 ? 0 : spacesCnt;
+	spacesCnt = spacesCnt < 0 ? 0 : spacesCnt
 
-	let result = '';
+	let result = ''
 	if (!insertSpaces) {
-		const tabsCnt = Math.floor(spacesCnt / tabSize);
-		spacesCnt = spacesCnt % tabSize;
+		const tabsCnt = Math.floor(spacesCnt / tabSize)
+		spacesCnt = spacesCnt % tabSize
 		for (let i = 0; i < tabsCnt; i++) {
-			result += '\t';
+			result += '\t'
 		}
 	}
 
 	for (let i = 0; i < spacesCnt; i++) {
-		result += ' ';
+		result += ' '
 	}
 
-	return result;
+	return result
 }

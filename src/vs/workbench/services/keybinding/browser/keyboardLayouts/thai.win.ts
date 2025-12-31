@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyboardLayoutContribution } from './_.contribution.js';
+import { KeyboardLayoutContribution } from './_.contribution.js'
 
 KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 	layout: { name: '0000041E', id: '', text: 'Thai Kedmanee' },
@@ -163,6 +163,6 @@ KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 		BrowserForward: [],
 		BrowserStop: [],
 		BrowserRefresh: [],
-		BrowserFavorites: []
-	}
-});
+		BrowserFavorites: [],
+	},
+})

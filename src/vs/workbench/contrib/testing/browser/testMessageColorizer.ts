@@ -3,16 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { renderStringAsPlaintext } from '../../../../base/browser/markdownRenderer.js';
-import { IMarkdownString } from '../../../../base/common/htmlContent.js';
-import { IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { GraphemeIterator, forAnsiStringParts, removeAnsiEscapeCodes } from '../../../../base/common/strings.js';
-import './media/testMessageColorizer.css';
-import { CodeEditorWidget } from '../../../../editor/browser/widget/codeEditor/codeEditorWidget.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { Range } from '../../../../editor/common/core/range.js';
+import { renderStringAsPlaintext } from '../../../../base/browser/markdownRenderer.js'
+import { IMarkdownString } from '../../../../base/common/htmlContent.js'
+import { IDisposable, toDisposable } from '../../../../base/common/lifecycle.js'
+import {
+	GraphemeIterator,
+	forAnsiStringParts,
+	removeAnsiEscapeCodes,
+} from '../../../../base/common/strings.js'
+import './media/testMessageColorizer.css'
+import { CodeEditorWidget } from '../../../../editor/browser/widget/codeEditor/codeEditorWidget.js'
+import { Position } from '../../../../editor/common/core/position.js'
+import { Range } from '../../../../editor/common/core/range.js'
 
-const colorAttrRe = /^\x1b\[([0-9]+)m$/;
+const colorAttrRe = /^\x1b\[([0-9]+)m$/
 
 const enum Classes {
 	Prefix = 'tstm-ansidec-',
@@ -25,8 +29,7 @@ const enum Classes {
 }
 
 export const renderTestMessageAsText = (tm: string | IMarkdownString) =>
-	typeof tm === 'string' ? removeAnsiEscapeCodes(tm) : renderStringAsPlaintext(tm);
-
+	typeof tm === 'string' ? removeAnsiEscapeCodes(tm) : renderStringAsPlaintext(tm)
 
 /**
  * Applies decorations based on ANSI styles from the test message in the editor.
@@ -39,62 +42,67 @@ export const renderTestMessageAsText = (tm: string | IMarkdownString) =>
  *
  * Note: does not support TrueColor.
  */
-export const colorizeTestMessageInEditor = (message: string, editor: CodeEditorWidget): IDisposable => {
-	const decos: string[] = [];
+export const colorizeTestMessageInEditor = (
+	message: string,
+	editor: CodeEditorWidget,
+): IDisposable => {
+	const decos: string[] = []
 
-	editor.changeDecorations(changeAccessor => {
-		let start = new Position(1, 1);
-		let cls: string[] = [];
+	editor.changeDecorations((changeAccessor) => {
+		let start = new Position(1, 1)
+		let cls: string[] = []
 		for (const part of forAnsiStringParts(message)) {
 			if (part.isCode) {
-				const colorAttr = colorAttrRe.exec(part.str)?.[1];
+				const colorAttr = colorAttrRe.exec(part.str)?.[1]
 				if (!colorAttr) {
-					continue;
+					continue
 				}
 
-				const n = Number(colorAttr);
+				const n = Number(colorAttr)
 				if (n === 0) {
-					cls.length = 0;
+					cls.length = 0
 				} else if (n === 22) {
-					cls = cls.filter(c => c !== Classes.Bold && c !== Classes.Italic);
+					cls = cls.filter((c) => c !== Classes.Bold && c !== Classes.Italic)
 				} else if (n === 23) {
-					cls = cls.filter(c => c !== Classes.Italic);
+					cls = cls.filter((c) => c !== Classes.Italic)
 				} else if (n === 24) {
-					cls = cls.filter(c => c !== Classes.Underline);
+					cls = cls.filter((c) => c !== Classes.Underline)
 				} else if ((n >= 30 && n <= 39) || (n >= 90 && n <= 99)) {
-					cls = cls.filter(c => !c.startsWith(Classes.ForegroundPrefix));
-					cls.push(Classes.ForegroundPrefix + colorAttr);
+					cls = cls.filter((c) => !c.startsWith(Classes.ForegroundPrefix))
+					cls.push(Classes.ForegroundPrefix + colorAttr)
 				} else if ((n >= 40 && n <= 49) || (n >= 100 && n <= 109)) {
-					cls = cls.filter(c => !c.startsWith(Classes.BackgroundPrefix));
-					cls.push(Classes.BackgroundPrefix + colorAttr);
+					cls = cls.filter((c) => !c.startsWith(Classes.BackgroundPrefix))
+					cls.push(Classes.BackgroundPrefix + colorAttr)
 				} else {
-					cls.push(Classes.Prefix + colorAttr);
+					cls.push(Classes.Prefix + colorAttr)
 				}
 			} else {
-				let line = start.lineNumber;
-				let col = start.column;
+				let line = start.lineNumber
+				let col = start.column
 
-				const graphemes = new GraphemeIterator(part.str);
+				const graphemes = new GraphemeIterator(part.str)
 				for (let i = 0; !graphemes.eol(); i += graphemes.nextGraphemeLength()) {
 					if (part.str[i] === '\n') {
-						line++;
-						col = 1;
+						line++
+						col = 1
 					} else {
-						col++;
+						col++
 					}
 				}
 
-				const end = new Position(line, col);
+				const end = new Position(line, col)
 				if (cls.length) {
-					decos.push(changeAccessor.addDecoration(Range.fromPositions(start, end), {
-						inlineClassName: cls.join(' '),
-						description: 'test-message-colorized',
-					}));
+					decos.push(
+						changeAccessor.addDecoration(Range.fromPositions(start, end), {
+							inlineClassName: cls.join(' '),
+							description: 'test-message-colorized',
+						}),
+					)
 				}
-				start = end;
+				start = end
 			}
 		}
-	});
+	})
 
-	return toDisposable(() => editor.removeDecorations(decos));
-};
+	return toDisposable(() => editor.removeDecorations(decos))
+}

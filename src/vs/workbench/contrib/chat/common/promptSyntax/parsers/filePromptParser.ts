@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BasePromptParser } from './basePromptParser.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { FilePromptContentProvider } from '../contentProviders/filePromptContentsProvider.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
+import { BasePromptParser } from './basePromptParser.js'
+import { URI } from '../../../../../../base/common/uri.js'
+import { ILogService } from '../../../../../../platform/log/common/log.js'
+import { FilePromptContentProvider } from '../contentProviders/filePromptContentsProvider.js'
+import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js'
 
 /**
  * Class capable of parsing prompt syntax out of a provided file,
@@ -20,16 +20,16 @@ export class FilePromptParser extends BasePromptParser<FilePromptContentProvider
 		@IInstantiationService initService: IInstantiationService,
 		@ILogService logService: ILogService,
 	) {
-		const contentsProvider = initService.createInstance(FilePromptContentProvider, uri);
-		super(contentsProvider, seenReferences, initService, logService);
+		const contentsProvider = initService.createInstance(FilePromptContentProvider, uri)
+		super(contentsProvider, seenReferences, initService, logService)
 
-		this._register(contentsProvider);
+		this._register(contentsProvider)
 	}
 
 	/**
 	 * Returns a string representation of this object.
 	 */
 	public override toString() {
-		return `file-prompt:${this.uri.path}`;
+		return `file-prompt:${this.uri.path}`
 	}
 }

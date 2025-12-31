@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/73524
 
 	/**
@@ -15,23 +14,23 @@ declare module 'vscode' {
 			/**
 			 * The root folder to search within.
 			 */
-			folder: Uri;
+			folder: Uri
 
 			/**
 			 * Files that match an `includes` glob pattern should be included in the search.
 			 */
-			includes: string[];
+			includes: string[]
 
 			/**
 			 * Files that match an `excludes` glob pattern should be excluded from the search.
 			 */
-			excludes: GlobPattern[];
+			excludes: GlobPattern[]
 
 			/**
 			 * Whether symlinks should be followed while searching.
 			 * For more info, see the setting description for `search.followSymlinks`.
 			 */
-			followSymlinks: boolean;
+			followSymlinks: boolean
 
 			/**
 			 * Which file locations we should look for ignore (.gitignore or .ignore) files to respect.
@@ -40,29 +39,29 @@ declare module 'vscode' {
 				/**
 				 * Use ignore files at the current workspace root.
 				 */
-				local: boolean;
+				local: boolean
 				/**
 				 * Use ignore files at the parent directory. If set, `local` in {@link FileSearchProviderOptions.useIgnoreFiles} should also be `true`.
 				 */
-				parent: boolean;
+				parent: boolean
 				/**
 				 * Use global ignore files. If set, `local` in {@link FileSearchProviderOptions.useIgnoreFiles} should also be `true`.
 				 */
-				global: boolean;
-			};
-		}[];
+				global: boolean
+			}
+		}[]
 
 		/**
 		 * An object with a lifespan that matches the session's lifespan. If the provider chooses to, this object can be used as the key for a cache,
 		 * and searches with the same session object can search the same cache. When the object is garbage-collected, the session is complete and the cache can be cleared.
 		 * Please do not store any references to the session object, except via a weak reference (e.g. `WeakRef` or `WeakMap`).
 		 */
-		session: object;
+		session: object
 
 		/**
 		 * The maximum number of results to be returned.
 		 */
-		maxResults: number;
+		maxResults: number
 	}
 
 	/**
@@ -80,7 +79,11 @@ declare module 'vscode' {
 		 * @param options A set of options to consider while searching files.
 		 * @param token A cancellation token.
 		 */
-		provideFileSearchResults(pattern: string, options: FileSearchProviderOptions, token: CancellationToken): ProviderResult<Uri[]>;
+		provideFileSearchResults(
+			pattern: string,
+			options: FileSearchProviderOptions,
+			token: CancellationToken,
+		): ProviderResult<Uri[]>
 	}
 
 	export namespace workspace {
@@ -94,6 +97,9 @@ declare module 'vscode' {
 		 * @param provider The provider.
 		 * @return A {@link Disposable} that unregisters this provider when being disposed.
 		 */
-		export function registerFileSearchProvider2(scheme: string, provider: FileSearchProvider2): Disposable;
+		export function registerFileSearchProvider2(
+			scheme: string,
+			provider: FileSearchProvider2,
+		): Disposable
 	}
 }

@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { MetadataConsts } from '../../../common/encodedTokenAttributes.js';
+import type { MetadataConsts } from '../../../common/encodedTokenAttributes.js'
 
 export interface IGlyphRasterizer {
 	/**
 	 * A unique identifier for the rasterizer.
 	 */
-	readonly id: number;
+	readonly id: number
 
 	/**
 	 * An identifier for properties inherent to rendering with this rasterizer. This will be the
 	 * same as other rasterizer cache keys provided they share the same property values in question.
 	 */
-	readonly cacheKey: string;
+	readonly cacheKey: string
 
 	/**
 	 * Rasterizes a glyph.
@@ -31,9 +31,9 @@ export interface IGlyphRasterizer {
 		tokenMetadata: number,
 		decorationStyleSetId: number,
 		colorMap: string[],
-	): Readonly<IRasterizedGlyph>;
+	): Readonly<IRasterizedGlyph>
 
-	getTextMetrics(text: string): TextMetrics;
+	getTextMetrics(text: string): TextMetrics
 }
 
 /**
@@ -41,13 +41,13 @@ export interface IGlyphRasterizer {
  */
 export interface IBoundingBox {
 	/** The left x coordinate (inclusive). */
-	left: number;
+	left: number
 	/** The top y coordinate (inclusive). */
-	top: number;
+	top: number
 	/** The right x coordinate (inclusive). */
-	right: number;
+	right: number
 	/** The bottom y coordinate (inclusive). */
-	bottom: number;
+	bottom: number
 }
 
 /**
@@ -57,27 +57,27 @@ export interface IRasterizedGlyph {
 	/**
 	 * The source canvas the glyph was rasterized to.
 	 */
-	source: OffscreenCanvas;
+	source: OffscreenCanvas
 	/**
 	 * The bounding box of the glyph within {@link source}.
 	 */
-	boundingBox: IBoundingBox;
+	boundingBox: IBoundingBox
 	/**
 	 * The offset to the glyph's origin (where it should be drawn to).
 	 */
-	originOffset: { x: number; y: number };
+	originOffset: { x: number; y: number }
 	/**
 	 * The distance from the glyph baseline to the top of the highest bounding rectangle of all
 	 * fonts used to render the text.
 	 *
 	 * @see {@link TextMetrics.fontBoundingBoxAscent}
 	 */
-	fontBoundingBoxAscent: number;
+	fontBoundingBoxAscent: number
 	/**
 	 * The distance from the glyph baseline to the bottom of the bounding rectangle of all fonts
 	 * used to render the text.
 	 *
 	 * @see {@link TextMetrics.fontBoundingBoxDescent}
 	 */
-	fontBoundingBoxDescent: number;
+	fontBoundingBoxDescent: number
 }

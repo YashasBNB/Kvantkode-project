@@ -3,17 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
+import * as vscode from 'vscode'
 
 /**
  * Minimal version of {@link vscode.TextDocument}.
  */
 export interface ITextDocument {
-	readonly uri: vscode.Uri;
-	readonly version: number;
+	readonly uri: vscode.Uri
+	readonly version: number
 
-	getText(range?: vscode.Range): string;
+	getText(range?: vscode.Range): string
 
-	positionAt(offset: number): vscode.Position;
+	positionAt(offset: number): vscode.Position
 }
-

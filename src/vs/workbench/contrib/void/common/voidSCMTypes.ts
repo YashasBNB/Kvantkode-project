@@ -3,10 +3,10 @@
  *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js'
 
 export interface IVoidSCMService {
-	readonly _serviceBrand: undefined;
+	readonly _serviceBrand: undefined
 	/**
 	 * Get git diff --stat
 	 *

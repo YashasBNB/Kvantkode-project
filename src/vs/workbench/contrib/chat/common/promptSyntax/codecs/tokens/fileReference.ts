@@ -3,16 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-
-import { PromptVariableWithData } from './promptVariable.js';
-import { assert } from '../../../../../../../base/common/assert.js';
-import { IRange, Range } from '../../../../../../../editor/common/core/range.js';
-import { BaseToken } from '../../../../../../../editor/common/codecs/baseToken.js';
+import { PromptVariableWithData } from './promptVariable.js'
+import { assert } from '../../../../../../../base/common/assert.js'
+import { IRange, Range } from '../../../../../../../editor/common/core/range.js'
+import { BaseToken } from '../../../../../../../editor/common/codecs/baseToken.js'
 
 /**
  * Name of the variable.
  */
-const VARIABLE_NAME: string = 'file';
+const VARIABLE_NAME: string = 'file'
 
 /**
  * Object represents a file reference token inside a chatbot prompt.
@@ -22,7 +21,7 @@ export class FileReference extends PromptVariableWithData {
 		range: Range,
 		public readonly path: string,
 	) {
-		super(range, VARIABLE_NAME, path);
+		super(range, VARIABLE_NAME, path)
 	}
 
 	/**
@@ -33,23 +32,20 @@ export class FileReference extends PromptVariableWithData {
 		assert(
 			variable.name === VARIABLE_NAME,
 			`Variable name must be '${VARIABLE_NAME}', got '${variable.name}'.`,
-		);
+		)
 
-		return new FileReference(
-			variable.range,
-			variable.data,
-		);
+		return new FileReference(variable.range, variable.data)
 	}
 
 	/**
 	 * Check if this token is equal to another one.
 	 */
 	public override equals<T extends BaseToken>(other: T): boolean {
-		if ((other instanceof FileReference) === false) {
-			return false;
+		if (other instanceof FileReference === false) {
+			return false
 		}
 
-		return super.equals(other);
+		return super.equals(other)
 	}
 
 	/**
@@ -57,6 +53,6 @@ export class FileReference extends PromptVariableWithData {
 	 * the `/path/to/file.md` part of `#file:/path/to/file.md`).
 	 */
 	public get linkRange(): IRange | undefined {
-		return super.dataRange;
+		return super.dataRange
 	}
 }

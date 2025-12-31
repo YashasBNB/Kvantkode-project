@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDiffEditorConstructionOptions } from '../../../../../editor/browser/editorBrowser.js';
-import { IEditorOptions } from '../../../../../editor/common/config/editorOptions.js';
+import { IDiffEditorConstructionOptions } from '../../../../../editor/browser/editorBrowser.js'
+import { IEditorOptions } from '../../../../../editor/common/config/editorOptions.js'
 
 /**
  * Do not leave at 12, when at 12 and we have whitespace and only one line,
@@ -12,15 +12,15 @@ import { IEditorOptions } from '../../../../../editor/common/config/editorOption
  */
 const fixedEditorPaddingSingleLineCells = {
 	top: 24,
-	bottom: 24
-};
+	bottom: 24,
+}
 const fixedEditorPadding = {
 	top: 12,
-	bottom: 12
-};
+	bottom: 12,
+}
 
 export function getEditorPadding(lineCount: number) {
-	return lineCount === 1 ? fixedEditorPaddingSingleLineCells : fixedEditorPadding;
+	return lineCount === 1 ? fixedEditorPaddingSingleLineCells : fixedEditorPadding
 }
 
 export const fixedEditorOptions: IEditorOptions = {
@@ -46,8 +46,8 @@ export const fixedEditorOptions: IEditorOptions = {
 	minimap: { enabled: false },
 	renderValidationDecorations: 'on',
 	renderLineHighlight: 'none',
-	readOnly: true
-};
+	readOnly: true,
+}
 
 export const fixedDiffEditorOptions: IDiffEditorConstructionOptions = {
 	...fixedEditorOptions,
@@ -62,5 +62,5 @@ export const fixedDiffEditorOptions: IDiffEditorConstructionOptions = {
 	diffWordWrap: 'off',
 	diffAlgorithm: 'advanced',
 	renderSideBySide: true,
-	useInlineViewWhenSpaceIsLimited: false
-};
+	useInlineViewWhenSpaceIsLimited: false,
+}

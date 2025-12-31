@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../../../base/common/uri.js';
-import { ResolveError } from '../../promptFileReferenceErrors.js';
-import { IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { VSBufferReadableStream } from '../../../../../../base/common/buffer.js';
+import { URI } from '../../../../../../base/common/uri.js'
+import { ResolveError } from '../../promptFileReferenceErrors.js'
+import { IDisposable } from '../../../../../../base/common/lifecycle.js'
+import { VSBufferReadableStream } from '../../../../../../base/common/buffer.js'
 
 /**
  * Interface for a prompt contents provider. Prompt contents providers are
@@ -17,12 +17,12 @@ export interface IPromptContentsProvider extends IDisposable {
 	/**
 	 * URI component of the prompt associated with this contents provider.
 	 */
-	readonly uri: URI;
+	readonly uri: URI
 
 	/**
 	 * Start the contents provider to produce the underlying contents.
 	 */
-	start(): this;
+	start(): this
 
 	/**
 	 * Event that fires when the prompt contents change. The event is either a
@@ -31,17 +31,15 @@ export interface IPromptContentsProvider extends IDisposable {
 	 */
 	onContentChanged(
 		callback: (streamOrError: VSBufferReadableStream | ResolveError) => void,
-	): IDisposable;
+	): IDisposable
 
 	/**
 	 * Subscribe to `onDispose` event of the contents provider.
 	 */
-	onDispose(callback: () => void): this;
+	onDispose(callback: () => void): this
 
 	/**
 	 * Create a new instance of prompt contents provider.
 	 */
-	createNew(
-		promptContentsSource: { uri: URI },
-	): IPromptContentsProvider;
+	createNew(promptContentsSource: { uri: URI }): IPromptContentsProvider
 }

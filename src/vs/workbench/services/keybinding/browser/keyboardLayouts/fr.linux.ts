@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyboardLayoutContribution } from './_.contribution.js';
-
+import { KeyboardLayoutContribution } from './_.contribution.js'
 
 KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 	layout: { model: 'pc104', group: 0, layout: 'fr', variant: '', options: '', rules: 'base' },
@@ -41,7 +40,7 @@ KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 		Digit1: ['&', '1', '¹', '¡', 0],
 		Digit2: ['é', '2', '~', '⅛', 0],
 		Digit3: ['"', '3', '#', '£', 0],
-		Digit4: ['\'', '4', '{', '$', 0],
+		Digit4: ["'", '4', '{', '$', 0],
 		Digit5: ['(', '5', '[', '⅜', 0],
 		Digit6: ['-', '6', '|', '⅝', 0],
 		Digit7: ['è', '7', '`', '⅞', 0],
@@ -182,6 +181,6 @@ KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 		BrowserFavorites: [],
 		MailReply: [],
 		MailForward: [],
-		MailSend: []
-	}
-});
+		MailSend: [],
+	},
+})

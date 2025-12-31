@@ -3,53 +3,57 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { coalesce } from '../../../../base/common/arrays.js';
-import { URI } from '../../../../base/common/uri.js';
-import { Location } from '../../../../editor/common/languages.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IViewsService } from '../../../services/views/common/viewsService.js';
-import { IChatRequestVariableData, IChatRequestVariableEntry } from '../common/chatModel.js';
-import { ChatRequestDynamicVariablePart, ChatRequestToolPart, IParsedChatRequest } from '../common/chatParserTypes.js';
-import { IChatVariablesService, IDynamicVariable } from '../common/chatVariables.js';
-import { ChatAgentLocation, ChatConfiguration } from '../common/constants.js';
-import { IChatWidgetService, showChatView, showEditsView } from './chat.js';
-import { ChatDynamicVariableModel } from './contrib/chatDynamicVariables.js';
+import { coalesce } from '../../../../base/common/arrays.js'
+import { URI } from '../../../../base/common/uri.js'
+import { Location } from '../../../../editor/common/languages.js'
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js'
+import { IViewsService } from '../../../services/views/common/viewsService.js'
+import { IChatRequestVariableData, IChatRequestVariableEntry } from '../common/chatModel.js'
+import {
+	ChatRequestDynamicVariablePart,
+	ChatRequestToolPart,
+	IParsedChatRequest,
+} from '../common/chatParserTypes.js'
+import { IChatVariablesService, IDynamicVariable } from '../common/chatVariables.js'
+import { ChatAgentLocation, ChatConfiguration } from '../common/constants.js'
+import { IChatWidgetService, showChatView, showEditsView } from './chat.js'
+import { ChatDynamicVariableModel } from './contrib/chatDynamicVariables.js'
 
 export class ChatVariablesService implements IChatVariablesService {
-	declare _serviceBrand: undefined;
+	declare _serviceBrand: undefined
 
 	constructor(
 		@IChatWidgetService private readonly chatWidgetService: IChatWidgetService,
 		@IViewsService private readonly viewsService: IViewsService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
-	) {
-	}
+	) {}
 
-	resolveVariables(prompt: IParsedChatRequest, attachedContextVariables: IChatRequestVariableEntry[] | undefined): IChatRequestVariableData {
-		let resolvedVariables: IChatRequestVariableEntry[] = [];
+	resolveVariables(
+		prompt: IParsedChatRequest,
+		attachedContextVariables: IChatRequestVariableEntry[] | undefined,
+	): IChatRequestVariableData {
+		let resolvedVariables: IChatRequestVariableEntry[] = []
 
-		prompt.parts
-			.forEach((part, i) => {
-				if (part instanceof ChatRequestDynamicVariablePart || part instanceof ChatRequestToolPart) {
-					resolvedVariables[i] = part.toVariableEntry();
-				}
-			});
+		prompt.parts.forEach((part, i) => {
+			if (part instanceof ChatRequestDynamicVariablePart || part instanceof ChatRequestToolPart) {
+				resolvedVariables[i] = part.toVariableEntry()
+			}
+		})
 
 		// Make array not sparse
-		resolvedVariables = coalesce<IChatRequestVariableEntry>(resolvedVariables);
+		resolvedVariables = coalesce<IChatRequestVariableEntry>(resolvedVariables)
 
 		// "reverse", high index first so that replacement is simple
-		resolvedVariables.sort((a, b) => b.range!.start - a.range!.start);
+		resolvedVariables.sort((a, b) => b.range!.start - a.range!.start)
 
 		if (attachedContextVariables) {
 			// attachments not in the prompt
-			resolvedVariables.push(...attachedContextVariables);
+			resolvedVariables.push(...attachedContextVariables)
 		}
-
 
 		return {
 			variables: resolvedVariables,
-		};
+		}
 	}
 
 	getDynamicVariables(sessionId: string): ReadonlyArray<IDynamicVariable> {
@@ -57,43 +61,46 @@ export class ChatVariablesService implements IChatVariablesService {
 		// Need to ...
 		// - Parser takes list of dynamic references (annoying)
 		// - Or the parser is known to implicitly act on the input widget, and we need to call it before calling the chat service (maybe incompatible with the future, but easy)
-		const widget = this.chatWidgetService.getWidgetBySessionId(sessionId);
+		const widget = this.chatWidgetService.getWidgetBySessionId(sessionId)
 		if (!widget || !widget.viewModel || !widget.supportsFileReferences) {
-			return [];
+			return []
 		}
 
-		const model = widget.getContrib<ChatDynamicVariableModel>(ChatDynamicVariableModel.ID);
+		const model = widget.getContrib<ChatDynamicVariableModel>(ChatDynamicVariableModel.ID)
 		if (!model) {
-			return [];
+			return []
 		}
 
-		return model.variables;
+		return model.variables
 	}
 
 	async attachContext(name: string, value: string | URI | Location, location: ChatAgentLocation) {
 		if (location !== ChatAgentLocation.Panel && location !== ChatAgentLocation.EditingSession) {
-			return;
+			return
 		}
 
-		const unifiedViewEnabled = !!this.configurationService.getValue(ChatConfiguration.UnifiedChatView);
-		const widget = location === ChatAgentLocation.EditingSession && !unifiedViewEnabled
-			? await showEditsView(this.viewsService)
-			: (this.chatWidgetService.lastFocusedWidget ?? await showChatView(this.viewsService));
+		const unifiedViewEnabled = !!this.configurationService.getValue(
+			ChatConfiguration.UnifiedChatView,
+		)
+		const widget =
+			location === ChatAgentLocation.EditingSession && !unifiedViewEnabled
+				? await showEditsView(this.viewsService)
+				: (this.chatWidgetService.lastFocusedWidget ?? (await showChatView(this.viewsService)))
 		if (!widget || !widget.viewModel) {
-			return;
+			return
 		}
 
-		const key = name.toLowerCase();
+		const key = name.toLowerCase()
 		if (key === 'file' && typeof value !== 'string') {
-			const uri = URI.isUri(value) ? value : value.uri;
-			const range = 'range' in value ? value.range : undefined;
-			await widget.attachmentModel.addFile(uri, range);
-			return;
+			const uri = URI.isUri(value) ? value : value.uri
+			const range = 'range' in value ? value.range : undefined
+			await widget.attachmentModel.addFile(uri, range)
+			return
 		}
 
 		if (key === 'folder' && URI.isUri(value)) {
-			widget.attachmentModel.addFolder(value);
-			return;
+			widget.attachmentModel.addFolder(value)
+			return
 		}
 	}
 }

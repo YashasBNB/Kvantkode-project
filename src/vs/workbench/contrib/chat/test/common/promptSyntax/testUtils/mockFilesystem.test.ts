@@ -3,25 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { MockFilesystem } from './mockFilesystem.js';
-import { URI } from '../../../../../../../base/common/uri.js';
-import { Schemas } from '../../../../../../../base/common/network.js';
-import { assertDefined } from '../../../../../../../base/common/types.js';
-import { FileService } from '../../../../../../../platform/files/common/fileService.js';
-import { ILogService, NullLogService } from '../../../../../../../platform/log/common/log.js';
-import { IFileService, IFileStat } from '../../../../../../../platform/files/common/files.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../../base/test/common/utils.js';
-import { InMemoryFileSystemProvider } from '../../../../../../../platform/files/common/inMemoryFilesystemProvider.js';
-import { TestInstantiationService } from '../../../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
+import assert from 'assert'
+import { MockFilesystem } from './mockFilesystem.js'
+import { URI } from '../../../../../../../base/common/uri.js'
+import { Schemas } from '../../../../../../../base/common/network.js'
+import { assertDefined } from '../../../../../../../base/common/types.js'
+import { FileService } from '../../../../../../../platform/files/common/fileService.js'
+import { ILogService, NullLogService } from '../../../../../../../platform/log/common/log.js'
+import { IFileService, IFileStat } from '../../../../../../../platform/files/common/files.js'
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../../base/test/common/utils.js'
+import { InMemoryFileSystemProvider } from '../../../../../../../platform/files/common/inMemoryFilesystemProvider.js'
+import { TestInstantiationService } from '../../../../../../../platform/instantiation/test/common/instantiationServiceMock.js'
 
 /**
  * Base attribute for an expected filesystem node (a file or a folder).
  */
-interface IExpectedFilesystemNode extends Pick<
-	IFileStat,
-	'resource' | 'name' | 'isFile' | 'isDirectory' | 'isSymbolicLink'
-> { }
+interface IExpectedFilesystemNode
+	extends Pick<IFileStat, 'resource' | 'name' | 'isFile' | 'isDirectory' | 'isSymbolicLink'> {}
 
 /**
  * Represents an expected `file` info.
@@ -30,7 +28,7 @@ interface IExpectedFile extends IExpectedFilesystemNode {
 	/**
 	 * Expected file contents.
 	 */
-	contents: string;
+	contents: string
 }
 
 /**
@@ -40,7 +38,7 @@ interface IExpectedFolder extends IExpectedFilesystemNode {
 	/**
 	 * Expected folder children.
 	 */
-	children: (IExpectedFolder | IExpectedFile)[];
+	children: (IExpectedFolder | IExpectedFile)[]
 }
 
 /**
@@ -51,56 +49,52 @@ const validateFile = async (
 	expectedFile: IExpectedFile,
 	fileService: IFileService,
 ) => {
-	let readFile: IFileStat | undefined;
+	let readFile: IFileStat | undefined
 	try {
-		readFile = await fileService.resolve(URI.file(filePath));
+		readFile = await fileService.resolve(URI.file(filePath))
 	} catch (error) {
-		throw new Error(`Failed to read file '${filePath}': ${error}.`);
+		throw new Error(`Failed to read file '${filePath}': ${error}.`)
 	}
 
 	assert.strictEqual(
 		readFile.name,
 		expectedFile.name,
 		`File '${filePath}' must have correct 'name'.`,
-	);
+	)
 
 	assert.deepStrictEqual(
 		readFile.resource,
 		expectedFile.resource,
 		`File '${filePath}' must have correct 'URI'.`,
-	);
+	)
 
 	assert.strictEqual(
 		readFile.isFile,
 		expectedFile.isFile,
 		`File '${filePath}' must have correct 'isFile' value.`,
-	);
+	)
 
 	assert.strictEqual(
 		readFile.isDirectory,
 		expectedFile.isDirectory,
 		`File '${filePath}' must have correct 'isDirectory' value.`,
-	);
+	)
 
 	assert.strictEqual(
 		readFile.isSymbolicLink,
 		expectedFile.isSymbolicLink,
 		`File '${filePath}' must have correct 'isSymbolicLink' value.`,
-	);
+	)
 
-	assert.strictEqual(
-		readFile.children,
-		undefined,
-		`File '${filePath}' must not have children.`,
-	);
+	assert.strictEqual(readFile.children, undefined, `File '${filePath}' must not have children.`)
 
-	const fileContents = await fileService.readFile(readFile.resource);
+	const fileContents = await fileService.readFile(readFile.resource)
 	assert.strictEqual(
 		fileContents.value.toString(),
 		expectedFile.contents,
 		`File '${expectedFile.resource.fsPath}' must have correct contents.`,
-	);
-};
+	)
+}
 
 /**
  * Validates that folder at {@link folderPath} has expected attributes.
@@ -110,90 +104,79 @@ const validateFolder = async (
 	expectedFolder: IExpectedFolder,
 	fileService: IFileService,
 ) => {
-	let readFolder: IFileStat | undefined;
+	let readFolder: IFileStat | undefined
 	try {
-		readFolder = await fileService.resolve(URI.file(folderPath));
+		readFolder = await fileService.resolve(URI.file(folderPath))
 	} catch (error) {
-		throw new Error(`Failed to read folder '${folderPath}': ${error}.`);
+		throw new Error(`Failed to read folder '${folderPath}': ${error}.`)
 	}
 
 	assert.strictEqual(
 		readFolder.name,
 		expectedFolder.name,
 		`Folder '${folderPath}' must have correct 'name'.`,
-	);
+	)
 
 	assert.deepStrictEqual(
 		readFolder.resource,
 		expectedFolder.resource,
 		`Folder '${folderPath}' must have correct 'URI'.`,
-	);
+	)
 
 	assert.strictEqual(
 		readFolder.isFile,
 		expectedFolder.isFile,
 		`Folder '${folderPath}' must have correct 'isFile' value.`,
-	);
+	)
 
 	assert.strictEqual(
 		readFolder.isDirectory,
 		expectedFolder.isDirectory,
 		`Folder '${folderPath}' must have correct 'isDirectory' value.`,
-	);
+	)
 
 	assert.strictEqual(
 		readFolder.isSymbolicLink,
 		expectedFolder.isSymbolicLink,
 		`Folder '${folderPath}' must have correct 'isSymbolicLink' value.`,
-	);
+	)
 
-	assertDefined(
-		readFolder.children,
-		`Folder '${folderPath}' must have children.`,
-	);
+	assertDefined(readFolder.children, `Folder '${folderPath}' must have children.`)
 
 	assert.strictEqual(
 		readFolder.children.length,
 		expectedFolder.children.length,
 		`Folder '${folderPath}' must have correct number of children.`,
-	);
+	)
 
 	for (const expectedChild of expectedFolder.children) {
-		const childPath = URI.joinPath(expectedFolder.resource, expectedChild.name).fsPath;
+		const childPath = URI.joinPath(expectedFolder.resource, expectedChild.name).fsPath
 
 		if ('children' in expectedChild) {
-			await validateFolder(
-				childPath,
-				expectedChild,
-				fileService,
-			);
+			await validateFolder(childPath, expectedChild, fileService)
 
-			continue;
+			continue
 		}
 
-		await validateFile(
-			childPath,
-			expectedChild,
-			fileService,
-		);
+		await validateFile(childPath, expectedChild, fileService)
 	}
-};
+}
 
 suite('MockFilesystem', () => {
-	const disposables = ensureNoDisposablesAreLeakedInTestSuite();
+	const disposables = ensureNoDisposablesAreLeakedInTestSuite()
 
-	let initService: TestInstantiationService;
-	let fileService: IFileService;
+	let initService: TestInstantiationService
+	let fileService: IFileService
 	setup(async () => {
-		initService = disposables.add(new TestInstantiationService());
-		initService.stub(ILogService, new NullLogService());
+		initService = disposables.add(new TestInstantiationService())
+		initService.stub(ILogService, new NullLogService())
 
-		fileService = disposables.add(initService.createInstance(FileService));
-		const fileSystemProvider = disposables.add(new InMemoryFileSystemProvider());
-		disposables.add(fileService.registerProvider(Schemas.file, fileSystemProvider));
+		fileService = disposables.add(initService.createInstance(FileService))
+		const fileSystemProvider = disposables.add(new InMemoryFileSystemProvider())
+		disposables.add(fileService.registerProvider(Schemas.file, fileSystemProvider))
 
-		initService.stub(IFileService, fileService);
-	});
+		initService.stub(IFileService, fileService)
+	})
 
 	test('• mocks file structure', async () => {
 		const mockFilesystem = initService.createInstance(MockFilesystem, [
@@ -219,13 +202,13 @@ suite('MockFilesystem', () => {
 								name: '.file-2.TEST.ts',
 								contents: 'test hello',
 							},
-						]
-					}
-				]
-			}
-		]);
+						],
+					},
+				],
+			},
+		])
 
-		await mockFilesystem.mock();
+		await mockFilesystem.mock()
 
 		/**
 		 * Validate files and folders next.
@@ -280,10 +263,10 @@ suite('MockFilesystem', () => {
 								contents: 'test hello',
 							},
 						],
-					}
+					},
 				],
 			},
 			fileService,
-		);
-	});
-});
+		)
+	})
+})

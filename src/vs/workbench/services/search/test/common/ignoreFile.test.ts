@@ -3,256 +3,272 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { IgnoreFile } from '../../common/ignoreFile.js';
+import assert from 'assert'
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js'
+import { IgnoreFile } from '../../common/ignoreFile.js'
 
-function runAssert(input: string, ignoreFile: string, ignoreFileLocation: string, shouldMatch: boolean, traverse: boolean) {
+function runAssert(
+	input: string,
+	ignoreFile: string,
+	ignoreFileLocation: string,
+	shouldMatch: boolean,
+	traverse: boolean,
+) {
 	return (prefix: string) => {
-		const isDir = input.endsWith('/');
-		const rawInput = isDir ? input.slice(0, input.length - 1) : input;
+		const isDir = input.endsWith('/')
+		const rawInput = isDir ? input.slice(0, input.length - 1) : input
 
-		const matcher = new IgnoreFile(ignoreFile, prefix + ignoreFileLocation);
+		const matcher = new IgnoreFile(ignoreFile, prefix + ignoreFileLocation)
 		if (traverse) {
-			const traverses = matcher.isPathIncludedInTraversal(prefix + rawInput, isDir);
+			const traverses = matcher.isPathIncludedInTraversal(prefix + rawInput, isDir)
 
 			if (shouldMatch) {
-				assert(traverses, `${ignoreFileLocation}: ${ignoreFile} should traverse ${isDir ? 'dir' : 'file'} ${prefix}${rawInput}`);
+				assert(
+					traverses,
+					`${ignoreFileLocation}: ${ignoreFile} should traverse ${isDir ? 'dir' : 'file'} ${prefix}${rawInput}`,
+				)
 			} else {
-				assert(!traverses, `${ignoreFileLocation}: ${ignoreFile} should not traverse ${isDir ? 'dir' : 'file'} ${prefix}${rawInput}`);
+				assert(
+					!traverses,
+					`${ignoreFileLocation}: ${ignoreFile} should not traverse ${isDir ? 'dir' : 'file'} ${prefix}${rawInput}`,
+				)
 			}
-		}
-		else {
-			const ignores = matcher.isArbitraryPathIgnored(prefix + rawInput, isDir);
+		} else {
+			const ignores = matcher.isArbitraryPathIgnored(prefix + rawInput, isDir)
 
 			if (shouldMatch) {
-				assert(ignores, `${ignoreFileLocation}: ${ignoreFile} should ignore ${isDir ? 'dir' : 'file'} ${prefix}${rawInput}`);
+				assert(
+					ignores,
+					`${ignoreFileLocation}: ${ignoreFile} should ignore ${isDir ? 'dir' : 'file'} ${prefix}${rawInput}`,
+				)
 			} else {
-				assert(!ignores, `${ignoreFileLocation}: ${ignoreFile} should not ignore ${isDir ? 'dir' : 'file'} ${prefix}${rawInput}`);
+				assert(
+					!ignores,
+					`${ignoreFileLocation}: ${ignoreFile} should not ignore ${isDir ? 'dir' : 'file'} ${prefix}${rawInput}`,
+				)
 			}
 		}
-	};
+	}
 }
 
 function assertNoTraverses(ignoreFile: string, ignoreFileLocation: string, input: string) {
-	const runWithPrefix = runAssert(input, ignoreFile, ignoreFileLocation, false, true);
+	const runWithPrefix = runAssert(input, ignoreFile, ignoreFileLocation, false, true)
 
-	runWithPrefix('');
-	runWithPrefix('/someFolder');
+	runWithPrefix('')
+	runWithPrefix('/someFolder')
 }
 
 function assertTraverses(ignoreFile: string, ignoreFileLocation: string, input: string) {
-	const runWithPrefix = runAssert(input, ignoreFile, ignoreFileLocation, true, true);
+	const runWithPrefix = runAssert(input, ignoreFile, ignoreFileLocation, true, true)
 
-	runWithPrefix('');
-	runWithPrefix('/someFolder');
+	runWithPrefix('')
+	runWithPrefix('/someFolder')
 }
 
 function assertIgnoreMatch(ignoreFile: string, ignoreFileLocation: string, input: string) {
-	const runWithPrefix = runAssert(input, ignoreFile, ignoreFileLocation, true, false);
+	const runWithPrefix = runAssert(input, ignoreFile, ignoreFileLocation, true, false)
 
-	runWithPrefix('');
-	runWithPrefix('/someFolder');
+	runWithPrefix('')
+	runWithPrefix('/someFolder')
 }
 
 function assertNoIgnoreMatch(ignoreFile: string, ignoreFileLocation: string, input: string) {
-	const runWithPrefix = runAssert(input, ignoreFile, ignoreFileLocation, false, false);
+	const runWithPrefix = runAssert(input, ignoreFile, ignoreFileLocation, false, false)
 
-	runWithPrefix('');
-	runWithPrefix('/someFolder');
+	runWithPrefix('')
+	runWithPrefix('/someFolder')
 }
 
 suite('Parsing .gitignore files', () => {
-	ensureNoDisposablesAreLeakedInTestSuite();
+	ensureNoDisposablesAreLeakedInTestSuite()
 
 	test('paths with trailing slashes do not match files', () => {
-		const i = 'node_modules/\n';
+		const i = 'node_modules/\n'
 
-		assertNoIgnoreMatch(i, '/', '/node_modules');
-		assertIgnoreMatch(i, '/', '/node_modules/');
+		assertNoIgnoreMatch(i, '/', '/node_modules')
+		assertIgnoreMatch(i, '/', '/node_modules/')
 
-		assertNoIgnoreMatch(i, '/', '/inner/node_modules');
-		assertIgnoreMatch(i, '/', '/inner/node_modules/');
-	});
+		assertNoIgnoreMatch(i, '/', '/inner/node_modules')
+		assertIgnoreMatch(i, '/', '/inner/node_modules/')
+	})
 
 	test('parsing simple gitignore files', () => {
-		let i = 'node_modules\nout\n';
+		let i = 'node_modules\nout\n'
 
-		assertIgnoreMatch(i, '/', '/node_modules');
-		assertNoTraverses(i, '/', '/node_modules');
-		assertIgnoreMatch(i, '/', '/node_modules/file');
-		assertIgnoreMatch(i, '/', '/dir/node_modules');
-		assertIgnoreMatch(i, '/', '/dir/node_modules/file');
+		assertIgnoreMatch(i, '/', '/node_modules')
+		assertNoTraverses(i, '/', '/node_modules')
+		assertIgnoreMatch(i, '/', '/node_modules/file')
+		assertIgnoreMatch(i, '/', '/dir/node_modules')
+		assertIgnoreMatch(i, '/', '/dir/node_modules/file')
 
-		assertIgnoreMatch(i, '/', '/out');
-		assertNoTraverses(i, '/', '/out');
-		assertIgnoreMatch(i, '/', '/out/file');
-		assertIgnoreMatch(i, '/', '/dir/out');
-		assertIgnoreMatch(i, '/', '/dir/out/file');
+		assertIgnoreMatch(i, '/', '/out')
+		assertNoTraverses(i, '/', '/out')
+		assertIgnoreMatch(i, '/', '/out/file')
+		assertIgnoreMatch(i, '/', '/dir/out')
+		assertIgnoreMatch(i, '/', '/dir/out/file')
 
-		i = '/node_modules\n/out\n';
+		i = '/node_modules\n/out\n'
 
-		assertIgnoreMatch(i, '/', '/node_modules');
-		assertIgnoreMatch(i, '/', '/node_modules/file');
-		assertNoIgnoreMatch(i, '/', '/dir/node_modules');
-		assertNoIgnoreMatch(i, '/', '/dir/node_modules/file');
+		assertIgnoreMatch(i, '/', '/node_modules')
+		assertIgnoreMatch(i, '/', '/node_modules/file')
+		assertNoIgnoreMatch(i, '/', '/dir/node_modules')
+		assertNoIgnoreMatch(i, '/', '/dir/node_modules/file')
 
-		assertIgnoreMatch(i, '/', '/out');
-		assertIgnoreMatch(i, '/', '/out/file');
-		assertNoIgnoreMatch(i, '/', '/dir/out');
-		assertNoIgnoreMatch(i, '/', '/dir/out/file');
+		assertIgnoreMatch(i, '/', '/out')
+		assertIgnoreMatch(i, '/', '/out/file')
+		assertNoIgnoreMatch(i, '/', '/dir/out')
+		assertNoIgnoreMatch(i, '/', '/dir/out/file')
 
-		i = 'node_modules/\nout/\n';
+		i = 'node_modules/\nout/\n'
 
-		assertNoIgnoreMatch(i, '/', '/node_modules');
-		assertIgnoreMatch(i, '/', '/node_modules/');
-		assertIgnoreMatch(i, '/', '/node_modules/file');
-		assertIgnoreMatch(i, '/', '/dir/node_modules/');
-		assertNoIgnoreMatch(i, '/', '/dir/node_modules');
-		assertIgnoreMatch(i, '/', '/dir/node_modules/file');
+		assertNoIgnoreMatch(i, '/', '/node_modules')
+		assertIgnoreMatch(i, '/', '/node_modules/')
+		assertIgnoreMatch(i, '/', '/node_modules/file')
+		assertIgnoreMatch(i, '/', '/dir/node_modules/')
+		assertNoIgnoreMatch(i, '/', '/dir/node_modules')
+		assertIgnoreMatch(i, '/', '/dir/node_modules/file')
 
-		assertIgnoreMatch(i, '/', '/out/');
-		assertNoIgnoreMatch(i, '/', '/out');
-		assertIgnoreMatch(i, '/', '/out/file');
-		assertNoIgnoreMatch(i, '/', '/dir/out');
-		assertIgnoreMatch(i, '/', '/dir/out/');
-		assertIgnoreMatch(i, '/', '/dir/out/file');
-	});
+		assertIgnoreMatch(i, '/', '/out/')
+		assertNoIgnoreMatch(i, '/', '/out')
+		assertIgnoreMatch(i, '/', '/out/file')
+		assertNoIgnoreMatch(i, '/', '/dir/out')
+		assertIgnoreMatch(i, '/', '/dir/out/')
+		assertIgnoreMatch(i, '/', '/dir/out/file')
+	})
 
 	test('parsing files-in-folder exclude', () => {
-		let i = 'node_modules/*\n';
+		let i = 'node_modules/*\n'
 
-		assertNoIgnoreMatch(i, '/', '/node_modules');
-		assertNoIgnoreMatch(i, '/', '/node_modules/');
-		assertTraverses(i, '/', '/node_modules');
-		assertTraverses(i, '/', '/node_modules/');
-		assertIgnoreMatch(i, '/', '/node_modules/something');
-		assertNoTraverses(i, '/', '/node_modules/something');
-		assertIgnoreMatch(i, '/', '/node_modules/something/else');
-		assertIgnoreMatch(i, '/', '/node_modules/@types');
-		assertNoTraverses(i, '/', '/node_modules/@types');
+		assertNoIgnoreMatch(i, '/', '/node_modules')
+		assertNoIgnoreMatch(i, '/', '/node_modules/')
+		assertTraverses(i, '/', '/node_modules')
+		assertTraverses(i, '/', '/node_modules/')
+		assertIgnoreMatch(i, '/', '/node_modules/something')
+		assertNoTraverses(i, '/', '/node_modules/something')
+		assertIgnoreMatch(i, '/', '/node_modules/something/else')
+		assertIgnoreMatch(i, '/', '/node_modules/@types')
+		assertNoTraverses(i, '/', '/node_modules/@types')
 
-		i = 'node_modules/**/*\n';
+		i = 'node_modules/**/*\n'
 
-		assertNoIgnoreMatch(i, '/', '/node_modules');
-		assertNoIgnoreMatch(i, '/', '/node_modules/');
-		assertIgnoreMatch(i, '/', '/node_modules/something');
-		assertIgnoreMatch(i, '/', '/node_modules/something/else');
-		assertIgnoreMatch(i, '/', '/node_modules/@types');
-	});
+		assertNoIgnoreMatch(i, '/', '/node_modules')
+		assertNoIgnoreMatch(i, '/', '/node_modules/')
+		assertIgnoreMatch(i, '/', '/node_modules/something')
+		assertIgnoreMatch(i, '/', '/node_modules/something/else')
+		assertIgnoreMatch(i, '/', '/node_modules/@types')
+	})
 
 	test('parsing simple negations', () => {
-		let i = 'node_modules/*\n!node_modules/@types\n';
+		let i = 'node_modules/*\n!node_modules/@types\n'
 
-		assertNoIgnoreMatch(i, '/', '/node_modules');
-		assertTraverses(i, '/', '/node_modules');
+		assertNoIgnoreMatch(i, '/', '/node_modules')
+		assertTraverses(i, '/', '/node_modules')
 
-		assertIgnoreMatch(i, '/', '/node_modules/something');
-		assertNoTraverses(i, '/', '/node_modules/something');
-		assertIgnoreMatch(i, '/', '/node_modules/something/else');
+		assertIgnoreMatch(i, '/', '/node_modules/something')
+		assertNoTraverses(i, '/', '/node_modules/something')
+		assertIgnoreMatch(i, '/', '/node_modules/something/else')
 
-		assertNoIgnoreMatch(i, '/', '/node_modules/@types');
-		assertTraverses(i, '/', '/node_modules/@types');
-		assertTraverses(i, '/', '/node_modules/@types/boop');
+		assertNoIgnoreMatch(i, '/', '/node_modules/@types')
+		assertTraverses(i, '/', '/node_modules/@types')
+		assertTraverses(i, '/', '/node_modules/@types/boop')
 
-		i = '*.log\n!important.log\n';
+		i = '*.log\n!important.log\n'
 
-		assertIgnoreMatch(i, '/', '/test.log');
-		assertIgnoreMatch(i, '/', '/inner/test.log');
+		assertIgnoreMatch(i, '/', '/test.log')
+		assertIgnoreMatch(i, '/', '/inner/test.log')
 
-		assertNoIgnoreMatch(i, '/', '/important.log');
-		assertNoIgnoreMatch(i, '/', '/inner/important.log');
+		assertNoIgnoreMatch(i, '/', '/important.log')
+		assertNoIgnoreMatch(i, '/', '/inner/important.log')
 
-		assertNoTraverses(i, '/', '/test.log');
-		assertNoTraverses(i, '/', '/inner/test.log');
-		assertTraverses(i, '/', '/important.log');
-		assertTraverses(i, '/', '/inner/important.log');
-	});
+		assertNoTraverses(i, '/', '/test.log')
+		assertNoTraverses(i, '/', '/inner/test.log')
+		assertTraverses(i, '/', '/important.log')
+		assertTraverses(i, '/', '/inner/important.log')
+	})
 
 	test('nested .gitignores', () => {
-		let i = 'node_modules\nout\n';
+		let i = 'node_modules\nout\n'
 
-		assertIgnoreMatch(i, '/inner/', '/inner/node_modules');
-		assertIgnoreMatch(i, '/inner/', '/inner/more/node_modules');
+		assertIgnoreMatch(i, '/inner/', '/inner/node_modules')
+		assertIgnoreMatch(i, '/inner/', '/inner/more/node_modules')
 
+		i = '/node_modules\n/out\n'
 
-		i = '/node_modules\n/out\n';
+		assertIgnoreMatch(i, '/inner/', '/inner/node_modules')
+		assertNoIgnoreMatch(i, '/inner/', '/inner/more/node_modules')
+		assertNoIgnoreMatch(i, '/inner/', '/node_modules')
 
-		assertIgnoreMatch(i, '/inner/', '/inner/node_modules');
-		assertNoIgnoreMatch(i, '/inner/', '/inner/more/node_modules');
-		assertNoIgnoreMatch(i, '/inner/', '/node_modules');
+		i = 'node_modules/\nout/\n'
 
-		i = 'node_modules/\nout/\n';
-
-		assertNoIgnoreMatch(i, '/inner/', '/inner/node_modules');
-		assertIgnoreMatch(i, '/inner/', '/inner/node_modules/');
-		assertNoIgnoreMatch(i, '/inner/', '/inner/more/node_modules');
-		assertIgnoreMatch(i, '/inner/', '/inner/more/node_modules/');
-		assertNoIgnoreMatch(i, '/inner/', '/node_modules');
-	});
+		assertNoIgnoreMatch(i, '/inner/', '/inner/node_modules')
+		assertIgnoreMatch(i, '/inner/', '/inner/node_modules/')
+		assertNoIgnoreMatch(i, '/inner/', '/inner/more/node_modules')
+		assertIgnoreMatch(i, '/inner/', '/inner/more/node_modules/')
+		assertNoIgnoreMatch(i, '/inner/', '/node_modules')
+	})
 
 	test('file extension matches', () => {
-		let i = '*.js\n';
+		let i = '*.js\n'
 
-		assertNoIgnoreMatch(i, '/', '/myFile.ts');
-		assertIgnoreMatch(i, '/', '/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts');
-		assertIgnoreMatch(i, '/', '/inner/myFile.js');
+		assertNoIgnoreMatch(i, '/', '/myFile.ts')
+		assertIgnoreMatch(i, '/', '/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts')
+		assertIgnoreMatch(i, '/', '/inner/myFile.js')
 
-		i = '/*.js';
-		assertNoIgnoreMatch(i, '/', '/myFile.ts');
-		assertIgnoreMatch(i, '/', '/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts');
-		assertNoIgnoreMatch(i, '/', '/inner/myFile.js');
+		i = '/*.js'
+		assertNoIgnoreMatch(i, '/', '/myFile.ts')
+		assertIgnoreMatch(i, '/', '/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts')
+		assertNoIgnoreMatch(i, '/', '/inner/myFile.js')
 
-		i = '**/*.js';
-		assertNoIgnoreMatch(i, '/', '/myFile.ts');
-		assertIgnoreMatch(i, '/', '/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts');
-		assertIgnoreMatch(i, '/', '/inner/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.ts');
-		assertIgnoreMatch(i, '/', '/inner/more/myFile.js');
+		i = '**/*.js'
+		assertNoIgnoreMatch(i, '/', '/myFile.ts')
+		assertIgnoreMatch(i, '/', '/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts')
+		assertIgnoreMatch(i, '/', '/inner/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.ts')
+		assertIgnoreMatch(i, '/', '/inner/more/myFile.js')
 
-		i = 'inner/*.js';
-		assertNoIgnoreMatch(i, '/', '/myFile.ts');
-		assertNoIgnoreMatch(i, '/', '/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts');
-		assertIgnoreMatch(i, '/', '/inner/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.ts');
-		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.js');
+		i = 'inner/*.js'
+		assertNoIgnoreMatch(i, '/', '/myFile.ts')
+		assertNoIgnoreMatch(i, '/', '/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts')
+		assertIgnoreMatch(i, '/', '/inner/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.ts')
+		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.js')
 
-		i = '/inner/*.js';
-		assertNoIgnoreMatch(i, '/', '/myFile.ts');
-		assertNoIgnoreMatch(i, '/', '/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts');
-		assertIgnoreMatch(i, '/', '/inner/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.ts');
-		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.js');
+		i = '/inner/*.js'
+		assertNoIgnoreMatch(i, '/', '/myFile.ts')
+		assertNoIgnoreMatch(i, '/', '/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts')
+		assertIgnoreMatch(i, '/', '/inner/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.ts')
+		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.js')
 
-		i = '**/inner/*.js';
-		assertNoIgnoreMatch(i, '/', '/myFile.ts');
-		assertNoIgnoreMatch(i, '/', '/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts');
-		assertIgnoreMatch(i, '/', '/inner/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.ts');
-		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.js');
+		i = '**/inner/*.js'
+		assertNoIgnoreMatch(i, '/', '/myFile.ts')
+		assertNoIgnoreMatch(i, '/', '/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts')
+		assertIgnoreMatch(i, '/', '/inner/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.ts')
+		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.js')
 
-		i = '**/inner/**/*.js';
-		assertNoIgnoreMatch(i, '/', '/myFile.ts');
-		assertNoIgnoreMatch(i, '/', '/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts');
-		assertIgnoreMatch(i, '/', '/inner/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.ts');
-		assertIgnoreMatch(i, '/', '/inner/more/myFile.js');
+		i = '**/inner/**/*.js'
+		assertNoIgnoreMatch(i, '/', '/myFile.ts')
+		assertNoIgnoreMatch(i, '/', '/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts')
+		assertIgnoreMatch(i, '/', '/inner/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.ts')
+		assertIgnoreMatch(i, '/', '/inner/more/myFile.js')
 
-		i = '**/more/*.js';
-		assertNoIgnoreMatch(i, '/', '/myFile.ts');
-		assertNoIgnoreMatch(i, '/', '/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts');
-		assertNoIgnoreMatch(i, '/', '/inner/myFile.js');
-		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.ts');
-		assertIgnoreMatch(i, '/', '/inner/more/myFile.js');
-	});
+		i = '**/more/*.js'
+		assertNoIgnoreMatch(i, '/', '/myFile.ts')
+		assertNoIgnoreMatch(i, '/', '/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/myFile.ts')
+		assertNoIgnoreMatch(i, '/', '/inner/myFile.js')
+		assertNoIgnoreMatch(i, '/', '/inner/more/myFile.ts')
+		assertIgnoreMatch(i, '/', '/inner/more/myFile.js')
+	})
 
 	test('real world example: vscode-js-debug', () => {
 		const i = `.cache/
@@ -273,7 +289,7 @@ suite('Parsing .gitignore files', () => {
 			/testWorkspace/web/tmp
 			/testWorkspace/**/debug.log
 			/testWorkspace/webview/win/true/
-			*.cpuprofile`;
+			*.cpuprofile`
 
 		const included = [
 			'/distro',
@@ -288,7 +304,7 @@ suite('Parsing .gitignore files', () => {
 
 			'/a/best/b/c.actual',
 			'/best/b/c.actual',
-		];
+		]
 
 		const excluded = [
 			'/.profile/',
@@ -327,16 +343,16 @@ suite('Parsing .gitignore files', () => {
 			'/a.cpuprofile',
 			'/aa/a.cpuprofile',
 			'/aaa/aa/a.cpuprofile',
-		];
+		]
 
 		for (const include of included) {
-			assertNoIgnoreMatch(i, '/', include);
+			assertNoIgnoreMatch(i, '/', include)
 		}
 
 		for (const exclude of excluded) {
-			assertIgnoreMatch(i, '/', exclude);
+			assertIgnoreMatch(i, '/', exclude)
 		}
-	});
+	})
 
 	test('real world example: vscode', () => {
 		const i = `.DS_Store
@@ -357,7 +373,7 @@ suite('Parsing .gitignore files', () => {
 			yarn-error.log
 			vscode.lsif
 			vscode.db
-			/.profile-oss`;
+			/.profile-oss`
 
 		const included = [
 			'/inner/extensions/dist',
@@ -383,7 +399,7 @@ suite('Parsing .gitignore files', () => {
 			'/extensions/dist',
 			'/extensions/boop/doop/dist',
 			'/extensions/boop/out',
-		];
+		]
 
 		const excluded = [
 			'/extensions/dist/',
@@ -404,28 +420,35 @@ suite('Parsing .gitignore files', () => {
 			'/out2/test',
 
 			'/.profile-oss',
-		];
+		]
 
 		for (const include of included) {
-			assertNoIgnoreMatch(i, '/', include);
+			assertNoIgnoreMatch(i, '/', include)
 		}
 
 		for (const exclude of excluded) {
-			assertIgnoreMatch(i, '/', exclude);
+			assertIgnoreMatch(i, '/', exclude)
 		}
-
-	});
+	})
 
 	test('various advanced constructs found in popular repos', () => {
-		const runTest = ({ pattern, included, excluded }: { pattern: string; included: string[]; excluded: string[] }) => {
+		const runTest = ({
+			pattern,
+			included,
+			excluded,
+		}: {
+			pattern: string
+			included: string[]
+			excluded: string[]
+		}) => {
 			for (const include of included) {
-				assertNoIgnoreMatch(pattern, '/', include);
+				assertNoIgnoreMatch(pattern, '/', include)
 			}
 
 			for (const exclude of excluded) {
-				assertIgnoreMatch(pattern, '/', exclude);
+				assertIgnoreMatch(pattern, '/', exclude)
 			}
-		};
+		}
 
 		runTest({
 			pattern: `**/node_modules
@@ -451,7 +474,7 @@ suite('Parsing .gitignore files', () => {
 				'/packages/a/b/dist',
 				'/packages/a/b/dist/test',
 			],
-		});
+		})
 
 		runTest({
 			pattern: `.yarn/*
@@ -462,10 +485,7 @@ suite('Parsing .gitignore files', () => {
 			!.yarn/sdks
 			!.yarn/versions`,
 
-			excluded: [
-				'/.yarn/test',
-				'/.yarn/cache',
-			],
+			excluded: ['/.yarn/test', '/.yarn/cache'],
 			included: [
 				'/inner/.yarn/test',
 				'/inner/.yarn/cache',
@@ -476,7 +496,7 @@ suite('Parsing .gitignore files', () => {
 				'/.yarn/sdks',
 				'/.yarn/versions',
 			],
-		});
+		})
 
 		runTest({
 			pattern: `[._]*s[a-w][a-z]
@@ -499,10 +519,8 @@ suite('Parsing .gitignore files', () => {
 				'/inner/._._sby',
 				'/_swz',
 			],
-			included: [
-				'/.jaa',
-			],
-		});
+			included: ['/.jaa'],
+		})
 
 		// TODO: the rest of these :)
 		runTest({
@@ -516,7 +534,7 @@ suite('Parsing .gitignore files', () => {
 			!default.perspectivev3`,
 			excluded: [],
 			included: [],
-		});
+		})
 
 		runTest({
 			pattern: `[Dd]ebug/
@@ -532,7 +550,7 @@ suite('Parsing .gitignore files', () => {
 			[Ll]og/`,
 			excluded: [],
 			included: [],
-		});
+		})
 
 		runTest({
 			pattern: `Dockerfile*
@@ -540,7 +558,7 @@ suite('Parsing .gitignore files', () => {
 			!/tests/conformance/**/Dockerfile*`,
 			excluded: [],
 			included: [],
-		});
+		})
 
 		runTest({
 			pattern: `*.pdf
@@ -554,7 +572,7 @@ suite('Parsing .gitignore files', () => {
 			!toc.html`,
 			excluded: [],
 			included: [],
-		});
+		})
 
 		runTest({
 			pattern: `/log/*
@@ -563,7 +581,6 @@ suite('Parsing .gitignore files', () => {
 			!/tmp/.keep`,
 			excluded: [],
 			included: [],
-		});
-
-	});
-});
+		})
+	})
+})

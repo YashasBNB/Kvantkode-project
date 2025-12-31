@@ -1,0 +1,76 @@
+export function gotoNextSibling(newCursor, oldCursor) {
+    const n = newCursor.gotoNextSibling();
+    const o = oldCursor.gotoNextSibling();
+    if (n !== o) {
+        throw new Error('Trees are out of sync');
+    }
+    return n && o;
+}
+export function gotoParent(newCursor, oldCursor) {
+    const n = newCursor.gotoParent();
+    const o = oldCursor.gotoParent();
+    if (n !== o) {
+        throw new Error('Trees are out of sync');
+    }
+    return n && o;
+}
+export function gotoNthChild(newCursor, oldCursor, index) {
+    const n = newCursor.gotoFirstChild();
+    const o = oldCursor.gotoFirstChild();
+    if (n !== o) {
+        throw new Error('Trees are out of sync');
+    }
+    if (index === 0) {
+        return n && o;
+    }
+    for (let i = 1; i <= index; i++) {
+        const nn = newCursor.gotoNextSibling();
+        const oo = oldCursor.gotoNextSibling();
+        if (nn !== oo) {
+            throw new Error('Trees are out of sync');
+        }
+        if (!nn || !oo) {
+            return false;
+        }
+    }
+    return n && o;
+}
+export function nextSiblingOrParentSibling(newCursor, oldCursor) {
+    do {
+        if (newCursor.currentNode.nextSibling) {
+            return gotoNextSibling(newCursor, oldCursor);
+        }
+        if (newCursor.currentNode.parent) {
+            gotoParent(newCursor, oldCursor);
+        }
+    } while (newCursor.currentNode.nextSibling || newCursor.currentNode.parent);
+    return false;
+}
+export function getClosestPreviousNodes(cursor, tree) {
+    // Go up parents until the end of the parent is before the start of the current.
+    const findPrev = tree.walk();
+    findPrev.resetTo(cursor);
+    const startingNode = cursor.currentNode;
+    do {
+        if (findPrev.currentNode.previousSibling &&
+            findPrev.currentNode.endIndex - findPrev.currentNode.startIndex !== 0) {
+            findPrev.gotoPreviousSibling();
+        }
+        else {
+            while (!findPrev.currentNode.previousSibling && findPrev.currentNode.parent) {
+                findPrev.gotoParent();
+            }
+            findPrev.gotoPreviousSibling();
+        }
+    } while (findPrev.currentNode.endIndex > startingNode.startIndex &&
+        (findPrev.currentNode.parent || findPrev.currentNode.previousSibling) &&
+        findPrev.currentNode.id !== startingNode.id);
+    if (findPrev.currentNode.id !== startingNode.id &&
+        findPrev.currentNode.endIndex <= startingNode.startIndex) {
+        return findPrev.currentNode;
+    }
+    else {
+        return undefined;
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY3Vyc29yVXRpbHMuanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9Vc2Vycy95YXNoYXNuYWlkdS9LdmFudGNvZGUvdm9pZC9zcmMvIiwic291cmNlcyI6WyJ2cy9lZGl0b3IvY29tbW9uL3NlcnZpY2VzL3RyZWVTaXR0ZXIvY3Vyc29yVXRpbHMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBTUEsTUFBTSxVQUFVLGVBQWUsQ0FBQyxTQUE0QixFQUFFLFNBQTRCO0lBQ3pGLE1BQU0sQ0FBQyxHQUFHLFNBQVMsQ0FBQyxlQUFlLEVBQUUsQ0FBQTtJQUNyQyxNQUFNLENBQUMsR0FBRyxTQUFTLENBQUMsZUFBZSxFQUFFLENBQUE7SUFDckMsSUFBSSxDQUFDLEtBQUssQ0FBQyxFQUFFLENBQUM7UUFDYixNQUFNLElBQUksS0FBSyxDQUFDLHVCQUF1QixDQUFDLENBQUE7SUFDekMsQ0FBQztJQUNELE9BQU8sQ0FBQyxJQUFJLENBQUMsQ0FBQTtBQUNkLENBQUM7QUFFRCxNQUFNLFVBQVUsVUFBVSxDQUFDLFNBQTRCLEVBQUUsU0FBNEI7SUFDcEYsTUFBTSxDQUFDLEdBQUcsU0FBUyxDQUFDLFVBQVUsRUFBRSxDQUFBO0lBQ2hDLE1BQU0sQ0FBQyxHQUFHLFNBQVMsQ0FBQyxVQUFVLEVBQUUsQ0FBQTtJQUNoQyxJQUFJLENBQUMsS0FBSyxDQUFDLEVBQUUsQ0FBQztRQUNiLE1BQU0sSUFBSSxLQUFLLENBQUMsdUJBQXVCLENBQUMsQ0FBQTtJQUN6QyxDQUFDO0lBQ0QsT0FBTyxDQUFDLElBQUksQ0FBQyxDQUFBO0FBQ2QsQ0FBQztBQUVELE1BQU0sVUFBVSxZQUFZLENBQzNCLFNBQTRCLEVBQzVCLFNBQTRCLEVBQzVCLEtBQWE7SUFFYixNQUFNLENBQUMsR0FBRyxTQUFTLENBQUMsY0FBYyxFQUFFLENBQUE7SUFDcEMsTUFBTSxDQUFDLEdBQUcsU0FBUyxDQUFDLGNBQWMsRUFBRSxDQUFBO0lBQ3BDLElBQUksQ0FBQyxLQUFLLENBQUMsRUFBRSxDQUFDO1FBQ2Is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

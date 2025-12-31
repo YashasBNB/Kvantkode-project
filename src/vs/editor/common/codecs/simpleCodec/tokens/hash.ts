@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BaseToken } from '../../baseToken.js';
-import { Range } from '../../../core/range.js';
-import { Position } from '../../../core/position.js';
-import { Line } from '../../linesCodec/tokens/line.js';
+import { BaseToken } from '../../baseToken.js'
+import { Range } from '../../../core/range.js'
+import { Position } from '../../../core/position.js'
+import { Line } from '../../linesCodec/tokens/line.js'
 
 /**
  * A token that represent a `#` with a `range`. The `range`
@@ -16,38 +16,32 @@ export class Hash extends BaseToken {
 	/**
 	 * The underlying symbol of the token.
 	 */
-	public static readonly symbol: string = '#';
+	public static readonly symbol: string = '#'
 
 	/**
 	 * Return text representation of the token.
 	 */
 	public get text(): string {
-		return Hash.symbol;
+		return Hash.symbol
 	}
 
 	/**
 	 * Create new token with range inside
 	 * the given `Line` at the given `column number`.
 	 */
-	public static newOnLine(
-		line: Line,
-		atColumnNumber: number,
-	): Hash {
-		const { range } = line;
+	public static newOnLine(line: Line, atColumnNumber: number): Hash {
+		const { range } = line
 
-		const startPosition = new Position(range.startLineNumber, atColumnNumber);
-		const endPosition = new Position(range.startLineNumber, atColumnNumber + this.symbol.length);
+		const startPosition = new Position(range.startLineNumber, atColumnNumber)
+		const endPosition = new Position(range.startLineNumber, atColumnNumber + this.symbol.length)
 
-		return new Hash(Range.fromPositions(
-			startPosition,
-			endPosition,
-		));
+		return new Hash(Range.fromPositions(startPosition, endPosition))
 	}
 
 	/**
 	 * Returns a string representation of the token.
 	 */
 	public override toString(): string {
-		return `hash${this.range}`;
+		return `hash${this.range}`
 	}
 }

@@ -9,7 +9,7 @@ declare namespace Fig {
 	 * - history: show suggestions for all items in history matching this pattern
 	 * - help: show subcommands. Only includes the 'siblings' of the nearest 'parent' subcommand
 	 */
-	type TemplateStrings = "filepaths" | "folders" | "history" | "help";
+	type TemplateStrings = 'filepaths' | 'folders' | 'history' | 'help'
 
 	/**
 	 * A template which is a single TemplateString or an array of TemplateStrings
@@ -26,25 +26,25 @@ declare namespace Fig {
 	 * `ls` used  ["filepaths", "folders"]. Why both? Because if I `ls` a directory, we want to enable a user to autoexecute on this directory. If we just did "filepaths" they couldn't autoexecute.
 	 *
 	 */
-	type Template = TemplateStrings | TemplateStrings[];
+	type Template = TemplateStrings | TemplateStrings[]
 
 	type HistoryContext = {
-		currentWorkingDirectory: string;
-		time: number;
-		exitCode: number;
-		shell: string;
-	};
+		currentWorkingDirectory: string
+		time: number
+		exitCode: number
+		shell: string
+	}
 
 	type TemplateSuggestionContext =
-		| { templateType: "filepaths" }
-		| { templateType: "folders" }
-		| { templateType: "help" }
-		| ({ templateType: "history" } & Partial<HistoryContext>);
+		| { templateType: 'filepaths' }
+		| { templateType: 'folders' }
+		| { templateType: 'help' }
+		| ({ templateType: 'history' } & Partial<HistoryContext>)
 
 	type TemplateSuggestion = Modify<
 		Suggestion,
 		{ name?: string; context: TemplateSuggestionContext }
-	>;
+	>
 
 	/**
 	 *
@@ -77,8 +77,8 @@ declare namespace Fig {
 	 * @irreplaceable
 	 */
 	type SpecLocation =
-		| { type: "local"; path?: string; name: string }
-		| { type: "global"; name: string };
+		| { type: 'local'; path?: string; name: string }
+		| { type: 'global'; name: string }
 
 	/**
 	 * Dynamically load up another completion spec at runtime.
@@ -89,9 +89,9 @@ declare namespace Fig {
 		| string
 		| Subcommand
 		| ((
-			token: string,
-			executeCommand: ExecuteCommandFunction
-		) => Promise<SpecLocation | SpecLocation[] | Subcommand>);
+				token: string,
+				executeCommand: ExecuteCommandFunction,
+		  ) => Promise<SpecLocation | SpecLocation[] | Subcommand>)
 
 	/**
 	 * The type of a suggestion object.
@@ -101,19 +101,19 @@ declare namespace Fig {
 	 * - whether we allow users to auto-execute a command
 	 */
 	type SuggestionType =
-		| "folder"
-		| "file"
-		| "arg"
-		| "subcommand"
-		| "option"
-		| "special"
-		| "mixin"
-		| "shortcut";
+		| 'folder'
+		| 'file'
+		| 'arg'
+		| 'subcommand'
+		| 'option'
+		| 'special'
+		| 'mixin'
+		| 'shortcut'
 
 	/**
 	 * A single object of type `T` or an array of objects of type `T`.
 	 */
-	type SingleOrArray<T> = T | T[];
+	type SingleOrArray<T> = T | T[]
 
 	/**
 	 * An async function that returns the version of a given CLI tool.
@@ -130,7 +130,7 @@ declare namespace Fig {
 	 * `v26`
 	 *
 	 */
-	type GetVersionCommand = (executeCommand: ExecuteCommandFunction) => Promise<string>;
+	type GetVersionCommand = (executeCommand: ExecuteCommandFunction) => Promise<string>
 
 	/**
 	 * Context about a current shell session.
@@ -139,52 +139,52 @@ declare namespace Fig {
 		/**
 		 * The current directory the shell is in
 		 */
-		currentWorkingDirectory: string;
+		currentWorkingDirectory: string
 		/**
 		 * Exported environment variables from the shell
 		 */
-		environmentVariables: Record<string, string>;
+		environmentVariables: Record<string, string>
 		/**
 		 * The name of the current process
 		 */
-		currentProcess: string;
+		currentProcess: string
 		/**
 		 * @hidden
 		 * @deprecated
 		 */
-		sshPrefix: string;
-	};
+		sshPrefix: string
+	}
 
 	type GeneratorContext = ShellContext & {
-		isDangerous?: boolean;
-		searchTerm: string;
-	};
+		isDangerous?: boolean
+		searchTerm: string
+	}
 
 	/**
 	 * A function which can have a `T` argument and a `R` result.
 	 * @param param - A param of type `R`
 	 * @returns Something of type `R`
 	 */
-	type Function<T = void, R = void> = (param: T) => R;
+	type Function<T = void, R = void> = (param: T) => R
 
 	/**
 	 * A utility type to modify a property type
 	 * @irreplaceable
 	 */
-	type Modify<T, R> = Omit<T, keyof R> & R;
+	type Modify<T, R> = Omit<T, keyof R> & R
 
 	/**
 	 * A `string` OR a `function` which can have a `T` argument and a `R` result.
 	 * @param param - A param of type `R`
 	 * @returns Something of type `R`
 	 */
-	type StringOrFunction<T = void, R = void> = string | Function<T, R>;
+	type StringOrFunction<T = void, R = void> = string | Function<T, R>
 
 	/**
 	 * @excluded
 	 * @irreplaceable
 	 */
-	type ArgDiff = Modify<Fig.Arg, { remove?: true }>;
+	type ArgDiff = Modify<Fig.Arg, { remove?: true }>
 
 	/**
 	 * @excluded
@@ -193,10 +193,10 @@ declare namespace Fig {
 	type OptionDiff = Modify<
 		Fig.Option,
 		{
-			args?: ArgDiff | ArgDiff[];
-			remove?: true;
+			args?: ArgDiff | ArgDiff[]
+			remove?: true
 		}
-	>;
+	>
 
 	/**
 	 * @excluded
@@ -205,24 +205,24 @@ declare namespace Fig {
 	type SubcommandDiff = Modify<
 		Fig.Subcommand,
 		{
-			subcommands?: SubcommandDiff[];
-			options?: OptionDiff[];
-			args?: ArgDiff | ArgDiff[];
-			remove?: true;
+			subcommands?: SubcommandDiff[]
+			options?: OptionDiff[]
+			args?: ArgDiff | ArgDiff[]
+			remove?: true
 		}
-	>;
+	>
 
 	/**
 	 * @excluded
 	 * @irreplaceable
 	 */
-	type SpecDiff = Omit<SubcommandDiff, "name" | "remove">;
+	type SpecDiff = Omit<SubcommandDiff, 'name' | 'remove'>
 
 	/**
 	 * @excluded
 	 * @irreplaceable
 	 */
-	type VersionDiffMap = Record<string, SpecDiff>;
+	type VersionDiffMap = Record<string, SpecDiff>
 
 	/**
 	 * A spec object.
@@ -235,33 +235,33 @@ declare namespace Fig {
 		| Subcommand
 		| ((version?: string) => Subcommand)
 		| ((version?: string) => {
-			versionedSpecPath: string;
-			version?: string;
-		});
+				versionedSpecPath: string
+				version?: string
+		  })
 
 	type ExecuteCommandInput = {
 		/**
 		 * The command to execute
 		 */
-		command: string;
+		command: string
 		/**
 		 * The arguments to the command to be run
 		 */
-		args: string[];
+		args: string[]
 		/**
 		 * The directory to run the command in
 		 */
-		cwd?: string;
+		cwd?: string
 		/**
 		 * The environment variables to set when executing the command, `undefined` will unset the variable if it set
 		 */
-		env?: Record<string, string | undefined>;
+		env?: Record<string, string | undefined>
 		/**
 		 * Duration of timeout in milliseconds, if the command takes longer than the timeout a error will be thrown.
 		 * @defaultValue 5000
 		 */
-		timeout?: number;
-	};
+		timeout?: number
+	}
 
 	/**
 	 * The output of running a command
@@ -270,80 +270,80 @@ declare namespace Fig {
 		/**
 		 * The stdout (1) of running a command
 		 */
-		stdout: string;
+		stdout: string
 		/**
 		 * The stderr (2) of running a command
 		 */
-		stderr: string;
+		stderr: string
 		/**
 		 * The exit status of running a command
 		 */
-		status: number;
-	};
+		status: number
+	}
 
 	/**
 	 * An async function to execute a command
 	 * @returns The output of the command
 	 */
-	type ExecuteCommandFunction = (args: ExecuteCommandInput) => Promise<ExecuteCommandOutput>;
+	type ExecuteCommandFunction = (args: ExecuteCommandInput) => Promise<ExecuteCommandOutput>
 
 	type CacheMaxAge = {
-		strategy: "max-age";
+		strategy: 'max-age'
 		/**
 		 * The time to live for the cache in milliseconds.
 		 * @example
 		 * 3600
 		 */
-		ttl: number;
-	};
+		ttl: number
+	}
 
 	type CacheStaleWhileRevalidate = {
-		strategy?: "stale-while-revalidate";
+		strategy?: 'stale-while-revalidate'
 		/**
 		 * The time to live for the cache in milliseconds.
 		 * @example
 		 * 3600
 		 */
-		ttl?: number;
-	};
+		ttl?: number
+	}
 
 	type Cache = (CacheMaxAge | CacheStaleWhileRevalidate) & {
 		/**
 		 * Whether the cache should be based on the directory the user was currently in or not.
 		 * @defaultValue false
 		 */
-		cacheByDirectory?: boolean;
+		cacheByDirectory?: boolean
 
 		/**
 		 * Hardcoded cache key that can be used to cache a single generator across
 		 * multiple argument locations in a spec.
 		 */
-		cacheKey?: string;
-	};
+		cacheKey?: string
+	}
 
 	type TriggerOnChange = {
 		/** Trigger on any change to the token */
-		on: "change";
-	};
+		on: 'change'
+	}
 
 	type TriggerOnThreshold = {
 		/** Trigger when the length of the token changes past a threshold */
-		on: "threshold";
-		length: number;
-	};
+		on: 'threshold'
+		length: number
+	}
 
 	type TriggerOnMatch = {
 		/** Trigger when the index of a string changes */
-		on: "match";
-		string: string | string[];
-	};
+		on: 'match'
+		string: string | string[]
+	}
 
 	type Trigger =
 		| string
 		| ((newToken: string, oldToken: string) => boolean)
 		| TriggerOnChange
 		| TriggerOnThreshold
-		| TriggerOnMatch;
+		| TriggerOnMatch
 
 	/**
 	 * The BaseSuggestion object is the root of the Suggestion, Subcommand, and Option objects.
@@ -360,7 +360,7 @@ declare namespace Fig {
 		 * to display some custom text like `Install an NPM package 📦` we would set
 		 * `name: "install"` and `displayName: "Install an NPM package 📦"`
 		 */
-		displayName?: string;
+		displayName?: string
 		/**
 		 * The value that's inserted into the terminal when a user presses enter/tab or clicks on a menu item.
 		 *
@@ -373,7 +373,7 @@ declare namespace Fig {
 		 * @example
 		 * For the `git commit` subcommand, the `-m` option has an insert value of `-m '{cursor}'`
 		 */
-		insertValue?: string;
+		insertValue?: string
 		/**
 		 * When the suggestion is inserted, replace the command with this string
 		 *
@@ -382,14 +382,14 @@ declare namespace Fig {
 		 * You can also optionally specify {cursor} in the string and Fig will automatically place the cursor there after insert.
 		 * Note that currently the entire edit buffer will be replaced. Eventually, only the root command will be replaced, preserving pipes and continuations.
 		 */
-		replaceValue?: string;
+		replaceValue?: string
 		/**
 		 * The text that gets rendered at the bottom of the autocomplete box (or the side if you hit ⌘i)
 		 *
 		 * @example
 		 * "Your commit message"
 		 */
-		description?: string;
+		description?: string
 		/**
 		 * The icon that is rendered is based on the type.
 		 *
@@ -409,7 +409,7 @@ declare namespace Fig {
 		 * `fig://icon?type=file`
 		 *
 		 */
-		icon?: string;
+		icon?: string
 		/**
 		 * Specifies whether the suggestion is "dangerous".
 		 *
@@ -422,7 +422,7 @@ declare namespace Fig {
 		 * @example
 		 * This is used in the `rm` spec. Why? Because we don't want users to accidentally delete their files so we make it just a little bit harder...
 		 */
-		isDangerous?: boolean;
+		isDangerous?: boolean
 		/**
 		 * The number used to rank suggestions in autocomplete. Number must be from 0-100. Higher priorities rank higher.
 		 *
@@ -446,7 +446,7 @@ declare namespace Fig {
 		 *     - at the top order, rank them 76 or above.
 		 *     - at the bottom, rank them 49 or below
 		 */
-		priority?: number;
+		priority?: number
 		/**
 		 * Specifies whether a suggestion should be hidden from results.
 		 * @remarks
@@ -455,7 +455,7 @@ declare namespace Fig {
 		 * @example
 		 * The "-" suggestion is hidden in the `cd` spec. You will only see it if you type exactly  `cd -`
 		 */
-		hidden?: boolean;
+		hidden?: boolean
 		/**
 		 *
 		 * Specifies whether a suggestion is deprecated.
@@ -468,7 +468,7 @@ declare namespace Fig {
 		 * deprecated: { insertValue: '--ansi never', description: 'The --no-ansi option has been deprecated in v2' }
 		 * ```
 		 */
-		deprecated?: boolean | Omit<BaseSuggestion, "deprecated">;
+		deprecated?: boolean | Omit<BaseSuggestion, 'deprecated'>
 
 		/**
 		 * Specifies which component to use to render the preview window.
@@ -477,14 +477,14 @@ declare namespace Fig {
 		 *
 		 * @example 'ls/filepathPreview'
 		 */
-		previewComponent?: string;
+		previewComponent?: string
 
 		/**
 		 * This is a way to pass data to the Autocomplete Engine that is not formalized in the spec, do not use this in specs as it may change at any time
 		 *
 		 * @ignore
 		 */
-		_internal?: Record<string, unknown>;
+		_internal?: Record<string, unknown>
 	}
 
 	/**
@@ -505,7 +505,7 @@ declare namespace Fig {
 		 * If a user types git `c`, any Suggestion objects with a name prop that has a value starting with "c" will match.
 		 *
 		 */
-		name?: SingleOrArray<string>;
+		name?: SingleOrArray<string>
 		/**
 		 * The type of a suggestion object.
 		 * @remarks
@@ -513,7 +513,7 @@ declare namespace Fig {
 		 * - the default icon Fig uses (e.g. a file or folder searches for the system icon, a subcommand has a specific icon etc)
 		 * - whether we allow users to auto-execute a command
 		 */
-		type?: SuggestionType;
+		type?: SuggestionType
 	}
 
 	/**
@@ -538,7 +538,7 @@ declare namespace Fig {
 		 * @example
 		 * For `npm install`, the subcommand `install` would have `name: ["install", "i"]` as these two values both represent the same subcommand.
 		 */
-		name: SingleOrArray<string>;
+		name: SingleOrArray<string>
 
 		/**
 		 * An array of `Subcommand` objects representing all the subcommands that exist beneath the current command.
@@ -548,7 +548,7 @@ declare namespace Fig {
 		 * @example
 		 * A CLI tool like `aws` is composed of many top-level subcommands (`s3`, `ec2`, `eks`...), each of which include child subcommands of their own.
 		 */
-		subcommands?: Subcommand[];
+		subcommands?: Subcommand[]
 
 		/**
 		 * Specifies whether the command requires a subcommand. This is false by default.
@@ -556,7 +556,7 @@ declare namespace Fig {
 		 * A space will always be inserted after this command if `requiresSubcommand` is true.
 		 * If the property is omitted, a space will be inserted if there is at least one required argument.
 		 */
-		requiresSubcommand?: boolean;
+		requiresSubcommand?: boolean
 
 		/**
 		 * An array of `Option` objects representing the options that are available on this subcommand.
@@ -564,13 +564,13 @@ declare namespace Fig {
 		 * @example
 		 * A command like `git commit` accepts various flags and options, such as `--message` and `--all`. These `Option` objects would be included in the `options` field.
 		 */
-		options?: Option[];
+		options?: Option[]
 
 		/**
 		 * An array of `Arg` objects representing the various parameters or "arguments" that can be passed to this subcommand.
 		 *
 		 */
-		args?: SingleOrArray<Arg>;
+		args?: SingleOrArray<Arg>
 		/**
 		 * This option allows to enforce the suggestion filtering strategy for a specific subcommand.
 		 * @remarks
@@ -600,7 +600,7 @@ declare namespace Fig {
 		 * }
 		 * ```
 		 */
-		filterStrategy?: "fuzzy" | "prefix" | "default";
+		filterStrategy?: 'fuzzy' | 'prefix' | 'default'
 		/**
 		 * A list of Suggestion objects that are appended to the suggestions shown beneath a subcommand.
 		 *
@@ -608,7 +608,7 @@ declare namespace Fig {
 		 * You can use this field to suggest common workflows.
 		 *
 		 */
-		additionalSuggestions?: (string | Suggestion)[];
+		additionalSuggestions?: (string | Suggestion)[]
 		/**
 		 * Dynamically load another completion spec at runtime.
 		 *
@@ -639,7 +639,7 @@ declare namespace Fig {
 		 * }
 		 * ```
 		 */
-		loadSpec?: LoadSpec;
+		loadSpec?: LoadSpec
 		/**
 		 * Dynamically *generate* a `Subcommand` object a runtime. The generated `Subcommand` is merged with the current subcommand.
 		 *
@@ -666,14 +666,17 @@ declare namespace Fig {
 		 *  },
 		 * ```
 		 */
-		generateSpec?: (tokens: string[], executeCommand: ExecuteCommandFunction) => Promise<Spec | undefined>;
+		generateSpec?: (
+			tokens: string[],
+			executeCommand: ExecuteCommandFunction,
+		) => Promise<Spec | undefined>
 
 		/**
 		 * Generating a spec can be expensive, but due to current guarantees they are not cached.
 		 * This function generates a cache key which is used to cache the result of generateSpec.
 		 * If `undefined` is returned, the cache will not be used.
 		 */
-		generateSpecCacheKey?: Function<{ tokens: string[] }, string | undefined> | string;
+		generateSpecCacheKey?: Function<{ tokens: string[] }, string | undefined> | string
 
 		/**
 		 * Configure how the autocomplete engine will map the raw tokens to a given completion spec.
@@ -686,10 +689,10 @@ declare namespace Fig {
 		 * The `-work` option from the `go` spec is parsed as a single flag when `parserDirectives.flagsArePosixNoncompliant` is set to true. Normally, this would be chained and parsed as `-w -o -r -k` if `flagsArePosixNoncompliant` is not set to true.
 		 */
 		parserDirectives?: {
-			flagsArePosixNoncompliant?: boolean;
-			optionsMustPrecedeArguments?: boolean;
-			optionArgSeparators?: SingleOrArray<string>;
-		};
+			flagsArePosixNoncompliant?: boolean
+			optionsMustPrecedeArguments?: boolean
+			optionArgSeparators?: SingleOrArray<string>
+		}
 
 		/**
 		 * Specifies whether or not to cache the result of loadSpec and generateSpec
@@ -697,7 +700,7 @@ declare namespace Fig {
 		 * @remarks
 		 * Caching is good because it reduces the time to completion on subsequent calls to a dynamic subcommand, but when the data does not outlive the cache this allows a mechanism for opting out of it.
 		 */
-		cache?: boolean;
+		cache?: boolean
 	}
 
 	/**
@@ -724,7 +727,7 @@ declare namespace Fig {
 		 * @example
 		 * For `ls -l` the `-l` option would have `name: "-l"`
 		 */
-		name: SingleOrArray<string>;
+		name: SingleOrArray<string>
 
 		/**
 		 * An array of arg objects or a single arg object
@@ -740,7 +743,7 @@ declare namespace Fig {
 		 * @example
 		 * `git clone` takes one mandatory argument and one optional argument. This can be represented by: `args: [{ }, { isOptional: true }]`
 		 */
-		args?: SingleOrArray<Arg>;
+		args?: SingleOrArray<Arg>
 		/**
 		 *
 		 * Signals whether an option is persistent, meaning that it will still be available
@@ -759,7 +762,7 @@ declare namespace Fig {
 		 * as a valid as we are passing the `--help` option to all `git` subcommands.
 		 *
 		 */
-		isPersistent?: boolean;
+		isPersistent?: boolean
 		/**
 		 * Signals whether an option is required.
 		 *
@@ -768,7 +771,7 @@ declare namespace Fig {
 		 * The `-m` option of `git commit` is required
 		 *
 		 */
-		isRequired?: boolean;
+		isRequired?: boolean
 		/**
 		 *
 		 * Signals whether an equals sign is required to pass an argument to an option (e.g. `git commit --message="msg"`)
@@ -780,7 +783,7 @@ declare namespace Fig {
 		 * @deprecated use `requiresSeparator` instead
 		 *
 		 */
-		requiresEquals?: boolean;
+		requiresEquals?: boolean
 		/**
 		 *
 		 * Signals whether one of the separators specified in parserDirectives is required to pass an argument to an option (e.g. `git commit --message[separator]"msg"`)
@@ -793,7 +796,7 @@ declare namespace Fig {
 		 * @example
 		 * When `requiresSeparator: ':'` the user MUST do `--opt:value` and cannot do `--opt value`
 		 */
-		requiresSeparator?: boolean | string;
+		requiresSeparator?: boolean | string
 		/**
 		 *
 		 * Signals whether an option can be passed multiple times.
@@ -829,7 +832,7 @@ declare namespace Fig {
 		 * and will treat this as an argument to `ssh`.
 		 *
 		 */
-		isRepeatable?: boolean | number;
+		isRepeatable?: boolean | number
 		/**
 		 *
 		 * Signals whether an option is mutually exclusive with other options (ie if the user has this option, Fig should not show the options specified).
@@ -843,7 +846,7 @@ declare namespace Fig {
 		 * If we were defining the exclusive prop of the "-a" option, then we would have `exclusive: ["--interactive", "--patch"]`
 		 *
 		 */
-		exclusiveOn?: string[];
+		exclusiveOn?: string[]
 		/**
 		 *
 		 *
@@ -859,7 +862,7 @@ declare namespace Fig {
 		 * In this case, `--extension` dependsOn `--project`
 		 *
 		 */
-		dependsOn?: string[];
+		dependsOn?: string[]
 	}
 
 	/**
@@ -876,7 +879,7 @@ declare namespace Fig {
 		 * @example
 		 * The name prop for the `git commit -m <msg>` arg object is "msg". But you could also make it "message" or "your message". It is only used for description purposes (you see it when you type the message), not for parsing!
 		 */
-		name?: string;
+		name?: string
 
 		/**
 		 * The text that gets rendered at the bottom of the autocomplete box a) when the user is inputting an argument and there are no suggestions and b) for all generated suggestions for an argument
@@ -885,7 +888,7 @@ declare namespace Fig {
 		 * @example
 		 * "Your commit message"
 		 */
-		description?: string;
+		description?: string
 
 		/**
 		 * Specifies whether the suggestions generated for this argument are "dangerous".
@@ -899,7 +902,7 @@ declare namespace Fig {
 		 * @example
 		 * This is used for all arguments in the `rm` spec.
 		 */
-		isDangerous?: boolean;
+		isDangerous?: boolean
 
 		/**
 		 * A list of Suggestion objects that are shown when a user is typing an argument.
@@ -910,7 +913,7 @@ declare namespace Fig {
 		 * @example
 		 * For `git reset <branch or commit>`, a two common arguments to pass are "head" and "head^". Therefore, the spec suggests both of these by using the suggestion prop
 		 */
-		suggestions?: (string | Suggestion)[];
+		suggestions?: (string | Suggestion)[]
 		/**
 		 * A template which is a single TemplateString or an array of TemplateStrings
 		 *
@@ -927,14 +930,14 @@ declare namespace Fig {
 		 * `ls` used  ["filepaths", "folders"]. Why both? Because if I `ls` a directory, we want to enable a user to autoexecute on this directory. If we just did "filepaths" they couldn't autoexecute.
 		 *
 		 */
-		template?: Template;
+		template?: Template
 		/**
 		 *
 		 * Generators let you dynamically generate suggestions for arguments by running shell commands on a user's device.
 		 *
 		 * This takes a single generator or an array of generators
 		 */
-		generators?: SingleOrArray<Generator>;
+		generators?: SingleOrArray<Generator>
 		/**
 		 * This option allows to enforce the suggestion filtering strategy for a specific argument suggestions.
 		 * @remarks
@@ -960,11 +963,11 @@ declare namespace Fig {
 		 * }
 		 * ```
 		 */
-		filterStrategy?: "fuzzy" | "prefix" | "default";
+		filterStrategy?: 'fuzzy' | 'prefix' | 'default'
 		/**
 		 * Provide a suggestion at the top of the list with the current token that is being typed by the user.
 		 */
-		suggestCurrentToken?: boolean;
+		suggestCurrentToken?: boolean
 		/**
 		 * Specifies that the argument is variadic and therefore repeats infinitely.
 		 *
@@ -976,7 +979,7 @@ declare namespace Fig {
 		 * @example
 		 * `git add` also takes a variadic argument
 		 */
-		isVariadic?: boolean;
+		isVariadic?: boolean
 
 		/**
 		 * Specifies whether options can interrupt variadic arguments. There is
@@ -1013,7 +1016,7 @@ declare namespace Fig {
 		 * variadic arguments haven't started yet
 		 *
 		 */
-		optionsCanBreakVariadicArg?: boolean;
+		optionsCanBreakVariadicArg?: boolean
 
 		/**
 		 * `true` if an argument is optional (ie the CLI spec says it is not mandatory to include an argument, but you can if you want to).
@@ -1024,7 +1027,7 @@ declare namespace Fig {
 		 * @example
 		 * `git push [remote] [branch]` takes two optional args.
 		 */
-		isOptional?: boolean;
+		isOptional?: boolean
 		/**
 		 * Syntactic sugar over the `loadSpec` prop.
 		 *
@@ -1034,7 +1037,7 @@ declare namespace Fig {
 		 * @example
 		 * `time` and `builtin` have only one argument and this argument has the `isCommand` property. If I type `time git`, Fig will load up the git completion spec because the isCommand property is set.
 		 */
-		isCommand?: boolean;
+		isCommand?: boolean
 		/**
 		 * The same as the `isCommand` prop, except Fig will look for a completion spec in the `.fig/autocomplete/build` folder in the user's current working directory.
 		 *
@@ -1043,7 +1046,7 @@ declare namespace Fig {
 		 * @example
 		 * `python` take one argument which is a `.py` file. If I have a `main.py` file on my desktop and my current working directory is my desktop, if I type `python main.py[space]` Fig will look for a completion spec in `~/Desktop/.fig/autocomplete/build/main.py.js`
 		 */
-		isScript?: boolean;
+		isScript?: boolean
 		/**
 		 * The same as the `isCommand` prop, except you specify a string to prepend to what the user inputs and fig will load the completion spec accordingly.
 		 * @remarks
@@ -1053,7 +1056,7 @@ declare namespace Fig {
 		 *
 		 * @deprecated use `loadSpec` instead
 		 */
-		isModule?: string;
+		isModule?: string
 
 		/**
 		 * This will debounce every keystroke event for this particular arg.
@@ -1063,7 +1066,7 @@ declare namespace Fig {
 		 * @example
 		 * `npm install` and `pip install` send debounced network requests after inactive typing from users.
 		 */
-		debounce?: boolean;
+		debounce?: boolean
 		/**
 		 * The default value for an optional argument.
 		 *
@@ -1071,7 +1074,7 @@ declare namespace Fig {
 		 * Note: This is currently not used anywhere in Fig's autocomplete popup, but will be soon.
 		 *
 		 */
-		default?: string;
+		default?: string
 		/**
 		 * See [`loadSpec` in Subcommand Object](https://fig.io/docs/reference/subcommand#loadspec).
 		 *
@@ -1081,7 +1084,7 @@ declare namespace Fig {
 		 * 2. `isScript` (See [Arg Object](https://fig.io/docs/reference/arg#isscript))
 		 *
 		 */
-		loadSpec?: LoadSpec;
+		loadSpec?: LoadSpec
 
 		/**
 		 * The `arg.parserDirective.alias` prop defines whether Fig's tokenizer should expand out an alias into separate tokens then offer completions accordingly.
@@ -1105,8 +1108,8 @@ declare namespace Fig {
 		 * Note: In both cases, the alias function is only used to expand a given alias NOT to generate the list of aliases. To generate a list of aliases, scripts etc, use a generator.
 		 */
 		parserDirectives?: {
-			alias?: string | ((token: string, exec: ExecuteCommandFunction) => Promise<string>);
-		};
+			alias?: string | ((token: string, exec: ExecuteCommandFunction) => Promise<string>)
+		}
 	}
 
 	/**
@@ -1130,7 +1133,7 @@ declare namespace Fig {
 		 * `ls` uses  ["filepaths", "folders"]. Why both? Because if I `ls` a directory, we want to enable a user to autoexecute on this directory. If we just did "filepaths" they couldn't autoexecute.
 		 *
 		 */
-		template?: Template;
+		template?: Template
 		/**
 		 *
 		 * A function to filter and modify suggestions returned by a template
@@ -1141,7 +1144,7 @@ declare namespace Fig {
 		 * @example
 		 * The python spec has an arg object which has a template for "filepaths". However, we don't want to suggest non `.py` files. Therefore, we take the output of the template, filter out all files that don't end in `.py`, keep all folders that end with `/` and return the list of suggestions.
 		 */
-		filterTemplateSuggestions?: Function<TemplateSuggestion[], Suggestion[]>;
+		filterTemplateSuggestions?: Function<TemplateSuggestion[], Suggestion[]>
 		/**
 		 *
 		 * The command you wish to run on the user's device at their shell session's current working directory.
@@ -1156,15 +1159,15 @@ declare namespace Fig {
 		 * `git checkout <branch>` takes one argument which is a git branch. Its arg object has a generator with a `script: ["git", "branch"]"`. The stdout output of this shell command is then passed into the postProcess function to generate the final suggestions.
 		 */
 		script?:
-		| string[]
-		| Function<string[], string[] | undefined> // <-- VS Code edit to make results correct
-		| ExecuteCommandInput
-		| Function<string[], ExecuteCommandInput>;
+			| string[]
+			| Function<string[], string[] | undefined> // <-- VS Code edit to make results correct
+			| ExecuteCommandInput
+			| Function<string[], ExecuteCommandInput>
 		/**
 		 * Set the execution timeout of the command specified in the `script` prop.
 		 * @defaultValue 5000
 		 */
-		scriptTimeout?: number;
+		scriptTimeout?: number
 		/**
 		 *
 		 * Process the string output from the `script` prop and return a list of suggestions
@@ -1174,7 +1177,7 @@ declare namespace Fig {
 		 * @returns An array of `Suggestion` objects.
 		 *
 		 */
-		postProcess?: (out: string, tokens: string[]) => (Suggestion | null)[] | undefined; // <-- VS Code edit to make results correct
+		postProcess?: (out: string, tokens: string[]) => (Suggestion | null)[] | undefined // <-- VS Code edit to make results correct
 		/**
 		 * Syntactic sugar for `postProcess` function
 		 *
@@ -1184,7 +1187,7 @@ declare namespace Fig {
 		 * @example
 		 * Specify `\n` and Fig will split on new lines, and turn each line into a suggestion object with `name` prop equal to the value on the line.
 		 */
-		splitOn?: string;
+		splitOn?: string
 		/**
 		 *
 		 * A function run on every keystroke that determines whether Fig should invalidate its cached list of suggestions and instead regenerate its list of suggestions.
@@ -1227,7 +1230,7 @@ declare namespace Fig {
 		 * `cd`: Let's say a user has "cd desktop" currently typed then the user types a "/" so the changes to "cd ~/desktop/".
 		 * The old token is "~/desktop", new token is "desktop/". This is a perfect time for us to generate a new list of suggestions. We previously had all the folders in my ~ directory as suggestions, but after the total number of `/` in the tokens changed, we should trigger a new set of suggestions to be generated. This new set of suggestions should then generate suggestions for the desktop directory, not the ~ directory.
 		 */
-		trigger?: Trigger;
+		trigger?: Trigger
 		/**
 		 * A function that takes the token that the user has typed and determines which part of it should be used to filter over all the suggestions.
 		 *
@@ -1246,7 +1249,7 @@ declare namespace Fig {
 		 * if the user types cd `~/desktop/a`, the list of suggestions will be all the folders on the user's desktop. We want to filter over these folders with the query term `"a"` not `~/desktop/a`
 		 *
 		 */
-		getQueryTerm?: StringOrFunction<string, string>;
+		getQueryTerm?: StringOrFunction<string, string>
 		/**
 		 * An async function that is similar to the function version of `script`, however, it gives you full control.
 		 *
@@ -1278,8 +1281,8 @@ declare namespace Fig {
 		custom?: (
 			tokens: string[],
 			executeCommand: ExecuteCommandFunction,
-			generatorContext: GeneratorContext
-		) => Promise<(Suggestion | null)[] | undefined>; // <-- VS Code edit to make results correct
+			generatorContext: GeneratorContext,
+		) => Promise<(Suggestion | null)[] | undefined> // <-- VS Code edit to make results correct
 		/**
 		 *
 		 * Cache the response of generators for a specific period time and optionally by directory the commands were executed in.
@@ -1295,6 +1298,6 @@ declare namespace Fig {
 		 * The kubernetes spec makes use of this.
 		 *
 		 */
-		cache?: Cache;
+		cache?: Cache
 	}
 }

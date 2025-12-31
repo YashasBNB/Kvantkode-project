@@ -3,21 +3,20 @@
  *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 
-import { ComputedDiff } from '../../common/editCodeServiceTypes.js';
+import { ComputedDiff } from '../../common/editCodeServiceTypes.js'
 import { diffLines } from '../react/out/diff/index.js'
 
 export function findDiffs(oldStr: string, newStr: string) {
-
 	// this makes it so the end of the file always ends with a \n (if you don't have this, then diffing E vs E\n gives an "edit". With it, you end up diffing E\n vs E\n\n which now properly gives an insertion)
-	newStr += '\n';
-	oldStr += '\n';
+	newStr += '\n'
+	oldStr += '\n'
 
 	// an ordered list of every original line, line added to the new file, and line removed from the old file (order is unambiguous, think about it)
-	const lineByLineChanges = diffLines(oldStr, newStr);
+	const lineByLineChanges = diffLines(oldStr, newStr)
 	lineByLineChanges.push({ value: '', added: false, removed: false }) // add a dummy so we flush any streaks we haven't yet at the very end (!line.added && !line.removed)
 
-	let oldFileLineNum: number = 1;
-	let newFileLineNum: number = 1;
+	let oldFileLineNum: number = 1
+	let newFileLineNum: number = 1
 
 	let streakStartInNewFile: number | undefined = undefined
 	let streakStartInOldFile: number | undefined = undefined
@@ -27,10 +26,8 @@ export function findDiffs(oldStr: string, newStr: string) {
 
 	const replacements: ComputedDiff[] = []
 	for (const line of lineByLineChanges) {
-
 		// no change on this line
 		if (!line.added && !line.removed) {
-
 			// do nothing
 
 			// if we were on a streak of +s and -s, end it
@@ -61,9 +58,11 @@ export function findDiffs(oldStr: string, newStr: string) {
 
 				const replacement: ComputedDiff = {
 					type,
-					startLine, endLine,
+					startLine,
+					endLine,
 					// startCol, endCol,
-					originalStartLine, originalEndLine,
+					originalStartLine,
+					originalEndLine,
 					// code: newContent,
 					// originalRange: new Range(originalStartLine, originalStartCol, originalEndLine, originalEndCol),
 					originalCode: originalContent,
@@ -75,8 +74,8 @@ export function findDiffs(oldStr: string, newStr: string) {
 				streakStartInNewFile = undefined
 				streakStartInOldFile = undefined
 			}
-			oldFileLineNum += line.count ?? 0;
-			newFileLineNum += line.count ?? 0;
+			oldFileLineNum += line.count ?? 0
+			newFileLineNum += line.count ?? 0
 		}
 
 		// line was removed from old file
@@ -96,32 +95,13 @@ export function findDiffs(oldStr: string, newStr: string) {
 				streakStartInNewFile = newFileLineNum
 				streakStartInOldFile = oldFileLineNum
 			}
-			newFileLineNum += line.count ?? 0; // we processed the line so add 1 (or "count")
+			newFileLineNum += line.count ?? 0 // we processed the line so add 1 (or "count")
 		}
 	} // end for
 
 	// console.log('DIFF', { oldStr, newStr, replacements })
 	return replacements
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // // uncomment this to test
 // let name_ = ''
@@ -171,7 +151,6 @@ export function findDiffs(oldStr: string, newStr: string) {
 // D
 // E
 // `
-
 
 // test('Diffs Insertion', () => {
 // 	const diffs = findDiffs(originalCode, insertedCode)
@@ -240,8 +219,6 @@ export function findDiffs(oldStr: string, newStr: string) {
 // 	}
 // 	assertEqual(diffs[0], expected)
 // })
-
-
 
 // if (testsFailed === 0) {
 // 	console.log('✅ Void - All tests passed')

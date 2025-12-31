@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/109277
 
 	/**
@@ -61,7 +60,6 @@ declare module 'vscode' {
 	 * Currently openers may only be registered for `http` and `https` uris.
 	 */
 	export interface ExternalUriOpener {
-
 		/**
 		 * Check if the opener can open a uri.
 		 *
@@ -71,7 +69,10 @@ declare module 'vscode' {
 		 *
 		 * @return Priority indicating if the opener can open the external uri.
 		 */
-		canOpenExternalUri(uri: Uri, token: CancellationToken): ExternalUriOpenerPriority | Thenable<ExternalUriOpenerPriority>;
+		canOpenExternalUri(
+			uri: Uri,
+			token: CancellationToken,
+		): ExternalUriOpenerPriority | Thenable<ExternalUriOpenerPriority>
 
 		/**
 		 * Open a uri.
@@ -90,7 +91,11 @@ declare module 'vscode' {
 		 *
 		 * @return Thenable indicating that the opening has completed.
 		 */
-		openExternalUri(resolvedUri: Uri, ctx: OpenExternalUriContext, token: CancellationToken): Thenable<void> | void;
+		openExternalUri(
+			resolvedUri: Uri,
+			ctx: OpenExternalUriContext,
+			token: CancellationToken,
+		): Thenable<void> | void
 	}
 
 	/**
@@ -103,27 +108,26 @@ declare module 'vscode' {
 		 * This is the original uri that the user clicked on or that was passed to `openExternal.`
 		 * Due to port forwarding, this may not match the `resolvedUri` passed to `openExternalUri`.
 		 */
-		readonly sourceUri: Uri;
+		readonly sourceUri: Uri
 	}
 
 	/**
 	 * Additional metadata about a registered `ExternalUriOpener`.
 	 */
 	export interface ExternalUriOpenerMetadata {
-
 		/**
 		 * List of uri schemes the opener is triggered for.
 		 *
 		 * Currently only `http` and `https` are supported.
 		 */
-		readonly schemes: readonly string[];
+		readonly schemes: readonly string[]
 
 		/**
 		 * Text displayed to the user that explains what the opener does.
 		 *
 		 * For example, 'Open in browser preview'
 		 */
-		readonly label: string;
+		readonly label: string
 	}
 
 	namespace window {
@@ -137,9 +141,13 @@ declare module 'vscode' {
 		 * @param opener Opener to register.
 		 * @param metadata Additional information about the opener.
 		 *
-		* @returns Disposable that unregisters the opener.
-		*/
-		export function registerExternalUriOpener(id: string, opener: ExternalUriOpener, metadata: ExternalUriOpenerMetadata): Disposable;
+		 * @returns Disposable that unregisters the opener.
+		 */
+		export function registerExternalUriOpener(
+			id: string,
+			opener: ExternalUriOpener,
+			metadata: ExternalUriOpenerMetadata,
+		): Disposable
 	}
 
 	export interface OpenExternalOptions {
@@ -154,10 +162,10 @@ declare module 'vscode' {
 		 * that should be used if it is available. Use `'default'` to force the editor's
 		 * standard external opener to be used.
 		 */
-		readonly allowContributedOpeners?: boolean | string;
+		readonly allowContributedOpeners?: boolean | string
 	}
 
 	namespace env {
-		export function openExternal(target: Uri, options?: OpenExternalOptions): Thenable<boolean>;
+		export function openExternal(target: Uri, options?: OpenExternalOptions): Thenable<boolean>
 	}
 }

@@ -46,22 +46,21 @@
 	display: inline-flex;
 }
 
-
 @keyframes ellipsis {
 	0% {
-		content: "";
+		content: '';
 	}
 	25% {
-		content: ".";
+		content: '.';
 	}
 	50% {
-		content: "..";
+		content: '..';
 	}
 	75% {
-		content: "...";
+		content: '...';
 	}
 	100% {
-		content: "";
+		content: '';
 	}
 }
 
@@ -77,7 +76,7 @@
 }
 
 .chat-editor-overlay-widget.busy .action-item > .action-label.busy::after {
-	content: "";
+	content: '';
 	display: inline-flex;
 	white-space: nowrap;
 	overflow: hidden;
@@ -100,7 +99,6 @@
 
 .chat-diff-change-content-widget .monaco-action-bar .action-item.disabled,
 .chat-editor-overlay-widget .monaco-action-bar .action-item.disabled {
-
 	> .action-label.codicon::before,
 	> .action-label.codicon,
 	> .action-label,
@@ -109,7 +107,6 @@
 		opacity: 0.7;
 	}
 }
-
 
 .chat-editor-overlay-widget .action-item.label-item {
 	font-variant-numeric: tabular-nums;

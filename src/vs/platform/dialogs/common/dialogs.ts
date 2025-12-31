@@ -3,443 +3,446 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { ThemeIcon } from '../../../base/common/themables.js';
-import { IMarkdownString } from '../../../base/common/htmlContent.js';
-import { basename } from '../../../base/common/resources.js';
-import Severity from '../../../base/common/severity.js';
-import { URI } from '../../../base/common/uri.js';
-import { localize } from '../../../nls.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { ITelemetryData } from '../../telemetry/common/telemetry.js';
-import { MessageBoxOptions } from '../../../base/parts/sandbox/common/electronTypes.js';
-import { mnemonicButtonLabel } from '../../../base/common/labels.js';
-import { isLinux, isMacintosh, isWindows } from '../../../base/common/platform.js';
-import { IProductService } from '../../product/common/productService.js';
-import { deepClone } from '../../../base/common/objects.js';
+import { Event } from '../../../base/common/event.js'
+import { ThemeIcon } from '../../../base/common/themables.js'
+import { IMarkdownString } from '../../../base/common/htmlContent.js'
+import { basename } from '../../../base/common/resources.js'
+import Severity from '../../../base/common/severity.js'
+import { URI } from '../../../base/common/uri.js'
+import { localize } from '../../../nls.js'
+import { createDecorator } from '../../instantiation/common/instantiation.js'
+import { ITelemetryData } from '../../telemetry/common/telemetry.js'
+import { MessageBoxOptions } from '../../../base/parts/sandbox/common/electronTypes.js'
+import { mnemonicButtonLabel } from '../../../base/common/labels.js'
+import { isLinux, isMacintosh, isWindows } from '../../../base/common/platform.js'
+import { IProductService } from '../../product/common/productService.js'
+import { deepClone } from '../../../base/common/objects.js'
 
 export interface IDialogArgs {
-	readonly confirmArgs?: IConfirmDialogArgs;
-	readonly inputArgs?: IInputDialogArgs;
-	readonly promptArgs?: IPromptDialogArgs;
+	readonly confirmArgs?: IConfirmDialogArgs
+	readonly inputArgs?: IInputDialogArgs
+	readonly promptArgs?: IPromptDialogArgs
 }
 
 export interface IBaseDialogOptions {
-	readonly type?: Severity | DialogType;
+	readonly type?: Severity | DialogType
 
-	readonly title?: string;
-	readonly message: string;
-	readonly detail?: string;
+	readonly title?: string
+	readonly message: string
+	readonly detail?: string
 
-	readonly checkbox?: ICheckbox;
+	readonly checkbox?: ICheckbox
 
 	/**
 	 * Allows to enforce use of custom dialog even in native environments.
 	 */
-	readonly custom?: boolean | ICustomDialogOptions;
+	readonly custom?: boolean | ICustomDialogOptions
 }
 
 export interface IConfirmDialogArgs {
-	readonly confirmation: IConfirmation;
+	readonly confirmation: IConfirmation
 }
 
 export interface IConfirmation extends IBaseDialogOptions {
-
 	/**
 	 * If not provided, defaults to `Yes`.
 	 */
-	readonly primaryButton?: string;
+	readonly primaryButton?: string
 
 	/**
 	 * If not provided, defaults to `Cancel`.
 	 */
-	readonly cancelButton?: string;
+	readonly cancelButton?: string
 }
 
 export interface IConfirmationResult extends ICheckboxResult {
-
 	/**
 	 * Will be true if the dialog was confirmed with the primary button pressed.
 	 */
-	readonly confirmed: boolean;
+	readonly confirmed: boolean
 }
 
 export interface IInputDialogArgs {
-	readonly input: IInput;
+	readonly input: IInput
 }
 
 export interface IInput extends IConfirmation {
-	readonly inputs: IInputElement[];
+	readonly inputs: IInputElement[]
 
 	/**
 	 * If not provided, defaults to `Ok`.
 	 */
-	readonly primaryButton?: string;
+	readonly primaryButton?: string
 }
 
 export interface IInputElement {
-	readonly type?: 'text' | 'password';
-	readonly value?: string;
-	readonly placeholder?: string;
+	readonly type?: 'text' | 'password'
+	readonly value?: string
+	readonly placeholder?: string
 }
 
 export interface IInputResult extends IConfirmationResult {
-
 	/**
 	 * Values for the input fields as provided by the user or `undefined` if none.
 	 */
-	readonly values?: string[];
+	readonly values?: string[]
 }
 
 export interface IPromptDialogArgs {
-	readonly prompt: IPrompt<unknown>;
+	readonly prompt: IPrompt<unknown>
 }
 
 export interface IPromptBaseButton<T> {
-
 	/**
 	 * @returns the result of the prompt button will be returned
 	 * as result from the `prompt()` call.
 	 */
-	run(checkbox: ICheckboxResult): T | Promise<T>;
+	run(checkbox: ICheckboxResult): T | Promise<T>
 }
 
 export interface IPromptButton<T> extends IPromptBaseButton<T> {
-	readonly label: string;
+	readonly label: string
 }
 
 export interface IPromptCancelButton<T> extends IPromptBaseButton<T> {
-
 	/**
 	 * The cancel button to show in the prompt. Defaults to
 	 * `Cancel` if not provided.
 	 */
-	readonly label?: string;
+	readonly label?: string
 }
 
 export interface IPrompt<T> extends IBaseDialogOptions {
-
 	/**
 	 * The buttons to show in the prompt. Defaults to `OK`
 	 * if no buttons or cancel button is provided.
 	 */
-	readonly buttons?: IPromptButton<T>[];
+	readonly buttons?: IPromptButton<T>[]
 
 	/**
 	 * The cancel button to show in the prompt. Defaults to
 	 * `Cancel` if set to `true`.
 	 */
-	readonly cancelButton?: IPromptCancelButton<T> | true | string;
+	readonly cancelButton?: IPromptCancelButton<T> | true | string
 }
 
 export interface IPromptWithCustomCancel<T> extends IPrompt<T> {
-	readonly cancelButton: IPromptCancelButton<T>;
+	readonly cancelButton: IPromptCancelButton<T>
 }
 
 export interface IPromptWithDefaultCancel<T> extends IPrompt<T> {
-	readonly cancelButton: true | string;
+	readonly cancelButton: true | string
 }
 
 export interface IPromptResult<T> extends ICheckboxResult {
-
 	/**
 	 * The result of the `IPromptButton` that was pressed or `undefined` if none.
 	 */
-	readonly result?: T;
+	readonly result?: T
 }
 
 export interface IPromptResultWithCancel<T> extends IPromptResult<T> {
-	readonly result: T;
+	readonly result: T
 }
 
 export interface IAsyncPromptResult<T> extends ICheckboxResult {
-
 	/**
 	 * The result of the `IPromptButton` that was pressed or `undefined` if none.
 	 */
-	readonly result?: Promise<T>;
+	readonly result?: Promise<T>
 }
 
 export interface IAsyncPromptResultWithCancel<T> extends IAsyncPromptResult<T> {
-	readonly result: Promise<T>;
+	readonly result: Promise<T>
 }
 
-export type IDialogResult = IConfirmationResult | IInputResult | IAsyncPromptResult<unknown>;
+export type IDialogResult = IConfirmationResult | IInputResult | IAsyncPromptResult<unknown>
 
-export type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
+export type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning'
 
 export interface ICheckbox {
-	readonly label: string;
-	readonly checked?: boolean;
+	readonly label: string
+	readonly checked?: boolean
 }
 
 export interface ICheckboxResult {
-
 	/**
 	 * This will only be defined if the confirmation was created
 	 * with the checkbox option defined.
 	 */
-	readonly checkboxChecked?: boolean;
+	readonly checkboxChecked?: boolean
 }
 
 export interface IPickAndOpenOptions {
-	readonly forceNewWindow?: boolean;
-	defaultUri?: URI;
-	readonly telemetryExtraData?: ITelemetryData;
-	availableFileSystems?: string[];
-	remoteAuthority?: string | null;
+	readonly forceNewWindow?: boolean
+	defaultUri?: URI
+	readonly telemetryExtraData?: ITelemetryData
+	availableFileSystems?: string[]
+	remoteAuthority?: string | null
 }
 
 export interface FileFilter {
-	readonly extensions: string[];
-	readonly name: string;
+	readonly extensions: string[]
+	readonly name: string
 }
 
 export interface ISaveDialogOptions {
-
 	/**
 	 * A human-readable string for the dialog title
 	 */
-	title?: string;
+	title?: string
 
 	/**
 	 * The resource the dialog shows when opened.
 	 */
-	defaultUri?: URI;
+	defaultUri?: URI
 
 	/**
 	 * A set of file filters that are used by the dialog. Each entry is a human readable label,
 	 * like "TypeScript", and an array of extensions.
 	 */
-	filters?: FileFilter[];
+	filters?: FileFilter[]
 
 	/**
 	 * A human-readable string for the ok button
 	 */
-	readonly saveLabel?: { readonly withMnemonic: string; readonly withoutMnemonic: string } | string;
+	readonly saveLabel?: { readonly withMnemonic: string; readonly withoutMnemonic: string } | string
 
 	/**
 	 * Specifies a list of schemas for the file systems the user can save to. If not specified, uses the schema of the defaultURI or, if also not specified,
 	 * the schema of the current window.
 	 */
-	availableFileSystems?: readonly string[];
+	availableFileSystems?: readonly string[]
 }
 
 export interface IOpenDialogOptions {
-
 	/**
 	 * A human-readable string for the dialog title
 	 */
-	readonly title?: string;
+	readonly title?: string
 
 	/**
 	 * The resource the dialog shows when opened.
 	 */
-	defaultUri?: URI;
+	defaultUri?: URI
 
 	/**
 	 * A human-readable string for the open button.
 	 */
-	readonly openLabel?: { readonly withMnemonic: string; readonly withoutMnemonic: string } | string;
+	readonly openLabel?: { readonly withMnemonic: string; readonly withoutMnemonic: string } | string
 
 	/**
 	 * Allow to select files, defaults to `true`.
 	 */
-	canSelectFiles?: boolean;
+	canSelectFiles?: boolean
 
 	/**
 	 * Allow to select folders, defaults to `false`.
 	 */
-	canSelectFolders?: boolean;
+	canSelectFolders?: boolean
 
 	/**
 	 * Allow to select many files or folders.
 	 */
-	readonly canSelectMany?: boolean;
+	readonly canSelectMany?: boolean
 
 	/**
 	 * A set of file filters that are used by the dialog. Each entry is a human readable label,
 	 * like "TypeScript", and an array of extensions.
 	 */
-	filters?: FileFilter[];
+	filters?: FileFilter[]
 
 	/**
 	 * Specifies a list of schemas for the file systems the user can load from. If not specified, uses the schema of the defaultURI or, if also not available,
 	 * the schema of the current window.
 	 */
-	availableFileSystems?: readonly string[];
+	availableFileSystems?: readonly string[]
 }
 
-export const IDialogService = createDecorator<IDialogService>('dialogService');
+export const IDialogService = createDecorator<IDialogService>('dialogService')
 
 export interface ICustomDialogOptions {
-	readonly buttonDetails?: string[];
-	readonly markdownDetails?: ICustomDialogMarkdown[];
-	readonly classes?: string[];
-	readonly icon?: ThemeIcon;
-	readonly disableCloseAction?: boolean;
+	readonly buttonDetails?: string[]
+	readonly markdownDetails?: ICustomDialogMarkdown[]
+	readonly classes?: string[]
+	readonly icon?: ThemeIcon
+	readonly disableCloseAction?: boolean
 }
 
 export interface ICustomDialogMarkdown {
-	readonly markdown: IMarkdownString;
-	readonly classes?: string[];
-	readonly dismissOnLinkClick?: boolean;
+	readonly markdown: IMarkdownString
+	readonly classes?: string[]
+	readonly dismissOnLinkClick?: boolean
 }
 
 /**
  * A handler to bring up modal dialogs.
  */
 export interface IDialogHandler {
-
 	/**
 	 * Ask the user for confirmation with a modal dialog.
 	 */
-	confirm(confirmation: IConfirmation): Promise<IConfirmationResult>;
+	confirm(confirmation: IConfirmation): Promise<IConfirmationResult>
 
 	/**
 	 * Prompt the user with a modal dialog.
 	 */
-	prompt<T>(prompt: IPrompt<T>): Promise<IAsyncPromptResult<T>>;
+	prompt<T>(prompt: IPrompt<T>): Promise<IAsyncPromptResult<T>>
 
 	/**
 	 * Present a modal dialog to the user asking for input.
 	 */
-	input(input: IInput): Promise<IInputResult>;
+	input(input: IInput): Promise<IInputResult>
 
 	/**
 	 * Present the about dialog to the user.
 	 */
-	about(): Promise<void>;
+	about(): Promise<void>
 }
 
 enum DialogKind {
 	Confirmation = 1,
 	Prompt,
-	Input
+	Input,
 }
 
 export abstract class AbstractDialogHandler implements IDialogHandler {
-
 	protected getConfirmationButtons(dialog: IConfirmation): string[] {
-		return this.getButtons(dialog, DialogKind.Confirmation);
+		return this.getButtons(dialog, DialogKind.Confirmation)
 	}
 
 	protected getPromptButtons(dialog: IPrompt<unknown>): string[] {
-		return this.getButtons(dialog, DialogKind.Prompt);
+		return this.getButtons(dialog, DialogKind.Prompt)
 	}
 
 	protected getInputButtons(dialog: IInput): string[] {
-		return this.getButtons(dialog, DialogKind.Input);
+		return this.getButtons(dialog, DialogKind.Input)
 	}
 
-	private getButtons(dialog: IConfirmation, kind: DialogKind.Confirmation): string[];
-	private getButtons(dialog: IPrompt<unknown>, kind: DialogKind.Prompt): string[];
-	private getButtons(dialog: IInput, kind: DialogKind.Input): string[];
-	private getButtons(dialog: IConfirmation | IInput | IPrompt<unknown>, kind: DialogKind): string[] {
-
+	private getButtons(dialog: IConfirmation, kind: DialogKind.Confirmation): string[]
+	private getButtons(dialog: IPrompt<unknown>, kind: DialogKind.Prompt): string[]
+	private getButtons(dialog: IInput, kind: DialogKind.Input): string[]
+	private getButtons(
+		dialog: IConfirmation | IInput | IPrompt<unknown>,
+		kind: DialogKind,
+	): string[] {
 		// We put buttons in the order of "default" button first and "cancel"
 		// button last. There maybe later processing when presenting the buttons
 		// based on OS standards.
 
-		const buttons: string[] = [];
+		const buttons: string[] = []
 
 		switch (kind) {
 			case DialogKind.Confirmation: {
-				const confirmationDialog = dialog as IConfirmation;
+				const confirmationDialog = dialog as IConfirmation
 
 				if (confirmationDialog.primaryButton) {
-					buttons.push(confirmationDialog.primaryButton);
+					buttons.push(confirmationDialog.primaryButton)
 				} else {
-					buttons.push(localize({ key: 'yesButton', comment: ['&& denotes a mnemonic'] }, "&&Yes"));
+					buttons.push(localize({ key: 'yesButton', comment: ['&& denotes a mnemonic'] }, '&&Yes'))
 				}
 
 				if (confirmationDialog.cancelButton) {
-					buttons.push(confirmationDialog.cancelButton);
+					buttons.push(confirmationDialog.cancelButton)
 				} else {
-					buttons.push(localize('cancelButton', "Cancel"));
+					buttons.push(localize('cancelButton', 'Cancel'))
 				}
 
-				break;
+				break
 			}
 			case DialogKind.Prompt: {
-				const promptDialog = dialog as IPrompt<unknown>;
+				const promptDialog = dialog as IPrompt<unknown>
 
 				if (Array.isArray(promptDialog.buttons) && promptDialog.buttons.length > 0) {
-					buttons.push(...promptDialog.buttons.map(button => button.label));
+					buttons.push(...promptDialog.buttons.map((button) => button.label))
 				}
 
 				if (promptDialog.cancelButton) {
 					if (promptDialog.cancelButton === true) {
-						buttons.push(localize('cancelButton', "Cancel"));
+						buttons.push(localize('cancelButton', 'Cancel'))
 					} else if (typeof promptDialog.cancelButton === 'string') {
-						buttons.push(promptDialog.cancelButton);
+						buttons.push(promptDialog.cancelButton)
 					} else {
 						if (promptDialog.cancelButton.label) {
-							buttons.push(promptDialog.cancelButton.label);
+							buttons.push(promptDialog.cancelButton.label)
 						} else {
-							buttons.push(localize('cancelButton', "Cancel"));
+							buttons.push(localize('cancelButton', 'Cancel'))
 						}
 					}
 				}
 
 				if (buttons.length === 0) {
-					buttons.push(localize({ key: 'okButton', comment: ['&& denotes a mnemonic'] }, "&&OK"));
+					buttons.push(localize({ key: 'okButton', comment: ['&& denotes a mnemonic'] }, '&&OK'))
 				}
 
-				break;
+				break
 			}
 			case DialogKind.Input: {
-				const inputDialog = dialog as IInput;
+				const inputDialog = dialog as IInput
 
 				if (inputDialog.primaryButton) {
-					buttons.push(inputDialog.primaryButton);
+					buttons.push(inputDialog.primaryButton)
 				} else {
-					buttons.push(localize({ key: 'okButton', comment: ['&& denotes a mnemonic'] }, "&&OK"));
+					buttons.push(localize({ key: 'okButton', comment: ['&& denotes a mnemonic'] }, '&&OK'))
 				}
 
 				if (inputDialog.cancelButton) {
-					buttons.push(inputDialog.cancelButton);
+					buttons.push(inputDialog.cancelButton)
 				} else {
-					buttons.push(localize('cancelButton', "Cancel"));
+					buttons.push(localize('cancelButton', 'Cancel'))
 				}
 
-				break;
+				break
 			}
 		}
 
-		return buttons;
+		return buttons
 	}
 
 	protected getDialogType(type: Severity | DialogType | undefined): DialogType | undefined {
 		if (typeof type === 'string') {
-			return type;
+			return type
 		}
 
 		if (typeof type === 'number') {
-			return (type === Severity.Info) ? 'info' : (type === Severity.Error) ? 'error' : (type === Severity.Warning) ? 'warning' : 'none';
+			return type === Severity.Info
+				? 'info'
+				: type === Severity.Error
+					? 'error'
+					: type === Severity.Warning
+						? 'warning'
+						: 'none'
 		}
 
-		return undefined;
+		return undefined
 	}
 
-	protected getPromptResult<T>(prompt: IPrompt<T>, buttonIndex: number, checkboxChecked: boolean | undefined): IAsyncPromptResult<T> {
-		const promptButtons: IPromptBaseButton<T>[] = [...(prompt.buttons ?? [])];
-		if (prompt.cancelButton && typeof prompt.cancelButton !== 'string' && typeof prompt.cancelButton !== 'boolean') {
-			promptButtons.push(prompt.cancelButton);
+	protected getPromptResult<T>(
+		prompt: IPrompt<T>,
+		buttonIndex: number,
+		checkboxChecked: boolean | undefined,
+	): IAsyncPromptResult<T> {
+		const promptButtons: IPromptBaseButton<T>[] = [...(prompt.buttons ?? [])]
+		if (
+			prompt.cancelButton &&
+			typeof prompt.cancelButton !== 'string' &&
+			typeof prompt.cancelButton !== 'boolean'
+		) {
+			promptButtons.push(prompt.cancelButton)
 		}
 
-		let result = promptButtons[buttonIndex]?.run({ checkboxChecked });
+		let result = promptButtons[buttonIndex]?.run({ checkboxChecked })
 		if (!(result instanceof Promise)) {
-			result = Promise.resolve(result);
+			result = Promise.resolve(result)
 		}
 
-		return { result, checkboxChecked };
+		return { result, checkboxChecked }
 	}
 
-	abstract confirm(confirmation: IConfirmation): Promise<IConfirmationResult>;
-	abstract input(input: IInput): Promise<IInputResult>;
-	abstract prompt<T>(prompt: IPrompt<T>): Promise<IAsyncPromptResult<T>>;
-	abstract about(): Promise<void>;
+	abstract confirm(confirmation: IConfirmation): Promise<IConfirmationResult>
+	abstract input(input: IInput): Promise<IInputResult>
+	abstract prompt<T>(prompt: IPrompt<T>): Promise<IAsyncPromptResult<T>>
+	abstract about(): Promise<void>
 }
 
 /**
@@ -449,23 +452,22 @@ export abstract class AbstractDialogHandler implements IDialogHandler {
  * the user for input.
  */
 export interface IDialogService {
-
-	readonly _serviceBrand: undefined;
+	readonly _serviceBrand: undefined
 
 	/**
 	 * An event that fires when a dialog is about to show.
 	 */
-	onWillShowDialog: Event<void>;
+	onWillShowDialog: Event<void>
 
 	/**
 	 * An event that fires when a dialog did show (closed).
 	 */
-	onDidShowDialog: Event<void>;
+	onDidShowDialog: Event<void>
 
 	/**
 	 * Ask the user for confirmation with a modal dialog.
 	 */
-	confirm(confirmation: IConfirmation): Promise<IConfirmationResult>;
+	confirm(confirmation: IConfirmation): Promise<IConfirmationResult>
 
 	/**
 	 * Prompt the user with a modal dialog. Provides a bit
@@ -477,159 +479,169 @@ export interface IDialogService {
 	 * @returns a promise that resolves to the `T` result
 	 * from the provided `IPromptButton<T>` or `undefined`.
 	 */
-	prompt<T>(prompt: IPromptWithCustomCancel<T>): Promise<IPromptResultWithCancel<T>>;
-	prompt<T>(prompt: IPromptWithDefaultCancel<T>): Promise<IPromptResult<T>>;
-	prompt<T>(prompt: IPrompt<T>): Promise<IPromptResult<T>>;
+	prompt<T>(prompt: IPromptWithCustomCancel<T>): Promise<IPromptResultWithCancel<T>>
+	prompt<T>(prompt: IPromptWithDefaultCancel<T>): Promise<IPromptResult<T>>
+	prompt<T>(prompt: IPrompt<T>): Promise<IPromptResult<T>>
 
 	/**
 	 * Present a modal dialog to the user asking for input.
 	 */
-	input(input: IInput): Promise<IInputResult>;
+	input(input: IInput): Promise<IInputResult>
 
 	/**
 	 * Show a modal info dialog.
 	 */
-	info(message: string, detail?: string): Promise<void>;
+	info(message: string, detail?: string): Promise<void>
 
 	/**
 	 * Show a modal warning dialog.
 	 */
-	warn(message: string, detail?: string): Promise<void>;
+	warn(message: string, detail?: string): Promise<void>
 
 	/**
 	 * Show a modal error dialog.
 	 */
-	error(message: string, detail?: string): Promise<void>;
+	error(message: string, detail?: string): Promise<void>
 
 	/**
 	 * Present the about dialog to the user.
 	 */
-	about(): Promise<void>;
+	about(): Promise<void>
 }
 
-export const IFileDialogService = createDecorator<IFileDialogService>('fileDialogService');
+export const IFileDialogService = createDecorator<IFileDialogService>('fileDialogService')
 
 /**
  * A service to bring up file dialogs.
  */
 export interface IFileDialogService {
-
-	readonly _serviceBrand: undefined;
+	readonly _serviceBrand: undefined
 
 	/**
 	 * The default path for a new file based on previously used files.
 	 * @param schemeFilter The scheme of the file path. If no filter given, the scheme of the current window is used.
 	 * Falls back to user home in the absence of enough information to find a better URI.
 	 */
-	defaultFilePath(schemeFilter?: string): Promise<URI>;
+	defaultFilePath(schemeFilter?: string): Promise<URI>
 
 	/**
 	 * The default path for a new folder based on previously used folders.
 	 * @param schemeFilter The scheme of the folder path. If no filter given, the scheme of the current window is used.
 	 * Falls back to user home in the absence of enough information to find a better URI.
 	 */
-	defaultFolderPath(schemeFilter?: string): Promise<URI>;
+	defaultFolderPath(schemeFilter?: string): Promise<URI>
 
 	/**
 	 * The default path for a new workspace based on previously used workspaces.
 	 * @param schemeFilter The scheme of the workspace path. If no filter given, the scheme of the current window is used.
 	 * Falls back to user home in the absence of enough information to find a better URI.
 	 */
-	defaultWorkspacePath(schemeFilter?: string): Promise<URI>;
+	defaultWorkspacePath(schemeFilter?: string): Promise<URI>
 
 	/**
 	 * Shows a file-folder selection dialog and opens the selected entry.
 	 */
-	pickFileFolderAndOpen(options: IPickAndOpenOptions): Promise<void>;
+	pickFileFolderAndOpen(options: IPickAndOpenOptions): Promise<void>
 
 	/**
 	 * Shows a file selection dialog and opens the selected entry.
 	 */
-	pickFileAndOpen(options: IPickAndOpenOptions): Promise<void>;
+	pickFileAndOpen(options: IPickAndOpenOptions): Promise<void>
 
 	/**
 	 * Shows a folder selection dialog and opens the selected entry.
 	 */
-	pickFolderAndOpen(options: IPickAndOpenOptions): Promise<void>;
+	pickFolderAndOpen(options: IPickAndOpenOptions): Promise<void>
 
 	/**
 	 * Shows a workspace selection dialog and opens the selected entry.
 	 */
-	pickWorkspaceAndOpen(options: IPickAndOpenOptions): Promise<void>;
+	pickWorkspaceAndOpen(options: IPickAndOpenOptions): Promise<void>
 
 	/**
 	 * Shows a save file dialog and save the file at the chosen file URI.
 	 */
-	pickFileToSave(defaultUri: URI, availableFileSystems?: string[]): Promise<URI | undefined>;
+	pickFileToSave(defaultUri: URI, availableFileSystems?: string[]): Promise<URI | undefined>
 
 	/**
 	 * The preferred folder path to open the dialog at.
 	 * @param schemeFilter The scheme of the file path. If no filter given, the scheme of the current window is used.
 	 * Falls back to user home in the absence of a setting.
 	 */
-	preferredHome(schemeFilter?: string): Promise<URI>;
+	preferredHome(schemeFilter?: string): Promise<URI>
 
 	/**
 	 * Shows a save file dialog and returns the chosen file URI.
 	 */
-	showSaveDialog(options: ISaveDialogOptions): Promise<URI | undefined>;
+	showSaveDialog(options: ISaveDialogOptions): Promise<URI | undefined>
 
 	/**
 	 * Shows a confirm dialog for saving 1-N files.
 	 */
-	showSaveConfirm(fileNamesOrResources: (string | URI)[]): Promise<ConfirmResult>;
+	showSaveConfirm(fileNamesOrResources: (string | URI)[]): Promise<ConfirmResult>
 
 	/**
 	 * Shows a open file dialog and returns the chosen file URI.
 	 */
-	showOpenDialog(options: IOpenDialogOptions): Promise<URI[] | undefined>;
+	showOpenDialog(options: IOpenDialogOptions): Promise<URI[] | undefined>
 }
 
 export const enum ConfirmResult {
 	SAVE,
 	DONT_SAVE,
-	CANCEL
+	CANCEL,
 }
 
-const MAX_CONFIRM_FILES = 10;
+const MAX_CONFIRM_FILES = 10
 export function getFileNamesMessage(fileNamesOrResources: readonly (string | URI)[]): string {
-	const message: string[] = [];
-	message.push(...fileNamesOrResources.slice(0, MAX_CONFIRM_FILES).map(fileNameOrResource => typeof fileNameOrResource === 'string' ? fileNameOrResource : basename(fileNameOrResource)));
+	const message: string[] = []
+	message.push(
+		...fileNamesOrResources
+			.slice(0, MAX_CONFIRM_FILES)
+			.map((fileNameOrResource) =>
+				typeof fileNameOrResource === 'string' ? fileNameOrResource : basename(fileNameOrResource),
+			),
+	)
 
 	if (fileNamesOrResources.length > MAX_CONFIRM_FILES) {
 		if (fileNamesOrResources.length - MAX_CONFIRM_FILES === 1) {
-			message.push(localize('moreFile', "...1 additional file not shown"));
+			message.push(localize('moreFile', '...1 additional file not shown'))
 		} else {
-			message.push(localize('moreFiles', "...{0} additional files not shown", fileNamesOrResources.length - MAX_CONFIRM_FILES));
+			message.push(
+				localize(
+					'moreFiles',
+					'...{0} additional files not shown',
+					fileNamesOrResources.length - MAX_CONFIRM_FILES,
+				),
+			)
 		}
 	}
 
-	message.push('');
-	return message.join('\n');
+	message.push('')
+	return message.join('\n')
 }
 
 export interface INativeOpenDialogOptions {
-	readonly forceNewWindow?: boolean;
+	readonly forceNewWindow?: boolean
 
-	readonly defaultPath?: string;
+	readonly defaultPath?: string
 
-	readonly telemetryEventName?: string;
-	readonly telemetryExtraData?: ITelemetryData;
+	readonly telemetryEventName?: string
+	readonly telemetryExtraData?: ITelemetryData
 }
 
 export interface IMassagedMessageBoxOptions {
-
 	/**
 	 * OS massaged message box options.
 	 */
-	readonly options: MessageBoxOptions;
+	readonly options: MessageBoxOptions
 
 	/**
 	 * Since the massaged result of the message box options potentially
 	 * changes the order of buttons, we have to keep a map of these
 	 * changes so that we can still return the correct index to the caller.
 	 */
-	readonly buttonIndeces: number[];
+	readonly buttonIndeces: number[]
 }
 
 /**
@@ -637,21 +649,25 @@ export interface IMassagedMessageBoxOptions {
  * are using properties that are consistent across all platforms and
  * specific to the platform where necessary.
  */
-export function massageMessageBoxOptions(options: MessageBoxOptions, productService: IProductService): IMassagedMessageBoxOptions {
-	const massagedOptions = deepClone(options);
+export function massageMessageBoxOptions(
+	options: MessageBoxOptions,
+	productService: IProductService,
+): IMassagedMessageBoxOptions {
+	const massagedOptions = deepClone(options)
 
-	let buttons = (massagedOptions.buttons ?? []).map(button => mnemonicButtonLabel(button).withMnemonic);
-	let buttonIndeces = (options.buttons || []).map((button, index) => index);
+	let buttons = (massagedOptions.buttons ?? []).map(
+		(button) => mnemonicButtonLabel(button).withMnemonic,
+	)
+	let buttonIndeces = (options.buttons || []).map((button, index) => index)
 
-	let defaultId = 0; // by default the first button is default button
-	let cancelId = massagedOptions.cancelId ?? buttons.length - 1; // by default the last button is cancel button
+	let defaultId = 0 // by default the first button is default button
+	let cancelId = massagedOptions.cancelId ?? buttons.length - 1 // by default the last button is cancel button
 
 	// Apply HIG per OS when more than one button is used
 	if (buttons.length > 1) {
-		const cancelButton = typeof cancelId === 'number' ? buttons[cancelId] : undefined;
+		const cancelButton = typeof cancelId === 'number' ? buttons[cancelId] : undefined
 
 		if (isLinux || isMacintosh) {
-
 			// Linux: the GNOME HIG (https://developer.gnome.org/hig/patterns/feedback/dialogs.html?highlight=dialog)
 			// recommend the following:
 			// "Always ensure that the cancel button appears first, before the affirmative button. In left-to-right
@@ -674,27 +690,26 @@ export function massageMessageBoxOptions(options: MessageBoxOptions, productServ
 			// shuffling is done for us.
 
 			if (typeof cancelButton === 'string' && buttons.length > 1 && cancelId !== 1) {
-				buttons.splice(cancelId, 1);
-				buttons.splice(1, 0, cancelButton);
+				buttons.splice(cancelId, 1)
+				buttons.splice(1, 0, cancelButton)
 
-				const cancelButtonIndex = buttonIndeces[cancelId];
-				buttonIndeces.splice(cancelId, 1);
-				buttonIndeces.splice(1, 0, cancelButtonIndex);
+				const cancelButtonIndex = buttonIndeces[cancelId]
+				buttonIndeces.splice(cancelId, 1)
+				buttonIndeces.splice(1, 0, cancelButtonIndex)
 
-				cancelId = 1;
+				cancelId = 1
 			}
 
 			if (isLinux && buttons.length > 1) {
-				buttons = buttons.reverse();
-				buttonIndeces = buttonIndeces.reverse();
+				buttons = buttons.reverse()
+				buttonIndeces = buttonIndeces.reverse()
 
-				defaultId = buttons.length - 1;
+				defaultId = buttons.length - 1
 				if (typeof cancelButton === 'string') {
-					cancelId = defaultId - 1;
+					cancelId = defaultId - 1
 				}
 			}
 		} else if (isWindows) {
-
 			// Windows: the HIG (https://learn.microsoft.com/en-us/windows/win32/uxguide/win-dialog-box)
 			// recommend the following:
 			// "One of the following sets of concise commands: Yes/No, Yes/No/Cancel, [Do it]/Cancel,
@@ -703,27 +718,31 @@ export function massageMessageBoxOptions(options: MessageBoxOptions, productServ
 			// Electron APIs do not reorder buttons for us, so we ensure the position of the cancel button
 			// (if provided) that matches the HIG
 
-			if (typeof cancelButton === 'string' && buttons.length > 1 && cancelId !== buttons.length - 1 /* last action */) {
-				buttons.splice(cancelId, 1);
-				buttons.push(cancelButton);
+			if (
+				typeof cancelButton === 'string' &&
+				buttons.length > 1 &&
+				cancelId !== buttons.length - 1 /* last action */
+			) {
+				buttons.splice(cancelId, 1)
+				buttons.push(cancelButton)
 
-				const buttonIndex = buttonIndeces[cancelId];
-				buttonIndeces.splice(cancelId, 1);
-				buttonIndeces.push(buttonIndex);
+				const buttonIndex = buttonIndeces[cancelId]
+				buttonIndeces.splice(cancelId, 1)
+				buttonIndeces.push(buttonIndex)
 
-				cancelId = buttons.length - 1;
+				cancelId = buttons.length - 1
 			}
 		}
 	}
 
-	massagedOptions.buttons = buttons;
-	massagedOptions.defaultId = defaultId;
-	massagedOptions.cancelId = cancelId;
-	massagedOptions.noLink = true;
-	massagedOptions.title = massagedOptions.title || productService.nameLong;
+	massagedOptions.buttons = buttons
+	massagedOptions.defaultId = defaultId
+	massagedOptions.cancelId = cancelId
+	massagedOptions.noLink = true
+	massagedOptions.title = massagedOptions.title || productService.nameLong
 
 	return {
 		options: massagedOptions,
-		buttonIndeces
-	};
+		buttonIndeces,
+	}
 }

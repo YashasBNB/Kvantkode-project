@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
+import { RawContextKey } from '../../../../platform/contextkey/common/contextkey.js'
 
 export const enum SearchCommandIds {
 	FindInFilesActionId = 'workbench.action.findInFiles',
@@ -69,7 +69,10 @@ export const SearchContext = {
 	FirstMatchFocusKey: new RawContextKey<boolean>('firstMatchFocus', false),
 	FileMatchOrMatchFocusKey: new RawContextKey<boolean>('fileMatchOrMatchFocus', false), // This is actually, Match or File or Folder
 	FileMatchOrFolderMatchFocusKey: new RawContextKey<boolean>('fileMatchOrFolderMatchFocus', false),
-	FileMatchOrFolderMatchWithResourceFocusKey: new RawContextKey<boolean>('fileMatchOrFolderMatchWithResourceFocus', false), // Excludes "Other files"
+	FileMatchOrFolderMatchWithResourceFocusKey: new RawContextKey<boolean>(
+		'fileMatchOrFolderMatchWithResourceFocus',
+		false,
+	), // Excludes "Other files"
 	FileFocusKey: new RawContextKey<boolean>('fileMatchFocus', false),
 	FolderFocusKey: new RawContextKey<boolean>('folderMatchFocus', false),
 	ResourceFolderFocusKey: new RawContextKey<boolean>('folderMatchWithResourceFocus', false),
@@ -84,4 +87,4 @@ export const SearchContext = {
 	hasAIResultProvider: new RawContextKey<boolean>('hasAIResultProviderKey', false),
 	AIResultsTitle: new RawContextKey<boolean>('aiResultsTitle', false),
 	AIResultsRequested: new RawContextKey<boolean>('aiResultsRequested', false),
-};
+}

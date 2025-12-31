@@ -3,26 +3,24 @@
  *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { isLinux, isMacintosh, isWindows } from '../../../../base/common/platform.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { IEnvironmentMainService } from '../../../../platform/environment/electron-main/environmentMainService.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { StorageTarget, StorageScope } from '../../../../platform/storage/common/storage.js';
-import { IApplicationStorageMainService } from '../../../../platform/storage/electron-main/storageMainService.js';
+import { Disposable } from '../../../../base/common/lifecycle.js'
+import { isLinux, isMacintosh, isWindows } from '../../../../base/common/platform.js'
+import { generateUuid } from '../../../../base/common/uuid.js'
+import { IEnvironmentMainService } from '../../../../platform/environment/electron-main/environmentMainService.js'
+import { IProductService } from '../../../../platform/product/common/productService.js'
+import { StorageTarget, StorageScope } from '../../../../platform/storage/common/storage.js'
+import { IApplicationStorageMainService } from '../../../../platform/storage/electron-main/storageMainService.js'
 
-import { IMetricsService } from '../common/metricsService.js';
+import { IMetricsService } from '../common/metricsService.js'
 import { PostHog } from 'posthog-node'
-import { OPT_OUT_KEY } from '../common/storageKeys.js';
-
+import { OPT_OUT_KEY } from '../common/storageKeys.js'
 
 const os = isWindows ? 'windows' : isMacintosh ? 'mac' : isLinux ? 'linux' : null
 const _getOSInfo = () => {
 	try {
 		const { platform, arch } = process // see platform.ts
 		return { platform, arch }
-	}
-	catch (e) {
+	} catch (e) {
 		return { osInfo: { platform: '??', arch: '??' } }
 	}
 }
@@ -30,15 +28,12 @@ const osInfo = _getOSInfo()
 
 // we'd like to use devDeviceId on telemetryService, but that gets sanitized by the time it gets here as 'someValue.devDeviceId'
 
-
-
 export class MetricsMainService extends Disposable implements IMetricsService {
-	_serviceBrand: undefined;
+	_serviceBrand: undefined
 
 	private readonly client: PostHog
 
 	private _initProperties: object = {}
-
 
 	// helper - looks like this is stored in a .vscdb file in ~/Library/Application Support/Void
 	private _memoStorage(key: string, target: StorageTarget, setValIfNotExist?: string) {
@@ -48,7 +43,6 @@ export class MetricsMainService extends Disposable implements IMetricsService {
 		this._appStorage.store(key, newVal, StorageScope.APPLICATION, target)
 		return newVal
 	}
-
 
 	// this is old, eventually we can just delete this since all the keys will have been transferred over
 	// returns 'NULL' or the old key
@@ -68,7 +62,6 @@ export class MetricsMainService extends Disposable implements IMetricsService {
 		// 	return this._memoStorage('void.app.oldMachineId', StorageTarget.MACHINE, 'NULL')
 		// }
 	}
-
 
 	// the main id
 	private get distinctId() {
@@ -128,16 +121,13 @@ export class MetricsMainService extends Disposable implements IMetricsService {
 		console.log('User is opted out of basic Void metrics?', didOptOut)
 		if (didOptOut) {
 			this.client.optOut()
-		}
-		else {
+		} else {
 			this.client.optIn()
 			this.client.identify(identifyMessage)
 		}
 
-
 		console.log('Void posthog metrics info:', JSON.stringify(identifyMessage, null, 2))
 	}
-
 
 	capture: IMetricsService['capture'] = (event, params) => {
 		const capture = { distinctId: this.distinctId, event, properties: params } as const
@@ -148,8 +138,7 @@ export class MetricsMainService extends Disposable implements IMetricsService {
 	setOptOut: IMetricsService['setOptOut'] = (newVal: boolean) => {
 		if (newVal) {
 			this._appStorage.store(OPT_OUT_KEY, 'true', StorageScope.APPLICATION, StorageTarget.MACHINE)
-		}
-		else {
+		} else {
 			this._appStorage.remove(OPT_OUT_KEY, StorageScope.APPLICATION)
 		}
 	}
@@ -158,5 +147,3 @@ export class MetricsMainService extends Disposable implements IMetricsService {
 		return this._initProperties
 	}
 }
-
-

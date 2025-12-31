@@ -3,33 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, dispose, IDisposable } from '../../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { Promises } from '../../../../base/common/async.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IWorkingCopyBackupService } from './workingCopyBackup.js';
-import { IFileWorkingCopy, IFileWorkingCopyModel } from './fileWorkingCopy.js';
+import { Emitter, Event } from '../../../../base/common/event.js'
+import { Disposable, dispose, IDisposable } from '../../../../base/common/lifecycle.js'
+import { ResourceMap } from '../../../../base/common/map.js'
+import { Promises } from '../../../../base/common/async.js'
+import { IFileService } from '../../../../platform/files/common/files.js'
+import { URI } from '../../../../base/common/uri.js'
+import { ILogService } from '../../../../platform/log/common/log.js'
+import { IWorkingCopyBackupService } from './workingCopyBackup.js'
+import { IFileWorkingCopy, IFileWorkingCopyModel } from './fileWorkingCopy.js'
 
-export interface IBaseFileWorkingCopyManager<M extends IFileWorkingCopyModel, W extends IFileWorkingCopy<M>> extends IDisposable {
-
+export interface IBaseFileWorkingCopyManager<
+	M extends IFileWorkingCopyModel,
+	W extends IFileWorkingCopy<M>,
+> extends IDisposable {
 	/**
 	 * An event for when a file working copy was created.
 	 */
-	readonly onDidCreate: Event<W>;
+	readonly onDidCreate: Event<W>
 
 	/**
 	 * Access to all known file working copies within the manager.
 	 */
-	readonly workingCopies: readonly W[];
+	readonly workingCopies: readonly W[]
 
 	/**
 	 * Returns the file working copy for the provided resource
 	 * or `undefined` if none.
 	 */
-	get(resource: URI): W | undefined;
+	get(resource: URI): W | undefined
 
 	/**
 	 * Disposes all working copies of the manager and disposes the manager. This
@@ -41,67 +43,75 @@ export interface IBaseFileWorkingCopyManager<M extends IFileWorkingCopyModel, W 
 	 * Callers should make sure to e.g. close any editors associated with the
 	 * working copy.
 	 */
-	destroy(): Promise<void>;
+	destroy(): Promise<void>
 }
 
-export abstract class BaseFileWorkingCopyManager<M extends IFileWorkingCopyModel, W extends IFileWorkingCopy<M>> extends Disposable implements IBaseFileWorkingCopyManager<M, W> {
+export abstract class BaseFileWorkingCopyManager<
+		M extends IFileWorkingCopyModel,
+		W extends IFileWorkingCopy<M>,
+	>
+	extends Disposable
+	implements IBaseFileWorkingCopyManager<M, W>
+{
+	private readonly _onDidCreate = this._register(new Emitter<W>())
+	readonly onDidCreate = this._onDidCreate.event
 
-	private readonly _onDidCreate = this._register(new Emitter<W>());
-	readonly onDidCreate = this._onDidCreate.event;
-
-	private readonly mapResourceToWorkingCopy = new ResourceMap<W>();
-	private readonly mapResourceToDisposeListener = new ResourceMap<IDisposable>();
+	private readonly mapResourceToWorkingCopy = new ResourceMap<W>()
+	private readonly mapResourceToDisposeListener = new ResourceMap<IDisposable>()
 
 	constructor(
 		@IFileService protected readonly fileService: IFileService,
 		@ILogService protected readonly logService: ILogService,
-		@IWorkingCopyBackupService protected readonly workingCopyBackupService: IWorkingCopyBackupService
+		@IWorkingCopyBackupService
+		protected readonly workingCopyBackupService: IWorkingCopyBackupService,
 	) {
-		super();
+		super()
 	}
 
 	protected has(resource: URI): boolean {
-		return this.mapResourceToWorkingCopy.has(resource);
+		return this.mapResourceToWorkingCopy.has(resource)
 	}
 
 	protected add(resource: URI, workingCopy: W): void {
-		const knownWorkingCopy = this.get(resource);
+		const knownWorkingCopy = this.get(resource)
 		if (knownWorkingCopy === workingCopy) {
-			return; // already cached
+			return // already cached
 		}
 
 		// Add to our working copy map
-		this.mapResourceToWorkingCopy.set(resource, workingCopy);
+		this.mapResourceToWorkingCopy.set(resource, workingCopy)
 
 		// Update our dispose listener to remove it on dispose
-		this.mapResourceToDisposeListener.get(resource)?.dispose();
-		this.mapResourceToDisposeListener.set(resource, workingCopy.onWillDispose(() => this.remove(resource)));
+		this.mapResourceToDisposeListener.get(resource)?.dispose()
+		this.mapResourceToDisposeListener.set(
+			resource,
+			workingCopy.onWillDispose(() => this.remove(resource)),
+		)
 
 		// Signal creation event
-		this._onDidCreate.fire(workingCopy);
+		this._onDidCreate.fire(workingCopy)
 	}
 
 	protected remove(resource: URI): boolean {
-
 		// Dispose any existing listener
-		const disposeListener = this.mapResourceToDisposeListener.get(resource);
+		const disposeListener = this.mapResourceToDisposeListener.get(resource)
 		if (disposeListener) {
-			dispose(disposeListener);
-			this.mapResourceToDisposeListener.delete(resource);
+			dispose(disposeListener)
+			this.mapResourceToDisposeListener.delete(resource)
 		}
 
 		// Remove from our working copy map
-		return this.mapResourceToWorkingCopy.delete(resource);
+		return this.mapResourceToWorkingCopy.delete(resource)
 	}
 
 	//#region Get / Get all
 
 	get workingCopies(): W[] {
-		return [...this.mapResourceToWorkingCopy.values()];
+		return [...this.mapResourceToWorkingCopy.values()]
 	}
 
 	get(resource: URI): W | undefined {
-		return this.mapResourceToWorkingCopy.get(resource);
+		return this.mapResourceToWorkingCopy.get(resource)
 	}
 
 	//#endregion
@@ -109,7 +119,7 @@ export abstract class BaseFileWorkingCopyManager<M extends IFileWorkingCopyModel
 	//#region Lifecycle
 
 	override dispose(): void {
-		super.dispose();
+		super.dispose()
 
 		// Clear working copy caches
 		//
@@ -119,48 +129,48 @@ export abstract class BaseFileWorkingCopyManager<M extends IFileWorkingCopyModel
 		// copy unregisters. We have an explicit `destroy`
 		// for that purpose (https://github.com/microsoft/vscode/pull/123555)
 		//
-		this.mapResourceToWorkingCopy.clear();
+		this.mapResourceToWorkingCopy.clear()
 
 		// Dispose the dispose listeners
-		dispose(this.mapResourceToDisposeListener.values());
-		this.mapResourceToDisposeListener.clear();
+		dispose(this.mapResourceToDisposeListener.values())
+		this.mapResourceToDisposeListener.clear()
 	}
 
 	async destroy(): Promise<void> {
-
 		// Make sure all dirty working copies are saved to disk
 		try {
-			await Promises.settled(this.workingCopies.map(async workingCopy => {
-				if (workingCopy.isDirty()) {
-					await this.saveWithFallback(workingCopy);
-				}
-			}));
+			await Promises.settled(
+				this.workingCopies.map(async (workingCopy) => {
+					if (workingCopy.isDirty()) {
+						await this.saveWithFallback(workingCopy)
+					}
+				}),
+			)
 		} catch (error) {
-			this.logService.error(error);
+			this.logService.error(error)
 		}
 
 		// Dispose all working copies
-		dispose(this.mapResourceToWorkingCopy.values());
+		dispose(this.mapResourceToWorkingCopy.values())
 
 		// Finally dispose manager
-		this.dispose();
+		this.dispose()
 	}
 
 	private async saveWithFallback(workingCopy: W): Promise<void> {
-
 		// First try regular save
-		let saveSuccess = false;
+		let saveSuccess = false
 		try {
-			saveSuccess = await workingCopy.save();
+			saveSuccess = await workingCopy.save()
 		} catch (error) {
 			// Ignore
 		}
 
 		// Then fallback to backup if that exists
 		if (!saveSuccess || workingCopy.isDirty()) {
-			const backup = await this.workingCopyBackupService.resolve(workingCopy);
+			const backup = await this.workingCopyBackupService.resolve(workingCopy)
 			if (backup) {
-				await this.fileService.writeFile(workingCopy.resource, backup.value, { unlock: true });
+				await this.fileService.writeFile(workingCopy.resource, backup.value, { unlock: true })
 			}
 		}
 	}

@@ -8,7 +8,7 @@
  */
 export const enum LanguageId {
 	Null = 0,
-	PlainText = 1
+	PlainText = 1,
 }
 
 /**
@@ -29,7 +29,7 @@ export const enum FontStyle {
 export const enum ColorId {
 	None = 0,
 	DefaultForeground = 1,
-	DefaultBackground = 2
+	DefaultBackground = 2,
 }
 
 /**
@@ -39,7 +39,7 @@ export const enum StandardTokenType {
 	Other = 0,
 	Comment = 1,
 	String = 2,
-	RegEx = 3
+	RegEx = 3,
 }
 
 /**
@@ -81,7 +81,7 @@ export const enum MetadataConsts {
 	// use the first 8 bits for control purposes
 	SEMANTIC_USE_ITALIC /*        */ = 0b00000000_00000000_00000000_00000001,
 	SEMANTIC_USE_BOLD /*          */ = 0b00000000_00000000_00000000_00000010,
-	SEMANTIC_USE_UNDERLINE  /*    */ = 0b00000000_00000000_00000000_00000100,
+	SEMANTIC_USE_UNDERLINE /*    */ = 0b00000000_00000000_00000000_00000100,
 	SEMANTIC_USE_STRIKETHROUGH /* */ = 0b00000000_00000000_00000000_00001000,
 	SEMANTIC_USE_FOREGROUND /*    */ = 0b00000000_00000000_00000000_00010000,
 	SEMANTIC_USE_BACKGROUND /*    */ = 0b00000000_00000000_00000000_00100000,
@@ -91,86 +91,84 @@ export const enum MetadataConsts {
 	BALANCED_BRACKETS_OFFSET = 10,
 	FONT_STYLE_OFFSET = 11,
 	FOREGROUND_OFFSET = 15,
-	BACKGROUND_OFFSET = 24
+	BACKGROUND_OFFSET = 24,
 }
 
 /**
  */
 export class TokenMetadata {
-
 	public static getLanguageId(metadata: number): LanguageId {
-		return (metadata & MetadataConsts.LANGUAGEID_MASK) >>> MetadataConsts.LANGUAGEID_OFFSET;
+		return (metadata & MetadataConsts.LANGUAGEID_MASK) >>> MetadataConsts.LANGUAGEID_OFFSET
 	}
 
 	public static getTokenType(metadata: number): StandardTokenType {
-		return (metadata & MetadataConsts.TOKEN_TYPE_MASK) >>> MetadataConsts.TOKEN_TYPE_OFFSET;
+		return (metadata & MetadataConsts.TOKEN_TYPE_MASK) >>> MetadataConsts.TOKEN_TYPE_OFFSET
 	}
 
 	public static containsBalancedBrackets(metadata: number): boolean {
-		return (metadata & MetadataConsts.BALANCED_BRACKETS_MASK) !== 0;
+		return (metadata & MetadataConsts.BALANCED_BRACKETS_MASK) !== 0
 	}
 
 	public static getFontStyle(metadata: number): FontStyle {
-		return (metadata & MetadataConsts.FONT_STYLE_MASK) >>> MetadataConsts.FONT_STYLE_OFFSET;
+		return (metadata & MetadataConsts.FONT_STYLE_MASK) >>> MetadataConsts.FONT_STYLE_OFFSET
 	}
 
 	public static getForeground(metadata: number): ColorId {
-		return (metadata & MetadataConsts.FOREGROUND_MASK) >>> MetadataConsts.FOREGROUND_OFFSET;
+		return (metadata & MetadataConsts.FOREGROUND_MASK) >>> MetadataConsts.FOREGROUND_OFFSET
 	}
 
 	public static getBackground(metadata: number): ColorId {
-		return (metadata & MetadataConsts.BACKGROUND_MASK) >>> MetadataConsts.BACKGROUND_OFFSET;
+		return (metadata & MetadataConsts.BACKGROUND_MASK) >>> MetadataConsts.BACKGROUND_OFFSET
 	}
 
 	public static getClassNameFromMetadata(metadata: number): string {
-		const foreground = this.getForeground(metadata);
-		let className = 'mtk' + foreground;
+		const foreground = this.getForeground(metadata)
+		let className = 'mtk' + foreground
 
-		const fontStyle = this.getFontStyle(metadata);
+		const fontStyle = this.getFontStyle(metadata)
 		if (fontStyle & FontStyle.Italic) {
-			className += ' mtki';
+			className += ' mtki'
 		}
 		if (fontStyle & FontStyle.Bold) {
-			className += ' mtkb';
+			className += ' mtkb'
 		}
 		if (fontStyle & FontStyle.Underline) {
-			className += ' mtku';
+			className += ' mtku'
 		}
 		if (fontStyle & FontStyle.Strikethrough) {
-			className += ' mtks';
+			className += ' mtks'
 		}
 
-		return className;
+		return className
 	}
 
 	public static getInlineStyleFromMetadata(metadata: number, colorMap: string[]): string {
-		const foreground = this.getForeground(metadata);
-		const fontStyle = this.getFontStyle(metadata);
+		const foreground = this.getForeground(metadata)
+		const fontStyle = this.getFontStyle(metadata)
 
-		let result = `color: ${colorMap[foreground]};`;
+		let result = `color: ${colorMap[foreground]};`
 		if (fontStyle & FontStyle.Italic) {
-			result += 'font-style: italic;';
+			result += 'font-style: italic;'
 		}
 		if (fontStyle & FontStyle.Bold) {
-			result += 'font-weight: bold;';
+			result += 'font-weight: bold;'
 		}
-		let textDecoration = '';
+		let textDecoration = ''
 		if (fontStyle & FontStyle.Underline) {
-			textDecoration += ' underline';
+			textDecoration += ' underline'
 		}
 		if (fontStyle & FontStyle.Strikethrough) {
-			textDecoration += ' line-through';
+			textDecoration += ' line-through'
 		}
 		if (textDecoration) {
-			result += `text-decoration:${textDecoration};`;
-
+			result += `text-decoration:${textDecoration};`
 		}
-		return result;
+		return result
 	}
 
 	public static getPresentationFromMetadata(metadata: number): ITokenPresentation {
-		const foreground = this.getForeground(metadata);
-		const fontStyle = this.getFontStyle(metadata);
+		const foreground = this.getForeground(metadata)
+		const fontStyle = this.getFontStyle(metadata)
 
 		return {
 			foreground: foreground,
@@ -178,16 +176,16 @@ export class TokenMetadata {
 			bold: Boolean(fontStyle & FontStyle.Bold),
 			underline: Boolean(fontStyle & FontStyle.Underline),
 			strikethrough: Boolean(fontStyle & FontStyle.Strikethrough),
-		};
+		}
 	}
 }
 
 /**
  */
 export interface ITokenPresentation {
-	foreground: ColorId;
-	italic: boolean;
-	bold: boolean;
-	underline: boolean;
-	strikethrough: boolean;
+	foreground: ColorId
+	italic: boolean
+	bold: boolean
+	underline: boolean
+	strikethrough: boolean
 }

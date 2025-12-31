@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { assertDefined } from '../types.js';
-import { Disposable, DisposableMap } from '../lifecycle.js';
-import { CancellationTokenSource, CancellationToken } from '../cancellation.js';
+import { assertDefined } from '../types.js'
+import { Disposable, DisposableMap } from '../lifecycle.js'
+import { CancellationTokenSource, CancellationToken } from '../cancellation.js'
 
 /**
  * Helper type that represents a function that has an optional {@linkcode CancellationToken}
@@ -14,9 +14,11 @@ import { CancellationTokenSource, CancellationToken } from '../cancellation.js';
  * @typeparam `TFunction` - Type of the function arguments list of which will be extended
  * 							with an optional {@linkcode CancellationToken} argument.
  */
-type TWithOptionalCancellationToken<TFunction extends Function> = TFunction extends (...args: infer TArgs) => infer TReturn
+type TWithOptionalCancellationToken<TFunction extends Function> = TFunction extends (
+	...args: infer TArgs
+) => infer TReturn
 	? (...args: [...TArgs, cancellatioNToken?: CancellationToken]) => TReturn
-	: never;
+	: never
 
 /**
  * Decorator that provides a mechanism to cancel previous calls of the decorated method
@@ -93,43 +95,37 @@ export function cancelPreviousCalls<
 	methodName: string,
 	descriptor: TypedPropertyDescriptor<TWithOptionalCancellationToken<(...args: TArgs) => TReturn>>,
 ) {
-	const originalMethod = descriptor.value;
+	const originalMethod = descriptor.value
 
-	assertDefined(
-		originalMethod,
-		`Method '${methodName}' is not defined.`,
-	);
+	assertDefined(originalMethod, `Method '${methodName}' is not defined.`)
 
 	// we create the global map that contains `TObjectRecord` for each object instance that
 	// uses this decorator, which itself contains a `{method name} -> TMethodRecord` mapping
 	// for each decorated method on the object; the `TMethodRecord` record stores current
 	// `cancellationTokenSource`, token of which was passed to the previous call of the method
-	const objectRecords = new WeakMap<TObject, DisposableMap<string, CancellationTokenSource>>();
+	const objectRecords = new WeakMap<TObject, DisposableMap<string, CancellationTokenSource>>()
 
 	// decorate the original method with the following logic that upon a new invocation
 	// of the method cancels the cancellation token that was passed to a previous call
-	descriptor.value = function (
-		this: TObject,
-		...args: Parameters<typeof originalMethod>
-	): TReturn {
+	descriptor.value = function (this: TObject, ...args: Parameters<typeof originalMethod>): TReturn {
 		// get or create a record for the current object instance
 		// the creation is done once per each object instance
-		let record = objectRecords.get(this);
+		let record = objectRecords.get(this)
 		if (!record) {
-			record = new DisposableMap();
-			objectRecords.set(this, record);
+			record = new DisposableMap()
+			objectRecords.set(this, record)
 
 			this._register({
 				dispose: () => {
-					objectRecords.get(this)?.dispose();
-					objectRecords.delete(this);
+					objectRecords.get(this)?.dispose()
+					objectRecords.delete(this)
 				},
-			});
+			})
 		}
 
 		// when the decorated method is called again and there is a cancellation token
 		// source exists from a previous call, cancel and dispose it, then remove it
-		record.get(methodName)?.dispose(true);
+		record.get(methodName)?.dispose(true)
 
 		// now we need to provide a cancellation token to the original method
 		// as the last argument, there are two cases to consider:
@@ -142,27 +138,23 @@ export function cancelPreviousCalls<
 
 		// get the last argument of the arguments list and if it is present,
 		// reuse it as the token for the new cancellation token source
-		const lastArgument = (args.length > 0)
-			? args[args.length - 1]
-			: undefined;
-		const token = CancellationToken.isCancellationToken(lastArgument)
-			? lastArgument
-			: undefined;
+		const lastArgument = args.length > 0 ? args[args.length - 1] : undefined
+		const token = CancellationToken.isCancellationToken(lastArgument) ? lastArgument : undefined
 
-		const cancellationSource = new CancellationTokenSource(token);
-		record.set(methodName, cancellationSource);
+		const cancellationSource = new CancellationTokenSource(token)
+		record.set(methodName, cancellationSource)
 
 		// then update or add cancelaltion token at the end of the arguments list
 		if (CancellationToken.isCancellationToken(lastArgument)) {
-			args[args.length - 1] = cancellationSource.token;
+			args[args.length - 1] = cancellationSource.token
 		} else {
-			args.push(cancellationSource.token);
+			args.push(cancellationSource.token)
 		}
 
 		// finally invoke the original method passing original arguments and
 		// the new cancellation token at the end of the arguments list
-		return originalMethod.call(this, ...args);
-	};
+		return originalMethod.call(this, ...args)
+	}
 
-	return descriptor;
+	return descriptor
 }

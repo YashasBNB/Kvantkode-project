@@ -9,7 +9,7 @@ module.exports = {
 	content: ['./src2/**/*.{jsx,tsx}'], // uses these files to decide how to transform the css file
 	theme: {
 		extend: {
-			typography: theme => ({
+			typography: (theme) => ({
 				DEFAULT: {
 					css: {
 						'--tw-prose-body': 'var(--void-fg-1)',
@@ -56,7 +56,6 @@ module.exports = {
 				'void-bg-2-hover': 'var(--void-bg-2-hover)',
 				'void-bg-3': 'var(--void-bg-3)',
 
-
 				'void-fg-0': 'var(--void-fg-0)',
 				'void-fg-1': 'var(--void-fg-1)',
 				'void-fg-2': 'var(--void-fg-2)',
@@ -78,7 +77,7 @@ module.exports = {
 					// see: https://code.visualstudio.com/api/extension-guides/webview#theming-webview-content
 
 					// base colors
-					'fg': 'var(--vscode-foreground)',
+					fg: 'var(--vscode-foreground)',
 					'focus-border': 'var(--vscode-focusBorder)',
 					'disabled-fg': 'var(--vscode-disabledForeground)',
 					'widget-border': 'var(--vscode-widget-border)',
@@ -175,8 +174,6 @@ module.exports = {
 					'editor-bg': 'var(--vscode-editor-background)',
 					'editor-fg': 'var(--vscode-editor-foreground)',
 
-
-
 					// other
 					'editorwidget-bg': 'var(--vscode-editorWidget-background)',
 					'toolbar-hover-bg': 'var(--vscode-toolbar-hoverBackground)',
@@ -191,9 +188,6 @@ module.exports = {
 			},
 		},
 	},
-	plugins: [
-		require('@tailwindcss/typography')
-	],
-	prefix: 'void-'
+	plugins: [require('@tailwindcss/typography')],
+	prefix: 'void-',
 }
-

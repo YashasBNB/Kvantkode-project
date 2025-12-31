@@ -1,0 +1,45 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import * as dom from '../dom.js';
+import { StandardKeyboardEvent } from '../keyboardEvent.js';
+import { StandardMouseEvent } from '../mouseEvent.js';
+import { Gesture } from '../touch.js';
+import { Disposable } from '../../common/lifecycle.js';
+export class Widget extends Disposable {
+    onclick(domNode, listener) {
+        this._register(dom.addDisposableListener(domNode, dom.EventType.CLICK, (e) => listener(new StandardMouseEvent(dom.getWindow(domNode), e))));
+    }
+    onmousedown(domNode, listener) {
+        this._register(dom.addDisposableListener(domNode, dom.EventType.MOUSE_DOWN, (e) => listener(new StandardMouseEvent(dom.getWindow(domNode), e))));
+    }
+    onmouseover(domNode, listener) {
+        this._register(dom.addDisposableListener(domNode, dom.EventType.MOUSE_OVER, (e) => listener(new StandardMouseEvent(dom.getWindow(domNode), e))));
+    }
+    onmouseleave(domNode, listener) {
+        this._register(dom.addDisposableListener(domNode, dom.EventType.MOUSE_LEAVE, (e) => listener(new StandardMouseEvent(dom.getWindow(domNode), e))));
+    }
+    onkeydown(domNode, listener) {
+        this._register(dom.addDisposableListener(domNode, dom.EventType.KEY_DOWN, (e) => listener(new StandardKeyboardEvent(e))));
+    }
+    onkeyup(domNode, listener) {
+        this._register(dom.addDisposableListener(domNode, dom.EventType.KEY_UP, (e) => listener(new StandardKeyboardEvent(e))));
+    }
+    oninput(domNode, listener) {
+        this._register(dom.addDisposableListener(domNode, dom.EventType.INPUT, listener));
+    }
+    onblur(domNode, listener) {
+        this._register(dom.addDisposableListener(domNode, dom.EventType.BLUR, listener));
+    }
+    onfocus(domNode, listener) {
+        this._register(dom.addDisposableListener(domNode, dom.EventType.FOCUS, listener));
+    }
+    onchange(domNode, listener) {
+        this._register(dom.addDisposableListener(domNode, dom.EventType.CHANGE, listener));
+    }
+    ignoreGesture(domNode) {
+        return Gesture.ignoreTarget(domNode);
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoid2lkZ2V0LmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vVXNlcnMveWFzaGFzbmFpZHUvS3ZhbnRjb2RlL3ZvaWQvc3JjLyIsInNvdXJjZXMiOlsidnMvYmFzZS9icm93c2VyL3VpL3dpZGdldC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRztBQUVoRyxPQUFPLEtBQUssR0FBRyxNQUFNLFdBQVcsQ0FBQTtBQUNoQyxPQUFPLEVBQWtCLHFCQUFxQixFQUFFLE1BQU0scUJBQXFCLENBQUE7QUFDM0UsT0FBTyxFQUFlLGtCQUFrQixFQUFFLE1BQU0sa0JBQWtCLENBQUE7QUFDbEUsT0FBTyxFQUFFLE9BQU8sRUFBRSxNQUFNLGFBQWEsQ0FBQTtBQUNyQyxPQUFPLEVBQUUsVUFBVSxFQUFlLE1BQU0sMkJBQTJCLENBQUE7QUFFbkUsTUFBTSxPQUFnQixNQUFPLFNBQVEsVUFBVTtJQUNwQyxPQUFPLENBQUMsT0FBb0IsRUFBRSxRQUFrQztRQUN6RSxJQUFJLENBQUMsU0FBUyxDQUNiLEdBQUcsQ0FBQyxxQkFBcUIsQ0FBQyxPQUFPLEVBQUUsR0FBRyxDQUFDLFNBQVMsQ0FBQyxLQUFLLEVBQUUsQ0FBQyxDQUFhLEVBQUUsRUFBRSxDQUN6RSxRQUFRLENBQUMsSUFBSSxrQkFBa0IsQ0FBQyxHQUFHLENBQUMsU0FBUyxDQUFDLE9BQU8sQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUFDLENBQzNELENBQ0QsQ0FBQTtJQUNGLENBQUM7SUFFUyxXQUFXLENBQUMsT0FBb0IsRUFBRSxRQUFrQztRQUM3RSxJQUFJLENBQUMsU0FBUyxDQUNiLEdBQUcsQ0FBQyxxQkFBcUIsQ0FBQyxPQUFPLEVBQUUsR0FBRyxDQUFDLFNBQVMsQ0FBQyxVQUFVLEVBQUUsQ0FBQyxDQUFhLEVBQUUsRUFBRSxDQUM5RSxRQUFRLENBQUMsSUFBSSxrQkFBa0IsQ0FBQyxHQUFHLENBQUMsU0FBUyxDQUFDLE9BQU8sQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUFDLENBQzNELENBQ0QsQ0FBQTtJQUNGLENBQUM7SUFFUyxXQUFXLENBQUMsT0FBb0IsRUFBRSxRQUFrQztRQUM3RSxJQUFJLENBQUMsU0FBUyxDQUNiLEdBQUcsQ0FBQyxxQkFBcUIsQ0FBQyxPQUFPLEVBQUUsR0FBRyxDQUFDLFNBQVMsQ0FBQyxVQUFVLEVBQUUsQ0FBQyxDQUFhLEVBQUUsRUFBRSxDQUM5RSxRQUFRLENBQUMsSUFBSSxrQkFBa0IsQ0FBQyxHQUFHLENBQUMsU0FBUyxDQUFDLE9BQU8sQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUFDLENBQzNELENBQ0QsQ0FBQTtJQUNGLENBQUM7SUFFUyxZQUFZLENBQUMsT0FBb0IsRUFBRSxRQUFrQztRQUM5RSxJQUFJLENBQUMsU0FBUyxDQUNiLEdBQUcsQ0FBQyxxQkFBcUIsQ0FBQyxPQUFPLEVBQUUsR0FBRyxDQUFDLFNBQVMsQ0FBQyxXQUFXLEVBQUUsQ0FBQyxDQUFhLEVBQUUsRUFBRSxDQUMvRSxRQUFRLENBQUMsSUFBSSxrQkFBa0IsQ0FBQyxHQUFHLENBQUMsU0FBUyxDQUFDLE9BQU8sQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUFDLENBQzNELENBQ0QsQ0FBQTtJQUNGLENBQUM7SUFFUyxTQUFTLENBQUMsT0FBb0IsRUFBRSxRQUFxQztRQUM5RSxJQUFJLENBQUMsU0FBUyxDQUNiLEdBQUcsQ0FBQyxxQkFBcUIsQ0FBQyxPQUFPLEVBQUUsR0FBRyxDQUFDLFNBQVMsQ0FBQyxRQUFRLEVBQUUsQ0FBQyxDQUFnQixFQUFFLEVBQUUsQ0FDL0UsUUFBUSxDQUFDLElBQUkscUJBQXFCLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FDdEMsQ0FDRCxDQUFBO0lBQ0YsQ0FBQztJQUVTLE9BQU8sQ0FBQyxPQUFvQixFQUFFLFFBQXFDO1FBQzVFLElBQUksQ0FBQyxTQUFTLENBQ2IsR0FBRyxDQUFDLHFCQUFxQixDQUFDLE9BQU8sRUFBRSxHQUFHLENBQUMsU0FBUyxDQUFDLE1BQU0sRUFBRSxDQUFDLENBQWdCLEVBQUUsRUFBRSxDQUM3RSxRQUFRLENBQUMsSUFBSSxxQkFBcUIsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUN0QyxDQUNELENBQUE7SUFDRixDQUFDO0lBRVMsT0FBTyxDQUFDLE9BQW9CLEVBQUUsUUFBNEI7UUFDbkUsSUFBSSxDQUFDLFNBQVMsQ0FBQyxHQUFHLENBQUMscUJBQXFCLENBQUMsT0FBTyxFQUFFLEdBQUcsQ0FBQyxTQUFTLENBQUMsS0FBSyxFQUFFLFFBQVEsQ0FBQyxDQUFDLENBQUE7SUFDbEYsQ0FBQztJQUVTLE1BQU0sQ0FBQyxPQUFvQixFQUFFLFFBQTRCO1FBQ2xFLElBQUksQ0FBQyxTQUFTLENBQUMsR0FBRyxDQUFDLHFCQUFxQixDQUFDLE9BQU8sRUFBRSxHQUFHLENBQUMsU0FBUyxDQUFDLElBQUksRUFBRSxRQUFRLENBQUMsQ0FBQyxDQUFBO0lBQ2pGLENBQUM7SUFFUyxPQUFPLENBQUMsT0FBb0IsRUFBRSxRQUE0QjtRQUNuRSxJQUFJLENBQUMsU0FBUyxDQUFDLEdBQUcsQ0FBQyxxQkFBcUIsQ0FBQyxPQUFPLEVBQUUsR0FBRyxDQUFDLFNBQVMsQ0FBQyxLQUFLLEVBQUUsUUFBUSxDQUFDLENBQUMsQ0FBQTtJQUNsRixDQUFDO0lBRVMsUUFBUSxDQUFDLE9BQW9CLEVBQUUsUUFBNEI7UUFDcEUsSUFBSSxDQUFDLFNBQVMsQ0FBQyxHQUFHLENBQUMscUJBQXFCLENBQUMsT0FBTyxFQUFFLEdBQUcsQ0FBQyxTQUFTLENBQUMsTUFBTSxFQUFFLFFBQVEsQ0FBQyxDQUFDLENBQUE7SUFDbkYsQ0FBQztJQUVTLGFBQWEsQ0FBQyxPQUFvQjtRQUMzQyxPQUFPLE9BQU8sQ0FBQyxZQUFZLENBQUMsT0FBTyxDQUFDLENBQUE7SUFDckMsQ0FBQztDQUNEIn0=

@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../../../base/common/uri.js';
-import { ResolveError } from '../../promptFileReferenceErrors.js';
-import { IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { IRange, Range } from '../../../../../../editor/common/core/range.js';
+import { URI } from '../../../../../../base/common/uri.js'
+import { ResolveError } from '../../promptFileReferenceErrors.js'
+import { IDisposable } from '../../../../../../base/common/lifecycle.js'
+import { IRange, Range } from '../../../../../../editor/common/core/range.js'
 
 /**
  * A resolve error with a parent prompt URI, if any.
@@ -15,12 +15,12 @@ export interface IResolveError {
 	/**
 	 * Original error instance.
 	 */
-	readonly originalError: ResolveError;
+	readonly originalError: ResolveError
 
 	/**
 	 * URI of the parent that references this error.
 	 */
-	readonly parentUri?: URI;
+	readonly parentUri?: URI
 }
 
 /**
@@ -34,18 +34,18 @@ export interface ITopError extends IResolveError {
 	 *  - `child` - the error is a child of the root error
 	 *  - `indirect-child` - the error is a child of a child of the root error
 	 */
-	readonly errorSubject: 'root' | 'child' | 'indirect-child';
+	readonly errorSubject: 'root' | 'child' | 'indirect-child'
 
 	/**
 	 * Total number of all errors in the references tree, including the error
 	 * of the current reference and all possible errors of its children.
 	 */
-	readonly errorsCount: number;
+	readonly errorsCount: number
 
 	/**
 	 * Localized error message.
 	 */
-	readonly localizedMessage: string;
+	readonly localizedMessage: string
 }
 
 /**
@@ -55,45 +55,45 @@ interface IPromptReferenceBase extends IDisposable {
 	/**
 	 * Type of the prompt reference. E.g., `file`, `http`, `image`, etc.
 	 */
-	readonly type: string;
+	readonly type: string
 
 	/**
 	 * Subtype of the prompt reference. For instance a `file` reference
 	 * can be a `markdown link` or a prompt `#file:` variable reference.
 	 */
-	readonly subtype: string;
+	readonly subtype: string
 
 	/**
 	 * URI component of the associated with this reference.
 	 */
-	readonly uri: URI;
+	readonly uri: URI
 
 	/**
 	 * The full range of the prompt reference in the source text,
 	 * including the {@link linkRange} and any additional
 	 * parts the reference may contain (e.g., the `#file:` prefix).
 	 */
-	readonly range: Range;
+	readonly range: Range
 
 	/**
 	 * Range of the link part that the reference points to.
 	 */
-	readonly linkRange: IRange | undefined;
+	readonly linkRange: IRange | undefined
 
 	/**
 	 * Text of the reference as it appears in the source.
 	 */
-	readonly text: string;
+	readonly text: string
 
 	/**
 	 * Original link path as it appears in the source.
 	 */
-	readonly path: string;
+	readonly path: string
 
 	/**
 	 * Whether the current reference points to a prompt snippet file.
 	 */
-	readonly isPromptFile: boolean;
+	readonly isPromptFile: boolean
 
 	/**
 	 * Flag that indicates if resolving this reference failed.
@@ -102,7 +102,7 @@ interface IPromptReferenceBase extends IDisposable {
 	 *
 	 * See also {@link errorCondition}.
 	 */
-	readonly resolveFailed: boolean | undefined;
+	readonly resolveFailed: boolean | undefined
 
 	/**
 	 * If failed to resolve the reference this property contains
@@ -110,35 +110,35 @@ interface IPromptReferenceBase extends IDisposable {
 	 *
 	 * See also {@link resolveFailed}.
 	 */
-	readonly errorCondition: ResolveError | undefined;
+	readonly errorCondition: ResolveError | undefined
 
 	/**
 	 * Get list of errors for the direct links of the current reference.
 	 */
-	readonly errors: readonly ResolveError[];
+	readonly errors: readonly ResolveError[]
 
 	/**
 	 * List of all errors that occurred while resolving the current
 	 * reference including all possible errors of nested children.
 	 */
-	readonly allErrors: readonly IResolveError[];
+	readonly allErrors: readonly IResolveError[]
 
 	/**
 	 * The top most error of the current reference or any of its
 	 * possible child reference errors.
 	 */
-	readonly topError: ITopError | undefined;
+	readonly topError: ITopError | undefined
 
 	/**
 	 * Direct references of the current reference.
 	 */
-	references: readonly IPromptReference[];
+	references: readonly IPromptReference[]
 
 	/**
 	 * All references that the current reference may have,
 	 * including all possible nested child references.
 	 */
-	allReferences: readonly IPromptReference[];
+	allReferences: readonly IPromptReference[]
 
 	/**
 	 * All *valid* references that the current reference may have,
@@ -148,13 +148,13 @@ interface IPromptReferenceBase extends IDisposable {
 	 * without creating a circular reference loop or having any other
 	 * issues that would make the reference resolve logic to fail.
 	 */
-	allValidReferences: readonly IPromptReference[];
+	allValidReferences: readonly IPromptReference[]
 
 	/**
 	 * Returns a promise that resolves when the reference contents
 	 * are completely parsed and all existing tokens are returned.
 	 */
-	settled(): Promise<this>;
+	settled(): Promise<this>
 
 	/**
 	 * Returns a promise that resolves when the reference contents,
@@ -164,7 +164,7 @@ interface IPromptReferenceBase extends IDisposable {
 	 * The same as {@link settled} but for all prompts in
 	 * the reference tree.
 	 */
-	allSettled(): Promise<this>;
+	allSettled(): Promise<this>
 }
 
 /**
@@ -172,16 +172,16 @@ interface IPromptReferenceBase extends IDisposable {
  * to a file resource on the disk.
  */
 export interface IPromptFileReference extends IPromptReferenceBase {
-	readonly type: 'file';
+	readonly type: 'file'
 
 	/**
 	 * Subtype of a file reference, - either a prompt `#file` variable,
 	 * or a `markdown link` (e.g., `[caption](/path/to/file.md)`).
 	 */
-	readonly subtype: 'prompt' | 'markdown';
+	readonly subtype: 'prompt' | 'markdown'
 }
 
 /**
  * List of all known prompt reference types.
  */
-export type IPromptReference = IPromptFileReference;
+export type IPromptReference = IPromptFileReference

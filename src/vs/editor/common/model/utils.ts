@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharCode } from '../../../base/common/charCode.js';
+import { CharCode } from '../../../base/common/charCode.js'
 
 /**
  * Returns:
@@ -11,25 +11,25 @@ import { CharCode } from '../../../base/common/charCode.js';
  *  - otherwise => the indent level is returned value
  */
 export function computeIndentLevel(line: string, tabSize: number): number {
-	let indent = 0;
-	let i = 0;
-	const len = line.length;
+	let indent = 0
+	let i = 0
+	const len = line.length
 
 	while (i < len) {
-		const chCode = line.charCodeAt(i);
+		const chCode = line.charCodeAt(i)
 		if (chCode === CharCode.Space) {
-			indent++;
+			indent++
 		} else if (chCode === CharCode.Tab) {
-			indent = indent - indent % tabSize + tabSize;
+			indent = indent - (indent % tabSize) + tabSize
 		} else {
-			break;
+			break
 		}
-		i++;
+		i++
 	}
 
 	if (i === len) {
-		return -1; // line only consists of whitespace
+		return -1 // line only consists of whitespace
 	}
 
-	return indent;
+	return indent
 }

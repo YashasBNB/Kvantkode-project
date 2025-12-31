@@ -3,25 +3,36 @@
  *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import Severity from '../../../../base/common/severity.js';
-import { ServicesAccessor } from '../../../../editor/browser/editorExtensions.js';
-import { localize2 } from '../../../../nls.js';
-import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { INotificationActions, INotificationHandle, INotificationService } from '../../../../platform/notification/common/notification.js';
-import { IMetricsService } from '../common/metricsService.js';
-import { IVoidUpdateService } from '../common/voidUpdateService.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
-import * as dom from '../../../../base/browser/dom.js';
-import { IUpdateService } from '../../../../platform/update/common/update.js';
-import { VoidCheckUpdateRespose } from '../common/voidUpdateServiceTypes.js';
-import { IAction } from '../../../../base/common/actions.js';
+import { Disposable } from '../../../../base/common/lifecycle.js'
+import Severity from '../../../../base/common/severity.js'
+import { ServicesAccessor } from '../../../../editor/browser/editorExtensions.js'
+import { localize2 } from '../../../../nls.js'
+import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js'
+import {
+	INotificationActions,
+	INotificationHandle,
+	INotificationService,
+} from '../../../../platform/notification/common/notification.js'
+import { IMetricsService } from '../common/metricsService.js'
+import { IVoidUpdateService } from '../common/voidUpdateService.js'
+import {
+	IWorkbenchContribution,
+	registerWorkbenchContribution2,
+	WorkbenchPhase,
+} from '../../../common/contributions.js'
+import * as dom from '../../../../base/browser/dom.js'
+import { IUpdateService } from '../../../../platform/update/common/update.js'
+import { VoidCheckUpdateRespose } from '../common/voidUpdateServiceTypes.js'
+import { IAction } from '../../../../base/common/actions.js'
 
-
-
-
-const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifService: INotificationService, updateService: IUpdateService): INotificationHandle => {
-	const message = res?.message || 'This is a very old version of Void, please download the latest version! [Void Editor](https://voideditor.com/download-beta)!'
+const notifyUpdate = (
+	res: VoidCheckUpdateRespose & { message: string },
+	notifService: INotificationService,
+	updateService: IUpdateService,
+): INotificationHandle => {
+	const message =
+		res?.message ||
+		'This is a very old version of KvantKode, please download the latest version! [KvantKode Editor](https://voideditor.com/download-beta)!'
 
 	let actions: INotificationActions | undefined
 
@@ -38,7 +49,7 @@ const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifSe
 				run: () => {
 					const { window } = dom.getActiveWindow()
 					window.open('https://voideditor.com/download-beta')
-				}
+				},
 			})
 		}
 
@@ -51,10 +62,9 @@ const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifSe
 				class: undefined,
 				run: () => {
 					updateService.downloadUpdate()
-				}
+				},
 			})
 		}
-
 
 		if (res.action === 'apply') {
 			primary.push({
@@ -65,7 +75,7 @@ const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifSe
 				class: undefined,
 				run: () => {
 					updateService.applyUpdate()
-				}
+				},
 			})
 		}
 
@@ -78,37 +88,38 @@ const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifSe
 				class: undefined,
 				run: () => {
 					updateService.quitAndInstall()
-				}
+				},
 			})
 		}
 
 		primary.push({
 			id: 'void.updater.site',
 			enabled: true,
-			label: `Void Site`,
+			label: `KvantKode Site`,
 			tooltip: '',
 			class: undefined,
 			run: () => {
 				const { window } = dom.getActiveWindow()
 				window.open('https://voideditor.com/')
-			}
+			},
 		})
 
 		actions = {
 			primary: primary,
-			secondary: [{
-				id: 'void.updater.close',
-				enabled: true,
-				label: `Keep current version`,
-				tooltip: '',
-				class: undefined,
-				run: () => {
-					notifController.close()
-				}
-			}]
+			secondary: [
+				{
+					id: 'void.updater.close',
+					enabled: true,
+					label: `Keep current version`,
+					tooltip: '',
+					class: undefined,
+					run: () => {
+						notifController.close()
+					},
+				},
+			],
 		}
-	}
-	else {
+	} else {
 		actions = undefined
 	}
 
@@ -127,7 +138,7 @@ const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifSe
 	// })
 }
 const notifyErrChecking = (notifService: INotificationService): INotificationHandle => {
-	const message = `Void Error: There was an error checking for updates. If this persists, please get in touch or reinstall Void [here](https://voideditor.com/download-beta)!`
+	const message = `KvantKode Error: There was an error checking for updates. If this persists, please get in touch or reinstall KvantKode [here](https://voideditor.com/download-beta)!`
 	const notifController = notifService.notify({
 		severity: Severity.Info,
 		message: message,
@@ -136,7 +147,6 @@ const notifyErrChecking = (notifService: INotificationService): INotificationHan
 	return notifController
 }
 
-
 const performVoidCheck = async (
 	explicit: boolean,
 	notifService: INotificationService,
@@ -144,58 +154,61 @@ const performVoidCheck = async (
 	metricsService: IMetricsService,
 	updateService: IUpdateService,
 ): Promise<INotificationHandle | null> => {
-
 	const metricsTag = explicit ? 'Manual' : 'Auto'
 
 	metricsService.capture(`Void Update ${metricsTag}: Checking...`, {})
 	const res = await voidUpdateService.check(explicit)
 	if (!res) {
-		const notifController = notifyErrChecking(notifService);
+		const notifController = notifyErrChecking(notifService)
 		metricsService.capture(`Void Update ${metricsTag}: Error`, { res })
 		return notifController
-	}
-	else {
+	} else {
 		if (res.message) {
 			const notifController = notifyUpdate(res, notifService, updateService)
 			metricsService.capture(`Void Update ${metricsTag}: Yes`, { res })
 			return notifController
-		}
-		else {
+		} else {
 			metricsService.capture(`Void Update ${metricsTag}: No`, { res })
 			return null
 		}
 	}
 }
 
-
 // Action
 let lastNotifController: INotificationHandle | null = null
 
-
-registerAction2(class extends Action2 {
-	constructor() {
-		super({
-			f1: true,
-			id: 'void.voidCheckUpdate',
-			title: localize2('voidCheckUpdate', 'Void: Check for Updates'),
-		});
-	}
-	async run(accessor: ServicesAccessor): Promise<void> {
-		const voidUpdateService = accessor.get(IVoidUpdateService)
-		const notifService = accessor.get(INotificationService)
-		const metricsService = accessor.get(IMetricsService)
-		const updateService = accessor.get(IUpdateService)
-
-		const currNotifController = lastNotifController
-
-		const newController = await performVoidCheck(true, notifService, voidUpdateService, metricsService, updateService)
-
-		if (newController) {
-			currNotifController?.close()
-			lastNotifController = newController
+registerAction2(
+	class extends Action2 {
+		constructor() {
+			super({
+				f1: true,
+				id: 'void.voidCheckUpdate',
+				title: localize2('voidCheckUpdate', 'KvantKode: Check for Updates'),
+			})
 		}
-	}
-})
+		async run(accessor: ServicesAccessor): Promise<void> {
+			const voidUpdateService = accessor.get(IVoidUpdateService)
+			const notifService = accessor.get(INotificationService)
+			const metricsService = accessor.get(IMetricsService)
+			const updateService = accessor.get(IUpdateService)
+
+			const currNotifController = lastNotifController
+
+			const newController = await performVoidCheck(
+				true,
+				notifService,
+				voidUpdateService,
+				metricsService,
+				updateService,
+			)
+
+			if (newController) {
+				currNotifController?.close()
+				lastNotifController = newController
+			}
+		}
+	},
+)
 
 // on mount
 class VoidUpdateWorkbenchContribution extends Disposable implements IWorkbenchContribution {
@@ -219,10 +232,12 @@ class VoidUpdateWorkbenchContribution extends Disposable implements IWorkbenchCo
 		const initId = window.setTimeout(() => autoCheck(), 5 * 1000)
 		this._register({ dispose: () => window.clearTimeout(initId) })
 
-
 		const intervalId = window.setInterval(() => autoCheck(), 3 * 60 * 60 * 1000) // every 3 hrs
 		this._register({ dispose: () => window.clearInterval(intervalId) })
-
 	}
 }
-registerWorkbenchContribution2(VoidUpdateWorkbenchContribution.ID, VoidUpdateWorkbenchContribution, WorkbenchPhase.BlockRestore);
+registerWorkbenchContribution2(
+	VoidUpdateWorkbenchContribution.ID,
+	VoidUpdateWorkbenchContribution,
+	WorkbenchPhase.BlockRestore,
+)

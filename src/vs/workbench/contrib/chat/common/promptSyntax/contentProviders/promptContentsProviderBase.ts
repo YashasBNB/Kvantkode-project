@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IPromptContentsProvider } from './types.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { Emitter } from '../../../../../../base/common/event.js';
-import { assert } from '../../../../../../base/common/assert.js';
-import { CancellationError } from '../../../../../../base/common/errors.js';
-import { VSBufferReadableStream } from '../../../../../../base/common/buffer.js';
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { ObservableDisposable } from '../../../../../../base/common/observableDisposable.js';
-import { FailedToResolveContentsStream, ResolveError } from '../../promptFileReferenceErrors.js';
-import { cancelPreviousCalls } from '../../../../../../base/common/decorators/cancelPreviousCalls.js';
+import { IPromptContentsProvider } from './types.js'
+import { URI } from '../../../../../../base/common/uri.js'
+import { Emitter } from '../../../../../../base/common/event.js'
+import { assert } from '../../../../../../base/common/assert.js'
+import { CancellationError } from '../../../../../../base/common/errors.js'
+import { VSBufferReadableStream } from '../../../../../../base/common/buffer.js'
+import { CancellationToken } from '../../../../../../base/common/cancellation.js'
+import { ObservableDisposable } from '../../../../../../base/common/observableDisposable.js'
+import { FailedToResolveContentsStream, ResolveError } from '../../promptFileReferenceErrors.js'
+import { cancelPreviousCalls } from '../../../../../../base/common/decorators/cancelPreviousCalls.js'
 
 /**
  * Base class for prompt contents providers. Classes that extend this one are responsible to:
@@ -28,12 +28,13 @@ import { cancelPreviousCalls } from '../../../../../../base/common/decorators/ca
  *   - implement the {@linkcode toString} method to return a string representation of this
  *     provider type to aid with debugging/tracing
  */
-export abstract class PromptContentsProviderBase<
-	TChangeEvent extends NonNullable<unknown>,
-> extends ObservableDisposable implements IPromptContentsProvider {
-	public abstract readonly uri: URI;
-	public abstract createNew(promptContentsSource: { uri: URI }): IPromptContentsProvider;
-	public abstract override toString(): string;
+export abstract class PromptContentsProviderBase<TChangeEvent extends NonNullable<unknown>>
+	extends ObservableDisposable
+	implements IPromptContentsProvider
+{
+	public abstract readonly uri: URI
+	public abstract createNew(promptContentsSource: { uri: URI }): IPromptContentsProvider
+	public abstract override toString(): string
 
 	/**
 	 * Function to get contents stream for the provider. This function should
@@ -46,28 +47,30 @@ export abstract class PromptContentsProviderBase<
 	protected abstract getContentsStream(
 		changesEvent: TChangeEvent | 'full',
 		cancellationToken?: CancellationToken,
-	): Promise<VSBufferReadableStream>;
+	): Promise<VSBufferReadableStream>
 
 	/**
 	 * Internal event emitter for the prompt contents change event. Classes that extend
 	 * this abstract class are responsible to use this emitter to fire the contents change
 	 * event when the prompt contents get modified.
 	 */
-	protected readonly onChangeEmitter = this._register(new Emitter<TChangeEvent | 'full'>());
+	protected readonly onChangeEmitter = this._register(new Emitter<TChangeEvent | 'full'>())
 
 	constructor() {
-		super();
+		super()
 		// ensure that the `onChangeEmitter` always fires with the correct context
-		this.onChangeEmitter.fire = this.onChangeEmitter.fire.bind(this.onChangeEmitter);
+		this.onChangeEmitter.fire = this.onChangeEmitter.fire.bind(this.onChangeEmitter)
 		// subscribe to the change event emitted by an extending class
-		this._register(this.onChangeEmitter.event(this.onContentsChanged, this));
+		this._register(this.onChangeEmitter.event(this.onContentsChanged, this))
 	}
 
 	/**
 	 * Event emitter for the prompt contents change event.
 	 * See {@linkcode onContentChanged} for more details.
 	 */
-	private readonly onContentChangedEmitter = this._register(new Emitter<VSBufferReadableStream | ResolveError>());
+	private readonly onContentChangedEmitter = this._register(
+		new Emitter<VSBufferReadableStream | ResolveError>(),
+	)
 
 	/**
 	 * Event that fires when the prompt contents change. The event is either
@@ -79,7 +82,7 @@ export abstract class PromptContentsProviderBase<
 	 *         Please use the {@linkcode onChangeEmitter} event to provide a change
 	 *         event in your prompt contents implementation instead.
 	 */
-	public readonly onContentChanged = this.onContentChangedEmitter.event;
+	public readonly onContentChanged = this.onContentChangedEmitter.event
 
 	/**
 	 * Internal common implementation of the event that should be fired when
@@ -90,46 +93,41 @@ export abstract class PromptContentsProviderBase<
 		event: TChangeEvent | 'full',
 		cancellationToken?: CancellationToken,
 	): this {
-		const promise = (cancellationToken?.isCancellationRequested)
+		const promise = cancellationToken?.isCancellationRequested
 			? Promise.reject(new CancellationError())
-			: this.getContentsStream(event, cancellationToken);
+			: this.getContentsStream(event, cancellationToken)
 
 		promise
 			.then((stream) => {
 				if (cancellationToken?.isCancellationRequested || this.disposed) {
-					stream.destroy();
-					throw new CancellationError();
+					stream.destroy()
+					throw new CancellationError()
 				}
 
-				this.onContentChangedEmitter.fire(stream);
+				this.onContentChangedEmitter.fire(stream)
 			})
 			.catch((error) => {
 				if (error instanceof ResolveError) {
-					this.onContentChangedEmitter.fire(error);
+					this.onContentChangedEmitter.fire(error)
 
-					return;
+					return
 				}
 
-				this.onContentChangedEmitter.fire(
-					new FailedToResolveContentsStream(this.uri, error),
-				);
-			});
+				this.onContentChangedEmitter.fire(new FailedToResolveContentsStream(this.uri, error))
+			})
 
-		return this;
+		return this
 	}
 
 	/**
 	 * Start producing the prompt contents data.
 	 */
 	public start(): this {
-		assert(
-			!this.disposed,
-			'Cannot start contents provider that was already disposed.',
-		);
+		assert(!this.disposed, 'Cannot start contents provider that was already disposed.')
 
 		// `'full'` means "everything has changed"
-		this.onContentsChanged('full');
+		this.onContentsChanged('full')
 
-		return this;
+		return this
 	}
 }

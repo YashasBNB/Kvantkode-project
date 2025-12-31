@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert } from '../assert.js';
-import { Emitter } from '../event.js';
-import { IDisposable } from '../lifecycle.js';
-import { ReadableStream } from '../stream.js';
-import { DeferredPromise } from '../async.js';
-import { AsyncDecoder } from './asyncDecoder.js';
-import { ObservableDisposable } from '../observableDisposable.js';
+import { assert } from '../assert.js'
+import { Emitter } from '../event.js'
+import { IDisposable } from '../lifecycle.js'
+import { ReadableStream } from '../stream.js'
+import { DeferredPromise } from '../async.js'
+import { AsyncDecoder } from './asyncDecoder.js'
+import { ObservableDisposable } from '../observableDisposable.js'
 
 /**
  * Event names of {@link ReadableStream} stream.
  */
-export type TStreamListenerNames = 'data' | 'error' | 'end';
+export type TStreamListenerNames = 'data' | 'error' | 'end'
 
 /**
  * Base decoder class that can be used to convert stream messages data type
@@ -23,53 +23,54 @@ export type TStreamListenerNames = 'data' | 'error' | 'end';
  * Intended to be a part of "codec" implementation rather than used directly.
  */
 export abstract class BaseDecoder<
-	T extends NonNullable<unknown>,
-	K extends NonNullable<unknown> = NonNullable<unknown>,
-> extends ObservableDisposable implements ReadableStream<T> {
+		T extends NonNullable<unknown>,
+		K extends NonNullable<unknown> = NonNullable<unknown>,
+	>
+	extends ObservableDisposable
+	implements ReadableStream<T>
+{
 	/**
 	 * Private attribute to track if the stream has ended.
 	 */
-	private _ended = false;
+	private _ended = false
 
-	protected readonly _onData = this._register(new Emitter<T>());
-	private readonly _onEnd = this._register(new Emitter<void>());
-	private readonly _onError = this._register(new Emitter<Error>());
+	protected readonly _onData = this._register(new Emitter<T>())
+	private readonly _onEnd = this._register(new Emitter<void>())
+	private readonly _onError = this._register(new Emitter<Error>())
 
 	/**
 	 * A store of currently registered event listeners.
 	 */
-	private readonly _listeners: Map<TStreamListenerNames, Map<Function, IDisposable>> = new Map();
+	private readonly _listeners: Map<TStreamListenerNames, Map<Function, IDisposable>> = new Map()
 
 	/**
 	 * This method is called when a new incoming data
 	 * is received from the input stream.
 	 */
-	protected abstract onStreamData(data: K): void;
+	protected abstract onStreamData(data: K): void
 
 	/**
 	 * @param stream The input stream to decode.
 	 */
-	constructor(
-		protected readonly stream: ReadableStream<K>,
-	) {
-		super();
+	constructor(protected readonly stream: ReadableStream<K>) {
+		super()
 
-		this.tryOnStreamData = this.tryOnStreamData.bind(this);
-		this.onStreamError = this.onStreamError.bind(this);
-		this.onStreamEnd = this.onStreamEnd.bind(this);
+		this.tryOnStreamData = this.tryOnStreamData.bind(this)
+		this.onStreamError = this.onStreamError.bind(this)
+		this.onStreamEnd = this.onStreamEnd.bind(this)
 	}
 
 	/**
 	 * Private attribute to track if the stream has started.
 	 */
-	private started = false;
+	private started = false
 
 	/**
 	 * Promise that resolves when the stream has ended, either by
 	 * receiving the `end` event or by a disposal, but not when
 	 * the `error` event is received alone.
 	 */
-	private settledPromise = new DeferredPromise<void>();
+	private settledPromise = new DeferredPromise<void>()
 
 	/**
 	 * Promise that resolves when the stream has ended, either by
@@ -91,9 +92,9 @@ export abstract class BaseDecoder<
 				'Cannot get `settled` promise of a stream that has not been started.',
 				'Please call `start()` first.',
 			].join(' '),
-		);
+		)
 
-		return this.settledPromise.p;
+		return this.settledPromise.p
 	}
 
 	/**
@@ -101,33 +102,27 @@ export abstract class BaseDecoder<
 	 * @throws if the decoder stream has already ended.
 	 */
 	public start(): this {
-		assert(
-			!this._ended,
-			'Cannot start stream that has already ended.',
-		);
-		assert(
-			!this.disposed,
-			'Cannot start stream that has already disposed.',
-		);
+		assert(!this._ended, 'Cannot start stream that has already ended.')
+		assert(!this.disposed, 'Cannot start stream that has already disposed.')
 
 		// if already started, nothing to do
 		if (this.started) {
-			return this;
+			return this
 		}
-		this.started = true;
+		this.started = true
 
-		this.stream.on('data', this.tryOnStreamData);
-		this.stream.on('error', this.onStreamError);
-		this.stream.on('end', this.onStreamEnd);
+		this.stream.on('data', this.tryOnStreamData)
+		this.stream.on('error', this.onStreamError)
+		this.stream.on('end', this.onStreamEnd)
 
 		// this allows to compose decoders together, - if a decoder
 		// instance is passed as a readable stream to this decoder,
 		// then we need to call `start` on it too
 		if (this.stream instanceof BaseDecoder) {
-			this.stream.start();
+			this.stream.start()
 		}
 
-		return this;
+		return this
 	}
 
 	/**
@@ -135,7 +130,7 @@ export abstract class BaseDecoder<
 	 * no more data to produce.
 	 */
 	public get ended(): boolean {
-		return this._ended;
+		return this._ended
 	}
 
 	/**
@@ -143,29 +138,29 @@ export abstract class BaseDecoder<
 	 */
 	private tryOnStreamData(data: K): void {
 		try {
-			this.onStreamData(data);
+			this.onStreamData(data)
 		} catch (error) {
-			this.onStreamError(error);
+			this.onStreamError(error)
 		}
 	}
 
-	public on(event: 'data', callback: (data: T) => void): void;
-	public on(event: 'error', callback: (err: Error) => void): void;
-	public on(event: 'end', callback: () => void): void;
+	public on(event: 'data', callback: (data: T) => void): void
+	public on(event: 'error', callback: (err: Error) => void): void
+	public on(event: 'end', callback: () => void): void
 	public on(event: TStreamListenerNames, callback: unknown): void {
 		if (event === 'data') {
-			return this.onData(callback as (data: T) => void);
+			return this.onData(callback as (data: T) => void)
 		}
 
 		if (event === 'error') {
-			return this.onError(callback as (error: Error) => void);
+			return this.onError(callback as (error: Error) => void)
 		}
 
 		if (event === 'end') {
-			return this.onEnd(callback as () => void);
+			return this.onEnd(callback as () => void)
 		}
 
-		throw new Error(`Invalid event name: ${event}`);
+		throw new Error(`Invalid event name: ${event}`)
 	}
 
 	/**
@@ -176,16 +171,16 @@ export abstract class BaseDecoder<
 		assert(
 			!this.ended,
 			'Cannot subscribe to the `data` event because the decoder stream has already ended.',
-		);
+		)
 
-		let currentListeners = this._listeners.get('data');
+		let currentListeners = this._listeners.get('data')
 
 		if (!currentListeners) {
-			currentListeners = new Map();
-			this._listeners.set('data', currentListeners);
+			currentListeners = new Map()
+			this._listeners.set('data', currentListeners)
 		}
 
-		currentListeners.set(callback, this._onData.event(callback));
+		currentListeners.set(callback, this._onData.event(callback))
 	}
 
 	/**
@@ -196,16 +191,16 @@ export abstract class BaseDecoder<
 		assert(
 			!this.ended,
 			'Cannot subscribe to the `error` event because the decoder stream has already ended.',
-		);
+		)
 
-		let currentListeners = this._listeners.get('error');
+		let currentListeners = this._listeners.get('error')
 
 		if (!currentListeners) {
-			currentListeners = new Map();
-			this._listeners.set('error', currentListeners);
+			currentListeners = new Map()
+			this._listeners.set('error', currentListeners)
 		}
 
-		currentListeners.set(callback, this._onError.event(callback));
+		currentListeners.set(callback, this._onError.event(callback))
 	}
 
 	/**
@@ -216,16 +211,16 @@ export abstract class BaseDecoder<
 		assert(
 			!this.ended,
 			'Cannot subscribe to the `end` event because the decoder stream has already ended.',
-		);
+		)
 
-		let currentListeners = this._listeners.get('end');
+		let currentListeners = this._listeners.get('end')
 
 		if (!currentListeners) {
-			currentListeners = new Map();
-			this._listeners.set('end', currentListeners);
+			currentListeners = new Map()
+			this._listeners.set('end', currentListeners)
 		}
 
-		currentListeners.set(callback, this._onEnd.event(callback));
+		currentListeners.set(callback, this._onEnd.event(callback))
 	}
 
 	/**
@@ -233,16 +228,16 @@ export abstract class BaseDecoder<
 	 */
 	public removeAllListeners(): void {
 		// remove listeners set up by this class
-		this.stream.removeListener('data', this.tryOnStreamData);
-		this.stream.removeListener('error', this.onStreamError);
-		this.stream.removeListener('end', this.onStreamEnd);
+		this.stream.removeListener('data', this.tryOnStreamData)
+		this.stream.removeListener('error', this.onStreamError)
+		this.stream.removeListener('end', this.onStreamEnd)
 
 		// remove listeners set up by external consumers
 		for (const [name, listeners] of this._listeners.entries()) {
-			this._listeners.delete(name);
+			this._listeners.delete(name)
 			for (const [listener, disposable] of listeners) {
-				disposable.dispose();
-				listeners.delete(listener);
+				disposable.dispose()
+				listeners.delete(listener)
 			}
 		}
 	}
@@ -251,7 +246,7 @@ export abstract class BaseDecoder<
 	 * Pauses the stream.
 	 */
 	public pause(): void {
-		this.stream.pause();
+		this.stream.pause()
 	}
 
 	/**
@@ -259,19 +254,16 @@ export abstract class BaseDecoder<
 	 * @throws if the decoder stream has already ended.
 	 */
 	public resume(): void {
-		assert(
-			!this.ended,
-			'Cannot resume the stream because it has already ended.',
-		);
+		assert(!this.ended, 'Cannot resume the stream because it has already ended.')
 
-		this.stream.resume();
+		this.stream.resume()
 	}
 
 	/**
 	 * Destroys(disposes) the stream.
 	 */
 	public destroy(): void {
-		this.dispose();
+		this.dispose()
 	}
 
 	/**
@@ -288,16 +280,16 @@ export abstract class BaseDecoder<
 	public removeListener(event: string, callback: Function): void {
 		for (const [nameName, listeners] of this._listeners.entries()) {
 			if (nameName !== event) {
-				continue;
+				continue
 			}
 
 			for (const [listener, disposable] of listeners) {
 				if (listener !== callback) {
-					continue;
+					continue
 				}
 
-				disposable.dispose();
-				listeners.delete(listener);
+				disposable.dispose()
+				listeners.delete(listener)
 			}
 		}
 	}
@@ -307,12 +299,12 @@ export abstract class BaseDecoder<
 	 */
 	protected onStreamEnd(): void {
 		if (this._ended) {
-			return;
+			return
 		}
 
-		this._ended = true;
-		this._onEnd.fire();
-		this.settledPromise.complete();
+		this._ended = true
+		this._onEnd.fire()
+		this.settledPromise.complete()
 	}
 
 	/**
@@ -321,7 +313,7 @@ export abstract class BaseDecoder<
 	 * override this method to handle the error differently.
 	 */
 	protected onStreamError(error: Error): void {
-		this._onError.fire(error);
+		this._onError.fire(error)
 	}
 
 	/**
@@ -329,22 +321,19 @@ export abstract class BaseDecoder<
 	 * @throws if the decoder stream has already ended.
 	 */
 	public async consumeAll(): Promise<T[]> {
-		assert(
-			!this._ended,
-			'Cannot consume all messages of the stream that has already ended.',
-		);
+		assert(!this._ended, 'Cannot consume all messages of the stream that has already ended.')
 
-		const messages = [];
+		const messages = []
 
 		for await (const maybeMessage of this) {
 			if (maybeMessage === null) {
-				break;
+				break
 			}
 
-			messages.push(maybeMessage);
+			messages.push(maybeMessage)
 		}
 
-		return messages;
+		return messages
 	}
 
 	/**
@@ -352,25 +341,22 @@ export abstract class BaseDecoder<
 	 * @throws if the decoder stream has already ended.
 	 */
 	[Symbol.asyncIterator](): AsyncIterator<T | null> {
-		assert(
-			!this._ended,
-			'Cannot iterate on messages of the stream that has already ended.',
-		);
+		assert(!this._ended, 'Cannot iterate on messages of the stream that has already ended.')
 
-		const asyncDecoder = this._register(new AsyncDecoder(this));
+		const asyncDecoder = this._register(new AsyncDecoder(this))
 
-		return asyncDecoder[Symbol.asyncIterator]();
+		return asyncDecoder[Symbol.asyncIterator]()
 	}
 
 	public override dispose(): void {
 		if (this.disposed) {
-			return;
+			return
 		}
 
-		this.onStreamEnd();
+		this.onStreamEnd()
 
-		this.stream.destroy();
-		this.removeAllListeners();
-		super.dispose();
+		this.stream.destroy()
+		this.removeAllListeners()
+		super.dispose()
 	}
 }

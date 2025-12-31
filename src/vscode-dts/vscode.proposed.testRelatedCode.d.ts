@@ -8,7 +8,7 @@ declare module 'vscode' {
 		/**
 		 * A provider used for associating code location with tests.
 		 */
-		relatedCodeProvider?: TestRelatedCodeProvider;
+		relatedCodeProvider?: TestRelatedCodeProvider
 	}
 
 	export interface TestRelatedCodeProvider {
@@ -22,7 +22,11 @@ declare module 'vscode' {
 		 * @param token A cancellation token.
 		 * @returns A list of tests related to the position in the code.
 		 */
-		provideRelatedTests?(document: TextDocument, position: Position, token: CancellationToken): ProviderResult<TestItem[]>;
+		provideRelatedTests?(
+			document: TextDocument,
+			position: Position,
+			token: CancellationToken,
+		): ProviderResult<TestItem[]>
 
 		/**
 		 * Returns the code related to the given test case.
@@ -31,6 +35,6 @@ declare module 'vscode' {
 		 * @param token A cancellation token.
 		 * @returns A list of locations related to the test.
 		 */
-		provideRelatedCode?(test: TestItem, token: CancellationToken): ProviderResult<Location[]>;
+		provideRelatedCode?(test: TestItem, token: CancellationToken): ProviderResult<Location[]>
 	}
 }

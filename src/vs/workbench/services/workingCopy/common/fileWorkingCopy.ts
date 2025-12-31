@@ -3,15 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { Event } from '../../../../base/common/event.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { VSBufferReadableStream } from '../../../../base/common/buffer.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IWorkingCopy } from './workingCopy.js';
+import { IDisposable } from '../../../../base/common/lifecycle.js'
+import { Event } from '../../../../base/common/event.js'
+import { CancellationToken } from '../../../../base/common/cancellation.js'
+import { VSBufferReadableStream } from '../../../../base/common/buffer.js'
+import { URI } from '../../../../base/common/uri.js'
+import { IWorkingCopy } from './workingCopy.js'
 
 export interface IFileWorkingCopyModelFactory<M extends IFileWorkingCopyModel> {
-
 	/**
 	 * Create a model for the untitled or stored working copy
 	 * from the given content under the provided resource.
@@ -20,11 +19,10 @@ export interface IFileWorkingCopyModelFactory<M extends IFileWorkingCopyModel> {
 	 * @param contents the content of the model to create it
 	 * @param token support for cancellation
 	 */
-	createModel(resource: URI, contents: VSBufferReadableStream, token: CancellationToken): Promise<M>;
+	createModel(resource: URI, contents: VSBufferReadableStream, token: CancellationToken): Promise<M>
 }
 
 export interface IFileWorkingCopyModelConfiguration {
-
 	/**
 	 * The delay in milliseconds to wait before triggering
 	 * a backup after the content of the model has changed.
@@ -32,12 +30,12 @@ export interface IFileWorkingCopyModelConfiguration {
 	 * If not configured, a sensible default will be taken
 	 * based on user settings.
 	 */
-	readonly backupDelay?: number;
+	readonly backupDelay?: number
 }
 
 export const enum SnapshotContext {
 	Save = 1,
-	Backup = 2
+	Backup = 2,
 }
 
 /**
@@ -45,7 +43,6 @@ export const enum SnapshotContext {
  * and stored file working copies.
  */
 export interface IFileWorkingCopyModel extends IDisposable {
-
 	/**
 	 * This event signals ANY changes to the contents, for example:
 	 * - through the user typing into the editor
@@ -60,18 +57,18 @@ export interface IFileWorkingCopyModel extends IDisposable {
 	 * file. The file working copy is tracking changes to the file
 	 * automatically.
 	 */
-	readonly onDidChangeContent: Event<unknown>;
+	readonly onDidChangeContent: Event<unknown>
 
 	/**
 	 * An event emitted right before disposing the model.
 	 */
-	readonly onWillDispose: Event<void>;
+	readonly onWillDispose: Event<void>
 
 	/**
 	 * Optional additional configuration for the model that drives
 	 * some of the working copy behaviour.
 	 */
-	readonly configuration?: IFileWorkingCopyModelConfiguration;
+	readonly configuration?: IFileWorkingCopyModelConfiguration
 
 	/**
 	 * Snapshots the model's current content for writing. This must include
@@ -80,7 +77,7 @@ export interface IFileWorkingCopyModel extends IDisposable {
 	 * @param context indicates in what context the snapshot is used
 	 * @param token support for cancellation
 	 */
-	snapshot(context: SnapshotContext, token: CancellationToken): Promise<VSBufferReadableStream>;
+	snapshot(context: SnapshotContext, token: CancellationToken): Promise<VSBufferReadableStream>
 
 	/**
 	 * Updates the model with the provided contents. The implementation should
@@ -94,44 +91,45 @@ export interface IFileWorkingCopyModel extends IDisposable {
 	 * @param contents the contents to use for the model
 	 * @param token support for cancellation
 	 */
-	update(contents: VSBufferReadableStream, token: CancellationToken): Promise<void>;
+	update(contents: VSBufferReadableStream, token: CancellationToken): Promise<void>
 }
 
-export interface IFileWorkingCopy<M extends IFileWorkingCopyModel> extends IWorkingCopy, IDisposable {
-
+export interface IFileWorkingCopy<M extends IFileWorkingCopyModel>
+	extends IWorkingCopy,
+		IDisposable {
 	/**
 	 * An event for when the file working copy has been reverted.
 	 */
-	readonly onDidRevert: Event<void>;
+	readonly onDidRevert: Event<void>
 
 	/**
 	 * An event for when the file working copy has been disposed.
 	 */
-	readonly onWillDispose: Event<void>;
+	readonly onWillDispose: Event<void>
 
 	/**
 	 * Provides access to the underlying model of this file
 	 * based working copy. As long as the file working copy
 	 * has not been resolved, the model is `undefined`.
 	 */
-	readonly model: M | undefined;
+	readonly model: M | undefined
 
 	/**
 	 * Resolves the file working copy and thus makes the `model`
 	 * available.
 	 */
-	resolve(): Promise<void>;
+	resolve(): Promise<void>
 
 	/**
 	 * Whether we have a resolved model or not.
 	 */
-	isResolved(): this is IResolvedFileWorkingCopy<M>;
+	isResolved(): this is IResolvedFileWorkingCopy<M>
 }
 
-export interface IResolvedFileWorkingCopy<M extends IFileWorkingCopyModel> extends IFileWorkingCopy<M> {
-
+export interface IResolvedFileWorkingCopy<M extends IFileWorkingCopyModel>
+	extends IFileWorkingCopy<M> {
 	/**
 	 * A resolved file working copy has a resolved model.
 	 */
-	readonly model: M;
+	readonly model: M
 }

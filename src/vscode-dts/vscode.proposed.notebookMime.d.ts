@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/126280 @mjbvz
 
 	export interface NotebookCellData {
@@ -16,7 +15,7 @@ declare module 'vscode' {
 		 * If not set, internally the cell is treated as having a mime type of `text/plain`.
 		 * Cells that set `language` to `markdown` instead are treated as `text/markdown`.
 		 */
-		mime?: string;
+		mime?: string
 	}
 
 	export interface NotebookCell {
@@ -28,6 +27,6 @@ declare module 'vscode' {
 		 * If not set, internally the cell is treated as having a mime type of `text/plain`.
 		 * Cells that set `language` to `markdown` instead are treated as `text/markdown`.
 		 */
-		mime: string | undefined;
+		mime: string | undefined
 	}
 }

@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BaseToken } from '../../baseToken.js';
-import { MarkdownToken } from './markdownToken.js';
-import { IRange, Range } from '../../../core/range.js';
-import { assert } from '../../../../../base/common/assert.js';
+import { BaseToken } from '../../baseToken.js'
+import { MarkdownToken } from './markdownToken.js'
+import { IRange, Range } from '../../../core/range.js'
+import { assert } from '../../../../../base/common/assert.js'
 
 /**
  * A token that represent a `markdown image` with a `range`. The `range`
@@ -16,7 +16,7 @@ export class MarkdownImage extends MarkdownToken {
 	/**
 	 * Check if this `markdown image link` points to a valid URL address.
 	 */
-	public readonly isURL: boolean;
+	public readonly isURL: boolean
 
 	constructor(
 		/**
@@ -36,35 +36,23 @@ export class MarkdownImage extends MarkdownToken {
 		 */
 		private readonly reference: string,
 	) {
-		assert(
-			!isNaN(lineNumber),
-			`The line number must not be a NaN.`,
-		);
+		assert(!isNaN(lineNumber), `The line number must not be a NaN.`)
 
-		assert(
-			lineNumber > 0,
-			`The line number must be >= 1, got "${lineNumber}".`,
-		);
+		assert(lineNumber > 0, `The line number must be >= 1, got "${lineNumber}".`)
 
-		assert(
-			columnNumber > 0,
-			`The column number must be >= 1, got "${columnNumber}".`,
-		);
+		assert(columnNumber > 0, `The column number must be >= 1, got "${columnNumber}".`)
 
-		assert(
-			caption[0] === '!',
-			`The caption must start with '!' character, got "${caption}".`,
-		);
+		assert(caption[0] === '!', `The caption must start with '!' character, got "${caption}".`)
 
 		assert(
 			caption[1] === '[' && caption[caption.length - 1] === ']',
 			`The caption must be enclosed in square brackets, got "${caption}".`,
-		);
+		)
 
 		assert(
 			reference[0] === '(' && reference[reference.length - 1] === ')',
 			`The reference must be enclosed in parentheses, got "${reference}".`,
-		);
+		)
 
 		super(
 			new Range(
@@ -73,26 +61,26 @@ export class MarkdownImage extends MarkdownToken {
 				lineNumber,
 				columnNumber + caption.length + reference.length,
 			),
-		);
+		)
 
 		// set up the `isURL` flag based on the current
 		try {
-			new URL(this.path);
-			this.isURL = true;
+			new URL(this.path)
+			this.isURL = true
 		} catch {
-			this.isURL = false;
+			this.isURL = false
 		}
 	}
 
 	public override get text(): string {
-		return `${this.caption}${this.reference}`;
+		return `${this.caption}${this.reference}`
 	}
 
 	/**
 	 * Returns the `reference` part of the link without enclosing parentheses.
 	 */
 	public get path(): string {
-		return this.reference.slice(1, this.reference.length - 1);
+		return this.reference.slice(1, this.reference.length - 1)
 	}
 
 	/**
@@ -100,14 +88,14 @@ export class MarkdownImage extends MarkdownToken {
 	 */
 	public override equals<T extends BaseToken>(other: T): boolean {
 		if (!super.sameRange(other.range)) {
-			return false;
+			return false
 		}
 
 		if (!(other instanceof MarkdownImage)) {
-			return false;
+			return false
 		}
 
-		return this.text === other.text;
+		return this.text === other.text
 	}
 
 	/**
@@ -115,27 +103,22 @@ export class MarkdownImage extends MarkdownToken {
 	 */
 	public get linkRange(): IRange | undefined {
 		if (this.path.length === 0) {
-			return undefined;
+			return undefined
 		}
 
-		const { range } = this;
+		const { range } = this
 
 		// note! '+1' for openning `(` of the link
-		const startColumn = range.startColumn + this.caption.length + 1;
-		const endColumn = startColumn + this.path.length;
+		const startColumn = range.startColumn + this.caption.length + 1
+		const endColumn = startColumn + this.path.length
 
-		return new Range(
-			range.startLineNumber,
-			startColumn,
-			range.endLineNumber,
-			endColumn,
-		);
+		return new Range(range.startLineNumber, startColumn, range.endLineNumber, endColumn)
 	}
 
 	/**
 	 * Returns a string representation of the token.
 	 */
 	public override toString(): string {
-		return `md-image("${this.text}")${this.range}`;
+		return `md-image("${this.text}")${this.range}`
 	}
 }

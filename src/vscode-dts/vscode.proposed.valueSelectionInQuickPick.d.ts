@@ -16,6 +16,6 @@ declare module 'vscode' {
 		 * This property does not get updated when the user types or makes a selection,
 		 * but it can be updated by the extension.
 		 */
-		valueSelection: readonly [number, number] | undefined;
+		valueSelection: readonly [number, number] | undefined
 	}
 }

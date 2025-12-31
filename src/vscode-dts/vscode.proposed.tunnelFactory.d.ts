@@ -14,19 +14,19 @@ declare module 'vscode' {
 		 * The localAddress should be the complete local address (ex. localhost:1234) for connecting to the port. Tunnels provided through
 		 * environmentTunnels are read-only from the forwarded ports UI.
 		 */
-		environmentTunnels?: TunnelDescription[];
+		environmentTunnels?: TunnelDescription[]
 
 		tunnelFeatures?: {
-			elevation: boolean;
+			elevation: boolean
 			/**
 			 * One of the options must have the ID "private".
 			 */
-			privacyOptions: TunnelPrivacy[];
+			privacyOptions: TunnelPrivacy[]
 			/**
 			 * Defaults to true for backwards compatibility.
 			 */
-			protocol?: boolean;
-		};
+			protocol?: boolean
+		}
 	}
 
 	export interface TunnelProvider {
@@ -34,7 +34,11 @@ declare module 'vscode' {
 		 * Provides port forwarding capabilities. If there is a resolver that already provids tunnels, then the resolver's provider will
 		 * be used. If multiple providers are registered, then only the first will be used.
 		 */
-		provideTunnel(tunnelOptions: TunnelOptions, tunnelCreationOptions: TunnelCreationOptions, token: CancellationToken): ProviderResult<Tunnel>;
+		provideTunnel(
+			tunnelOptions: TunnelOptions,
+			tunnelCreationOptions: TunnelCreationOptions,
+			token: CancellationToken,
+		): ProviderResult<Tunnel>
 	}
 
 	export namespace workspace {
@@ -42,7 +46,9 @@ declare module 'vscode' {
 		 * Registering a tunnel provider enables port forwarding. This will cause the Ports view to show.
 		 * @param provider
 		 */
-		export function registerTunnelProvider(provider: TunnelProvider, information: TunnelInformation): Thenable<Disposable>;
+		export function registerTunnelProvider(
+			provider: TunnelProvider,
+			information: TunnelInformation,
+		): Thenable<Disposable>
 	}
-
 }

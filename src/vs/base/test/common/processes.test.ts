@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import * as processes from '../../common/processes.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from './utils.js';
+import assert from 'assert'
+import * as processes from '../../common/processes.js'
+import { ensureNoDisposablesAreLeakedInTestSuite } from './utils.js'
 
 suite('Processes', () => {
-	ensureNoDisposablesAreLeakedInTestSuite();
+	ensureNoDisposablesAreLeakedInTestSuite()
 
 	test('sanitizeProcessEnvironment', () => {
 		const env = {
@@ -28,12 +28,12 @@ suite('Processes', () => {
 			VSCODE_CODE_CACHE_PATH: 'x',
 			VSCODE_NEW_VAR: 'x',
 			GDK_PIXBUF_MODULE_FILE: 'x',
-			GDK_PIXBUF_MODULEDIR: 'x'
-		};
-		processes.sanitizeProcessEnvironment(env);
-		assert.strictEqual(env['FOO'], 'bar');
-		assert.strictEqual(env['VSCODE_SHELL_LOGIN'], '1');
-		assert.strictEqual(env['VSCODE_PORTABLE'], '3');
-		assert.strictEqual(Object.keys(env).length, 3);
-	});
-});
+			GDK_PIXBUF_MODULEDIR: 'x',
+		}
+		processes.sanitizeProcessEnvironment(env)
+		assert.strictEqual(env['FOO'], 'bar')
+		assert.strictEqual(env['VSCODE_SHELL_LOGIN'], '1')
+		assert.strictEqual(env['VSCODE_PORTABLE'], '3')
+		assert.strictEqual(Object.keys(env).length, 3)
+	})
+})

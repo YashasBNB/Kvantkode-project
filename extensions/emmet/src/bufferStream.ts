@@ -5,45 +5,45 @@
 
 /* Based on @sergeche's work in his emmet plugin */
 
-import { TextDocument } from 'vscode';
+import { TextDocument } from 'vscode'
 
 /**
  * A stream reader for VSCode's `TextDocument`
  * Based on @emmetio/stream-reader and @emmetio/atom-plugin
  */
 export class DocumentStreamReader {
-	private document: TextDocument;
-	private start: number;
-	private _eof: number;
-	private _sof: number;
-	public pos: number;
+	private document: TextDocument
+	private start: number
+	private _eof: number
+	private _sof: number
+	public pos: number
 
 	constructor(document: TextDocument, pos?: number, limit?: [number, number]) {
-		this.document = document;
-		this.start = this.pos = pos ? pos : 0;
-		this._sof = limit ? limit[0] : 0;
-		this._eof = limit ? limit[1] : document.getText().length;
+		this.document = document
+		this.start = this.pos = pos ? pos : 0
+		this._sof = limit ? limit[0] : 0
+		this._eof = limit ? limit[1] : document.getText().length
 	}
 
 	/**
 	 * Returns true only if the stream is at the start of the file.
 	 */
 	sof(): boolean {
-		return this.pos <= this._sof;
+		return this.pos <= this._sof
 	}
 
 	/**
 	 * Returns true only if the stream is at the end of the file.
 	 */
 	eof(): boolean {
-		return this.pos >= this._eof;
+		return this.pos >= this._eof
 	}
 
 	/**
 	 * Creates a new stream instance which is limited to given range for given document
 	 */
 	limit(start: number, end: number): DocumentStreamReader {
-		return new DocumentStreamReader(this.document, start, [start, end]);
+		return new DocumentStreamReader(this.document, start, [start, end])
 	}
 
 	/**
@@ -52,9 +52,9 @@ export class DocumentStreamReader {
 	 */
 	peek(): number {
 		if (this.eof()) {
-			return NaN;
+			return NaN
 		}
-		return this.document.getText().charCodeAt(this.pos);
+		return this.document.getText().charCodeAt(this.pos)
 	}
 
 	/**
@@ -63,18 +63,18 @@ export class DocumentStreamReader {
 	 */
 	next(): number {
 		if (this.eof()) {
-			return NaN;
+			return NaN
 		}
 
-		const code = this.document.getText().charCodeAt(this.pos);
-		this.pos++;
+		const code = this.document.getText().charCodeAt(this.pos)
+		this.pos++
 
 		if (this.eof()) {
 			// restrict pos to eof, if in case it got moved beyond eof
-			this.pos = this._eof;
+			this.pos = this._eof
 		}
 
-		return code;
+		return code
 	}
 
 	/**
@@ -82,11 +82,11 @@ export class DocumentStreamReader {
 	 * start of the current token will cause things to break, so be careful.
 	 */
 	backUp(n: number): number {
-		this.pos -= n;
+		this.pos -= n
 		if (this.pos < 0) {
-			this.pos = 0;
+			this.pos = 0
 		}
-		return this.peek();
+		return this.peek()
 	}
 
 	/**
@@ -94,22 +94,22 @@ export class DocumentStreamReader {
 	 * current stream position.
 	 */
 	current(): string {
-		return this.substring(this.start, this.pos);
+		return this.substring(this.start, this.pos)
 	}
 
 	/**
 	 * Returns contents for given range
 	 */
 	substring(from: number, to: number): string {
-		return this.document.getText().substring(from, to);
+		return this.document.getText().substring(from, to)
 	}
 
 	/**
 	 * Creates error object with current stream state
 	 */
 	error(message: string): Error {
-		const err = new Error(`${message} at offset ${this.pos}`);
-		return err;
+		const err = new Error(`${message} at offset ${this.pos}`)
+		return err
 	}
 
 	/**
@@ -119,14 +119,14 @@ export class DocumentStreamReader {
 	 * Otherwise, `false` is returned.
 	 */
 	eat(match: number | Function): boolean {
-		const ch = this.peek();
-		const ok = typeof match === 'function' ? match(ch) : ch === match;
+		const ch = this.peek()
+		const ok = typeof match === 'function' ? match(ch) : ch === match
 
 		if (ok) {
-			this.next();
+			this.next()
 		}
 
-		return ok;
+		return ok
 	}
 
 	/**
@@ -134,8 +134,8 @@ export class DocumentStreamReader {
 	 * fails. Returns <code>true</code> if any characters were eaten.
 	 */
 	eatWhile(match: number | Function): boolean {
-		const start = this.pos;
-		while (!this.eof() && this.eat(match)) { }
-		return this.pos !== start;
+		const start = this.pos
+		while (!this.eof() && this.eat(match)) {}
+		return this.pos !== start
 	}
 }

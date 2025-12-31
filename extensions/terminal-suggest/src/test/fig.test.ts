@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { testPaths, type ISuiteSpec } from './helpers';
-const expectedCompletions = [{ label: 'foo', description: 'Foo' }];
+import { testPaths, type ISuiteSpec } from './helpers'
+const expectedCompletions = [{ label: 'foo', description: 'Foo' }]
 export const figGenericTestSuites: ISuiteSpec[] = [
 	{
 		name: 'Fig name and description only',
@@ -12,19 +12,39 @@ export const figGenericTestSuites: ISuiteSpec[] = [
 			{
 				name: 'foo',
 				description: 'Foo',
-			}
+			},
 		],
 		availableCommands: 'foo',
 		testSpecs: [
 			// Typing a path
-			{ input: '|', expectedCompletions, expectedResourceRequests: { type: 'both', cwd: testPaths.cwd } },
-			{ input: 'f|', expectedCompletions, expectedResourceRequests: { type: 'both', cwd: testPaths.cwd } },
-			{ input: 'fo|', expectedCompletions, expectedResourceRequests: { type: 'both', cwd: testPaths.cwd } },
-			{ input: 'foo|', expectedCompletions, expectedResourceRequests: { type: 'both', cwd: testPaths.cwd } },
+			{
+				input: '|',
+				expectedCompletions,
+				expectedResourceRequests: { type: 'both', cwd: testPaths.cwd },
+			},
+			{
+				input: 'f|',
+				expectedCompletions,
+				expectedResourceRequests: { type: 'both', cwd: testPaths.cwd },
+			},
+			{
+				input: 'fo|',
+				expectedCompletions,
+				expectedResourceRequests: { type: 'both', cwd: testPaths.cwd },
+			},
+			{
+				input: 'foo|',
+				expectedCompletions,
+				expectedResourceRequests: { type: 'both', cwd: testPaths.cwd },
+			},
 
 			// Basic arguments (fallback)
-			{ input: 'foo |', expectedCompletions: [], expectedResourceRequests: { type: 'both', cwd: testPaths.cwd } }
-		]
+			{
+				input: 'foo |',
+				expectedCompletions: [],
+				expectedResourceRequests: { type: 'both', cwd: testPaths.cwd },
+			},
+		],
 	},
 	{
 		name: 'Fig top-level args files only',
@@ -35,13 +55,17 @@ export const figGenericTestSuites: ISuiteSpec[] = [
 				args: {
 					template: 'filepaths',
 					isVariadic: true,
-				}
-			}
+				},
+			},
 		],
 		availableCommands: 'foo',
 		testSpecs: [
-			{ input: 'foo |', expectedCompletions: [], expectedResourceRequests: { type: 'files', cwd: testPaths.cwd } },
-		]
+			{
+				input: 'foo |',
+				expectedCompletions: [],
+				expectedResourceRequests: { type: 'files', cwd: testPaths.cwd },
+			},
+		],
 	},
 	{
 		name: 'Fig top-level args folders only',
@@ -52,13 +76,17 @@ export const figGenericTestSuites: ISuiteSpec[] = [
 				args: {
 					template: 'folders',
 					isVariadic: true,
-				}
-			}
+				},
+			},
 		],
 		availableCommands: 'foo',
 		testSpecs: [
-			{ input: 'foo |', expectedCompletions: [], expectedResourceRequests: { type: 'folders', cwd: testPaths.cwd } },
-		]
+			{
+				input: 'foo |',
+				expectedCompletions: [],
+				expectedResourceRequests: { type: 'folders', cwd: testPaths.cwd },
+			},
+		],
 	},
 	{
 		name: 'Fig top-level args files and folders',
@@ -69,13 +97,17 @@ export const figGenericTestSuites: ISuiteSpec[] = [
 				args: {
 					template: ['filepaths', 'folders'],
 					isVariadic: true,
-				}
-			}
+				},
+			},
 		],
 		availableCommands: 'foo',
 		testSpecs: [
-			{ input: 'foo |', expectedCompletions: [], expectedResourceRequests: { type: 'both', cwd: testPaths.cwd } },
-		]
+			{
+				input: 'foo |',
+				expectedCompletions: [],
+				expectedResourceRequests: { type: 'both', cwd: testPaths.cwd },
+			},
+		],
 	},
 	{
 		name: 'Fig top-level options',
@@ -85,9 +117,9 @@ export const figGenericTestSuites: ISuiteSpec[] = [
 				description: 'Foo',
 				options: [
 					{ name: '--bar', description: 'Bar' },
-					{ name: '--baz', description: 'Baz' }
-				]
-			}
+					{ name: '--baz', description: 'Baz' },
+				],
+			},
 		],
 		availableCommands: 'foo',
 		testSpecs: [
@@ -95,7 +127,7 @@ export const figGenericTestSuites: ISuiteSpec[] = [
 			{ input: 'foo bar|', expectedCompletions: ['--bar', '--baz'] },
 			{ input: 'foo --bar |', expectedCompletions: ['--baz'] },
 			{ input: 'foo --baz |', expectedCompletions: ['--bar'] },
-		]
+		],
 	},
 	{
 		name: 'Fig top-level option values',
@@ -109,15 +141,11 @@ export const figGenericTestSuites: ISuiteSpec[] = [
 						description: 'Bar',
 						args: {
 							name: 'baz',
-							suggestions: [
-								'a',
-								'b',
-								'c',
-							],
-						}
-					}
-				]
-			}
+							suggestions: ['a', 'b', 'c'],
+						},
+					},
+				],
+			},
 		],
 		availableCommands: 'foo',
 		testSpecs: [
@@ -126,7 +154,7 @@ export const figGenericTestSuites: ISuiteSpec[] = [
 			{ input: 'foo --bar a|', expectedCompletions: ['a', 'b', 'c'] },
 			{ input: 'foo --bar b|', expectedCompletions: ['a', 'b', 'c'] },
 			{ input: 'foo --bar c|', expectedCompletions: ['a', 'b', 'c'] },
-		]
+		],
 	},
 	{
 		name: 'Fig script generator',
@@ -139,13 +167,17 @@ export const figGenericTestSuites: ISuiteSpec[] = [
 					generators: [
 						{
 							script: () => ['echo abcd'],
-							postProcess: (out) => out.split('').map(item => {
-								return { name: item };
-							}).filter(i => !!i)
-						}
-					]
-				}
-			}
+							postProcess: (out) =>
+								out
+									.split('')
+									.map((item) => {
+										return { name: item }
+									})
+									.filter((i) => !!i),
+						},
+					],
+				},
+			},
 		],
 		availableCommands: 'foo',
 		testSpecs: [
@@ -153,7 +185,7 @@ export const figGenericTestSuites: ISuiteSpec[] = [
 			{ input: 'foo a|', expectedCompletions: ['e', 'c', 'h', 'o', ' ', 'a', 'b', 'c', 'd'] },
 			{ input: 'foo b|', expectedCompletions: ['e', 'c', 'h', 'o', ' ', 'a', 'b', 'c', 'd'] },
 			{ input: 'foo c|', expectedCompletions: ['e', 'c', 'h', 'o', ' ', 'a', 'b', 'c', 'd'] },
-		]
+		],
 	},
 	{
 		name: 'Fig custom generator',
@@ -165,16 +197,20 @@ export const figGenericTestSuites: ISuiteSpec[] = [
 					name: 'bar',
 					generators: [
 						{
-							custom: async (tokens: string[], executeCommand: Fig.ExecuteCommandFunction, generatorContext: Fig.GeneratorContext) => {
+							custom: async (
+								tokens: string[],
+								executeCommand: Fig.ExecuteCommandFunction,
+								generatorContext: Fig.GeneratorContext,
+							) => {
 								if (tokens.length) {
-									return tokens.map(token => ({ name: token }));
+									return tokens.map((token) => ({ name: token }))
 								}
-								executeCommand({ command: 'echo', args: ['a\tb\nc\td'] });
-							}
-						}
-					]
-				}
-			}
+								executeCommand({ command: 'echo', args: ['a\tb\nc\td'] })
+							},
+						},
+					],
+				},
+			},
 		],
 		availableCommands: 'foo',
 		testSpecs: [
@@ -182,7 +218,6 @@ export const figGenericTestSuites: ISuiteSpec[] = [
 			{ input: 'foo a|', expectedCompletions: ['a', 'foo'] },
 			{ input: 'foo b|', expectedCompletions: ['b', 'foo'] },
 			{ input: 'foo c|', expectedCompletions: ['c', 'foo'] },
-		]
-	}
-];
-
+		],
+	},
+]

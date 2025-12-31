@@ -28,10 +28,7 @@
 															"properties": {
 																"actions": {
 																	"type": "string",
-																	"enum": [
-																		"read",
-																		"write"
-																	]
+																	"enum": ["read", "write"]
 																}
 															}
 														},
@@ -39,10 +36,7 @@
 															"properties": {
 																"checks": {
 																	"type": "string",
-																	"enum": [
-																		"read",
-																		"write"
-																	]
+																	"enum": ["read", "write"]
 																}
 															}
 														},
@@ -50,10 +44,7 @@
 															"properties": {
 																"contents": {
 																	"type": "string",
-																	"enum": [
-																		"read",
-																		"write"
-																	]
+																	"enum": ["read", "write"]
 																}
 															}
 														},
@@ -61,10 +52,7 @@
 															"properties": {
 																"deployments": {
 																	"type": "string",
-																	"enum": [
-																		"read",
-																		"write"
-																	]
+																	"enum": ["read", "write"]
 																}
 															}
 														},
@@ -72,10 +60,7 @@
 															"properties": {
 																"discussions": {
 																	"type": "string",
-																	"enum": [
-																		"read",
-																		"write"
-																	]
+																	"enum": ["read", "write"]
 																}
 															}
 														},
@@ -83,10 +68,7 @@
 															"properties": {
 																"issues": {
 																	"type": "string",
-																	"enum": [
-																		"read",
-																		"write"
-																	]
+																	"enum": ["read", "write"]
 																}
 															}
 														},
@@ -94,9 +76,7 @@
 															"properties": {
 																"packages": {
 																	"type": "string",
-																	"enum": [
-																		"read"
-																	]
+																	"enum": ["read"]
 																}
 															}
 														},
@@ -104,10 +84,7 @@
 															"properties": {
 																"pages": {
 																	"type": "string",
-																	"enum": [
-																		"read",
-																		"write"
-																	]
+																	"enum": ["read", "write"]
 																}
 															}
 														},
@@ -115,10 +92,7 @@
 															"properties": {
 																"pull_requests": {
 																	"type": "string",
-																	"enum": [
-																		"read",
-																		"write"
-																	]
+																	"enum": ["read", "write"]
 																}
 															}
 														},
@@ -126,10 +100,7 @@
 															"properties": {
 																"repository_projects": {
 																	"type": "string",
-																	"enum": [
-																		"read",
-																		"write"
-																	]
+																	"enum": ["read", "write"]
 																}
 															}
 														},
@@ -137,10 +108,7 @@
 															"properties": {
 																"statuses": {
 																	"type": "string",
-																	"enum": [
-																		"read",
-																		"write"
-																	]
+																	"enum": ["read", "write"]
 																}
 															}
 														},
@@ -148,9 +116,7 @@
 															"properties": {
 																"workflows": {
 																	"type": "string",
-																	"enum": [
-																		"write"
-																	]
+																	"enum": ["write"]
 																}
 															}
 														}
@@ -163,10 +129,7 @@
 												"permissions": {
 													"type": "string",
 													"description": "Additional repository permissions.\n See https://aka.ms/ghcs/multi-repo-auth for more info.",
-													"enum": [
-														"read-all",
-														"write-all"
-													]
+													"enum": ["read-all", "write-all"]
 												}
 											}
 										}

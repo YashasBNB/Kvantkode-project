@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { randomInt } from '../../../../base/common/numbers.js';
-import { BaseToken } from '../../../common/codecs/baseToken.js';
-import { assertDefined } from '../../../../base/common/types.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { WriteableStream } from '../../../../base/common/stream.js';
-import { BaseDecoder } from '../../../../base/common/codecs/baseDecoder.js';
+import assert from 'assert'
+import { VSBuffer } from '../../../../base/common/buffer.js'
+import { randomInt } from '../../../../base/common/numbers.js'
+import { BaseToken } from '../../../common/codecs/baseToken.js'
+import { assertDefined } from '../../../../base/common/types.js'
+import { Disposable } from '../../../../base/common/lifecycle.js'
+import { WriteableStream } from '../../../../base/common/stream.js'
+import { BaseDecoder } from '../../../../base/common/codecs/baseDecoder.js'
 
 /**
  * Kind of decoder tokens consume methods are different ways
  * consume tokens that a decoder produces out of a byte stream.
  */
-export type TTokensConsumeMethod = 'async-generator' | 'consume-all-method' | 'on-data-event';
+export type TTokensConsumeMethod = 'async-generator' | 'consume-all-method' | 'on-data-event'
 
 /**
  * A reusable test utility that asserts that the given decoder
@@ -45,9 +45,9 @@ export class TestDecoder<T extends BaseToken, D extends BaseDecoder<T>> extends 
 		private readonly stream: WriteableStream<VSBuffer>,
 		public readonly decoder: D,
 	) {
-		super();
+		super()
 
-		this._register(this.decoder);
+		this._register(this.decoder)
 	}
 
 	/**
@@ -56,32 +56,30 @@ export class TestDecoder<T extends BaseToken, D extends BaseDecoder<T>> extends 
 	 *
 	 * @param inputData Input data to send.
 	 */
-	public sendData(
-		inputData: string | string[],
-	): this {
+	public sendData(inputData: string | string[]): this {
 		// if input data was passed as an array of lines,
 		// join them into a single string with newlines
 		if (Array.isArray(inputData)) {
-			inputData = inputData.join('\n');
+			inputData = inputData.join('\n')
 		}
 
 		// write the input data to the stream in multiple random-length
 		// chunks to simulate real input stream data flows
-		let inputDataBytes = VSBuffer.fromString(inputData);
+		let inputDataBytes = VSBuffer.fromString(inputData)
 		const interval = setInterval(() => {
 			if (inputDataBytes.byteLength <= 0) {
-				clearInterval(interval);
-				this.stream.end();
+				clearInterval(interval)
+				this.stream.end()
 
-				return;
+				return
 			}
 
-			const dataToSend = inputDataBytes.slice(0, randomInt(inputDataBytes.byteLength));
-			this.stream.write(dataToSend);
-			inputDataBytes = inputDataBytes.slice(dataToSend.byteLength);
-		}, randomInt(5));
+			const dataToSend = inputDataBytes.slice(0, randomInt(inputDataBytes.byteLength))
+			this.stream.write(dataToSend)
+			inputDataBytes = inputDataBytes.slice(dataToSend.byteLength)
+		}, randomInt(5))
 
-		return this;
+		return this
 	}
 
 	/**
@@ -100,68 +98,59 @@ export class TestDecoder<T extends BaseToken, D extends BaseDecoder<T>> extends 
 	): Promise<void> {
 		try {
 			// initiate the data sending flow
-			this.sendData(inputData);
+			this.sendData(inputData)
 
 			// consume the decoder tokens based on specified
 			// (or randomly generated) tokens consume method
-			const receivedTokens: T[] = [];
+			const receivedTokens: T[] = []
 			switch (tokensConsumeMethod) {
 				// test the `async iterator` code path
 				case 'async-generator': {
 					for await (const token of this.decoder) {
 						if (token === null) {
-							break;
+							break
 						}
 
-						receivedTokens.push(token);
+						receivedTokens.push(token)
 					}
 
-					break;
+					break
 				}
 				// test the `.consumeAll()` method code path
 				case 'consume-all-method': {
-					receivedTokens.push(...(await this.decoder.consumeAll()));
-					break;
+					receivedTokens.push(...(await this.decoder.consumeAll()))
+					break
 				}
 				// test the `.onData()` event consume flow
 				case 'on-data-event': {
 					this.decoder.onData((token) => {
-						receivedTokens.push(token);
-					});
+						receivedTokens.push(token)
+					})
 
-					this.decoder.start();
+					this.decoder.start()
 
 					// in this case we also test the `settled` promise of the decoder
-					await this.decoder.settled;
+					await this.decoder.settled
 
-					break;
+					break
 				}
 				// ensure that the switch block is exhaustive
 				default: {
-					throw new Error(`Unknown consume method '${tokensConsumeMethod}'.`);
+					throw new Error(`Unknown consume method '${tokensConsumeMethod}'.`)
 				}
 			}
 
 			// validate the received tokens
-			this.validateReceivedTokens(
-				receivedTokens,
-				expectedTokens,
-			);
+			this.validateReceivedTokens(receivedTokens, expectedTokens)
 		} catch (error) {
-			assertDefined(
-				error,
-				`An non-nullable error must be thrown.`,
-			);
-			assert(
-				error instanceof Error,
-				`An error error instance must be thrown.`,
-			);
+			assertDefined(error, `An non-nullable error must be thrown.`)
+			assert(error instanceof Error, `An error error instance must be thrown.`)
 
 			// add the tokens consume method to the error message so we
 			// would know which method of consuming the tokens failed exactly
-			error.message = `[${tokensConsumeMethod}] ${error.message}`;
+			error.message = `[${tokensConsumeMethod}] ${error.message}`
 
-			throw error;
+			throw error
 		}
 	}
 
@@ -169,24 +158,24 @@ export class TestDecoder<T extends BaseToken, D extends BaseDecoder<T>> extends 
 	 * Randomly generate a tokens consume method type for the test.
 	 */
 	private randomTokensConsumeMethod(): TTokensConsumeMethod {
-		const testConsumeMethodIndex = randomInt(2);
+		const testConsumeMethodIndex = randomInt(2)
 
 		switch (testConsumeMethodIndex) {
 			// test the `async iterator` code path
 			case 0: {
-				return 'async-generator';
+				return 'async-generator'
 			}
 			// test the `.consumeAll()` method code path
 			case 1: {
-				return 'consume-all-method';
+				return 'consume-all-method'
 			}
 			// test the `.onData()` event consume flow
 			case 2: {
-				return 'on-data-event';
+				return 'on-data-event'
 			}
 			// ensure that the switch block is exhaustive
 			default: {
-				throw new Error(`Unknown consume method index '${testConsumeMethodIndex}'.`);
+				throw new Error(`Unknown consume method index '${testConsumeMethodIndex}'.`)
 			}
 		}
 	}
@@ -194,27 +183,24 @@ export class TestDecoder<T extends BaseToken, D extends BaseDecoder<T>> extends 
 	/**
 	 * Validate that received tokens list is equal to the expected one.
 	 */
-	private validateReceivedTokens(
-		receivedTokens: readonly T[],
-		expectedTokens: readonly T[],
-	) {
+	private validateReceivedTokens(receivedTokens: readonly T[], expectedTokens: readonly T[]) {
 		for (let i = 0; i < expectedTokens.length; i++) {
-			const expectedToken = expectedTokens[i];
-			const receivedToken = receivedTokens[i];
+			const expectedToken = expectedTokens[i]
+			const receivedToken = receivedTokens[i]
 
 			assertDefined(
 				receivedToken,
 				`Expected token '${i}' to be '${expectedToken}', got 'undefined'.`,
-			);
+			)
 
 			assert(
 				receivedToken.equals(expectedToken),
 				`Expected token '${i}' to be '${expectedToken}', got '${receivedToken}'.`,
-			);
+			)
 		}
 
 		if (receivedTokens.length === expectedTokens.length) {
-			return;
+			return
 		}
 
 		// sanity check - if received/expected list lengths are not equal, the received
@@ -223,14 +209,14 @@ export class TestDecoder<T extends BaseToken, D extends BaseDecoder<T>> extends 
 		assert(
 			receivedTokens.length > expectedTokens.length,
 			'Must have received more tokens than expected.',
-		);
+		)
 
-		const index = expectedTokens.length;
+		const index = expectedTokens.length
 		throw new Error(
 			[
 				`Expected no '${index}' token present, got '${receivedTokens[index]}'.`,
 				`(received ${receivedTokens.length} tokens in total)`,
 			].join(' '),
-		);
+		)
 	}
 }

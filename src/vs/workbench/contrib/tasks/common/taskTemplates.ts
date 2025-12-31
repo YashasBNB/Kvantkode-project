@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from '../../../../nls.js';
+import * as nls from '../../../../nls.js'
 
-import { IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
+import { IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js'
 
 export interface ITaskEntry extends IQuickPickItem {
-	sort?: string;
-	autoDetect: boolean;
-	content: string;
+	sort?: string
+	autoDetect: boolean
+	content: string
 }
 
 const dotnetBuild: ITaskEntry = {
@@ -43,9 +43,9 @@ const dotnetBuild: ITaskEntry = {
 		'\t\t\t"problemMatcher": "$msCompile"',
 		'\t\t}',
 		'\t]',
-		'}'
-	].join('\n')
-};
+		'}',
+	].join('\n'),
+}
 
 const msbuild: ITaskEntry = {
 	id: 'msbuild',
@@ -78,9 +78,9 @@ const msbuild: ITaskEntry = {
 		'\t\t\t"problemMatcher": "$msCompile"',
 		'\t\t}',
 		'\t]',
-		'}'
-	].join('\n')
-};
+		'}',
+	].join('\n'),
+}
 
 const command: ITaskEntry = {
 	id: 'externalCommand',
@@ -99,9 +99,9 @@ const command: ITaskEntry = {
 		'\t\t\t"command": "echo Hello"',
 		'\t\t}',
 		'\t]',
-		'}'
-	].join('\n')
-};
+		'}',
+	].join('\n'),
+}
 
 const maven: ITaskEntry = {
 	id: 'maven',
@@ -128,21 +128,20 @@ const maven: ITaskEntry = {
 		'\t\t\t"group": "test"',
 		'\t\t}',
 		'\t]',
-		'}'
-	].join('\n')
-};
+		'}',
+	].join('\n'),
+}
 
-let _templates: ITaskEntry[] | null = null;
+let _templates: ITaskEntry[] | null = null
 export function getTemplates(): ITaskEntry[] {
 	if (!_templates) {
 		_templates = [dotnetBuild, msbuild, maven].sort((a, b) => {
-			return (a.sort || a.label).localeCompare(b.sort || b.label);
-		});
-		_templates.push(command);
+			return (a.sort || a.label).localeCompare(b.sort || b.label)
+		})
+		_templates.push(command)
 	}
-	return _templates;
+	return _templates
 }
-
 
 /** Version 1.0 templates
  *

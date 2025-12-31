@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyboardLayoutContribution } from './_.contribution.js';
-
+import { KeyboardLayoutContribution } from './_.contribution.js'
 
 KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 	layout: { id: 'com.apple.keylayout.PolishPro', lang: 'pl', localizedName: 'Polish - Pro' },
@@ -57,7 +56,7 @@ KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 		BracketRight: [']', '}', '‚', '’', 0],
 		Backslash: ['\\', '|', '«', '»', 0],
 		Semicolon: [';', ':', '…', 'Ú', 0],
-		Quote: ['\'', '"', 'ĺ', 'ģ', 0],
+		Quote: ["'", '"', 'ĺ', 'ģ', 0],
 		Backquote: ['`', '~', '`', 'Ŕ', 4],
 		Comma: [',', '<', '≤', 'Ý', 0],
 		Period: ['.', '>', '≥', 'ý', 0],
@@ -127,6 +126,6 @@ KeyboardLayoutContribution.INSTANCE.registerKeyboardLayout({
 		ControlRight: [],
 		ShiftRight: [],
 		AltRight: [],
-		MetaRight: []
-	}
-});
+		MetaRight: [],
+	},
+})

@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-
 // #######################################################################
 // ###                                                                 ###
 // ###      electron.d.ts types we expose from electron-sandbox        ###
@@ -12,12 +11,11 @@
 // #######################################################################
 
 type Event<Params extends object = {}> = {
-	preventDefault: () => void;
-	readonly defaultPrevented: boolean;
-} & Params;
+	preventDefault: () => void
+	readonly defaultPrevented: boolean
+} & Params
 
 export interface IpcRendererEvent extends Event {
-
 	// Docs: https://electronjs.org/docs/api/structures/ipc-renderer-event
 
 	// Note: API with `Transferable` intentionally commented out because you
@@ -29,11 +27,10 @@ export interface IpcRendererEvent extends Event {
 	/**
 	 * The `IpcRenderer` instance that emitted the event originally
 	 */
-	sender: IpcRenderer;
+	sender: IpcRenderer
 }
 
 export interface IpcRenderer {
-
 	// Docs: https://electronjs.org/docs/api/ipc-renderer
 
 	/**
@@ -66,17 +63,17 @@ export interface IpcRenderer {
 	 * returned by `invoke` will reject. However, the `Error` object in the renderer
 	 * process will not be the same as the one thrown in the main process.
 	 */
-	invoke(channel: string, ...args: any[]): Promise<any>;
+	invoke(channel: string, ...args: any[]): Promise<any>
 	/**
 	 * Listens to `channel`, when a new message arrives `listener` would be called with
 	 * `listener(event, args...)`.
 	 */
-	on(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void): this;
+	on(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void): this
 	/**
 	 * Adds a one time `listener` function for the event. This `listener` is invoked
 	 * only the next time a message is sent to `channel`, after which it is removed.
 	 */
-	once(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void): this;
+	once(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void): this
 	// Note: API with `Transferable` intentionally commented out because you
 	// cannot transfer these when `contextIsolation: true`.
 	// /**
@@ -97,7 +94,7 @@ export interface IpcRenderer {
 	 * Removes the specified `listener` from the listener array for the specified
 	 * `channel`.
 	 */
-	removeListener(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void): this;
+	removeListener(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void): this
 	/**
 	 * Send an asynchronous message to the main process via `channel`, along with
 	 * arguments. Arguments will be serialized with the Structured Clone Algorithm,
@@ -122,7 +119,7 @@ export interface IpcRenderer {
 	 * If you want to receive a single response from the main process, like the result
 	 * of a method call, consider using `ipcRenderer.invoke`.
 	 */
-	send(channel: string, ...args: any[]): void;
+	send(channel: string, ...args: any[]): void
 }
 
 export interface WebFrame {
@@ -137,44 +134,42 @@ export interface WebFrame {
 	 * with the same domain. Differentiating the window URLs will make zoom work
 	 * per-window.
 	 */
-	setZoomLevel(level: number): void;
+	setZoomLevel(level: number): void
 }
 
 export interface ProcessMemoryInfo {
-
 	// Docs: https://electronjs.org/docs/api/structures/process-memory-info
 
 	/**
 	 * The amount of memory not shared by other processes, such as JS heap or HTML
 	 * content in Kilobytes.
 	 */
-	private: number;
+	private: number
 	/**
 	 * The amount of memory currently pinned to actual physical RAM in Kilobytes.
 	 *
 	 * @platform linux,win32
 	 */
-	residentSet: number;
+	residentSet: number
 	/**
 	 * The amount of memory shared between processes, typically memory consumed by the
 	 * Electron code itself in Kilobytes.
 	 */
-	shared: number;
+	shared: number
 }
 
 /**
  * Additional information around a `app.on('login')` event.
  */
 export interface AuthInfo {
-	isProxy: boolean;
-	scheme: string;
-	host: string;
-	port: number;
-	realm: string;
+	isProxy: boolean
+	scheme: string
+	host: string
+	port: number
+	realm: string
 }
 
 export interface WebUtils {
-
 	// Docs: https://electronjs.org/docs/api/web-utils
 
 	/**
@@ -186,5 +181,5 @@ export interface WebUtils {
 	 * This method superceded the previous augmentation to the `File` object with the
 	 * `path` property.  An example is included below.
 	 */
-	getPathForFile(file: File): string;
+	getPathForFile(file: File): string
 }

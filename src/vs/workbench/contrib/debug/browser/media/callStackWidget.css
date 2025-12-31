@@ -21,7 +21,7 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 
-		&[role="link"] {
+		&[role='link'] {
 			cursor: pointer;
 		}
 

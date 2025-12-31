@@ -3,33 +3,27 @@
  *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
+import { Disposable } from '../../../../base/common/lifecycle.js'
+import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js'
+import { registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js'
 
-import * as dom from '../../../../base/browser/dom.js';
-import { IMetricsService } from '../common/metricsService.js';
-
-
+import * as dom from '../../../../base/browser/dom.js'
+import { IMetricsService } from '../common/metricsService.js'
 
 export interface IMetricsPollService {
-	readonly _serviceBrand: undefined;
+	readonly _serviceBrand: undefined
 }
 
+const PING_EVERY_MS = 15 * 1000 * 60 // 15 minutes
 
-const PING_EVERY_MS = 15 * 1000 * 60  // 15 minutes
-
-export const IMetricsPollService = createDecorator<IMetricsPollService>('voidMetricsPollService');
+export const IMetricsPollService = createDecorator<IMetricsPollService>('voidMetricsPollService')
 class MetricsPollService extends Disposable implements IMetricsPollService {
-	_serviceBrand: undefined;
+	_serviceBrand: undefined
 
-	static readonly ID = 'voidMetricsPollService';
-
+	static readonly ID = 'voidMetricsPollService'
 
 	private readonly intervalID: number
-	constructor(
-		@IMetricsService private readonly metricsService: IMetricsService,
-	) {
+	constructor(@IMetricsService private readonly metricsService: IMetricsService) {
 		super()
 
 		// initial state
@@ -40,8 +34,6 @@ class MetricsPollService extends Disposable implements IMetricsPollService {
 			this.metricsService.capture('Alive', { iv1: i })
 			i += 1
 		}, PING_EVERY_MS)
-
-
 	}
 
 	override dispose() {
@@ -49,8 +41,10 @@ class MetricsPollService extends Disposable implements IMetricsPollService {
 		const { window } = dom.getActiveWindow()
 		window.clearInterval(this.intervalID)
 	}
-
-
 }
 
-registerWorkbenchContribution2(MetricsPollService.ID, MetricsPollService, WorkbenchPhase.BlockRestore);
+registerWorkbenchContribution2(
+	MetricsPollService.ID,
+	MetricsPollService,
+	WorkbenchPhase.BlockRestore,
+)

@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { GeneratorState } from '../generators/helpers';
-import type { ArgumentParserResult } from '../../autocomplete-parser/parseArguments';
-import type { Suggestion } from '../../shared/internal';
-import type { Command } from '../../shell-parser';
-import type { FigState } from '../fig/hooks';
+import { GeneratorState } from '../generators/helpers'
+import type { ArgumentParserResult } from '../../autocomplete-parser/parseArguments'
+import type { Suggestion } from '../../shared/internal'
+import type { Command } from '../../shell-parser'
+import type { FigState } from '../fig/hooks'
 
 export enum Visibility {
 	VISIBLE = 'visible',
@@ -49,36 +49,32 @@ export enum Visibility {
 // };
 
 export type AutocompleteState = {
-	figState: FigState;
-	parserResult: ArgumentParserResult;
-	generatorStates: GeneratorState[];
-	command: Command | null;
+	figState: FigState
+	parserResult: ArgumentParserResult
+	generatorStates: GeneratorState[]
+	command: Command | null
 
-	visibleState: Visibility;
-	lastInsertedSuggestion: Suggestion | null;
-	justInserted: boolean;
+	visibleState: Visibility
+	lastInsertedSuggestion: Suggestion | null
+	justInserted: boolean
 
-	suggestions: Suggestion[];
-	selectedIndex: number;
-	hasChangedIndex: boolean;
+	suggestions: Suggestion[]
+	selectedIndex: number
+	hasChangedIndex: boolean
 
-	historyModeEnabled: boolean;
+	historyModeEnabled: boolean
 	/**
 	 * Store the user preference about fuzzy search
 	 */
-	userFuzzySearchEnabled: boolean;
+	userFuzzySearchEnabled: boolean
 	/**
 	 * Sometimes we override fuzzy search user
 	 * preference so we also store the "real" current state of fuzzy search
 	 */
-	fuzzySearchEnabled: boolean;
+	fuzzySearchEnabled: boolean
 	// settings: SettingsMap;
-}; // & AutocompleteActions;
+} // & AutocompleteActions;
 
 export declare type NamedSetState<T> = {
-	(
-		name: string,
-		partial: Partial<T> | ((s: T) => Partial<T>),
-		replace?: boolean,
-	): void;
-};
+	(name: string, partial: Partial<T> | ((s: T) => Partial<T>), replace?: boolean): void
+}

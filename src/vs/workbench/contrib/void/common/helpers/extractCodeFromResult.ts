@@ -25,8 +25,7 @@ export class SurroundingsRemover {
 		let offset = 0
 		// console.log('prefix', prefix, Math.min(this.j, prefix.length - 1))
 		while (this.i <= this.j && offset <= prefix.length - 1) {
-			if (this.originalS.charAt(this.i) !== prefix.charAt(offset))
-				break
+			if (this.originalS.charAt(this.i) !== prefix.charAt(offset)) break
 			offset += 1
 			this.i += 1
 		}
@@ -39,7 +38,8 @@ export class SurroundingsRemover {
 		const s = this.value()
 		// for every possible prefix of `suffix`, check if string ends with it
 		for (let len = Math.min(s.length, suffix.length); len >= 1; len -= 1) {
-			if (s.endsWith(suffix.substring(0, len))) { // the end of the string equals a prefix
+			if (s.endsWith(suffix.substring(0, len))) {
+				// the end of the string equals a prefix
 				this.j -= len
 				return len === suffix.length
 			}
@@ -68,14 +68,11 @@ export class SurroundingsRemover {
 		}
 		// console.log('index', index, until.length)
 
-		if (alsoRemoveUntilStr)
-			this.i = index + until.length
-		else
-			this.i = index
+		if (alsoRemoveUntilStr) this.i = index + until.length
+		else this.i = index
 
 		return true
 	}
-
 
 	removeCodeBlock = () => {
 		// Match either:
@@ -99,7 +96,6 @@ export class SurroundingsRemover {
 		return true
 	}
 
-
 	deltaInfo = (recentlyAddedTextLen: number) => {
 		// aaaaaatextaaaaaa{recentlyAdded}
 		//                  ^   i    j    len
@@ -110,15 +106,15 @@ export class SurroundingsRemover {
 		const ignoredSuffix = this.originalS.substring(Math.max(this.j + 1, recentlyAddedIdx), Infinity)
 		return [actualDelta, ignoredSuffix] as const
 	}
-
-
-
 }
 
-
-
-export const extractCodeFromRegular = ({ text, recentlyAddedTextLen }: { text: string, recentlyAddedTextLen: number }): [string, string, string] => {
-
+export const extractCodeFromRegular = ({
+	text,
+	recentlyAddedTextLen,
+}: {
+	text: string
+	recentlyAddedTextLen: number
+}): [string, string, string] => {
 	const pm = new SurroundingsRemover(text)
 
 	pm.removeCodeBlock()
@@ -129,13 +125,16 @@ export const extractCodeFromRegular = ({ text, recentlyAddedTextLen }: { text: s
 	return [s, delta, ignoredSuffix]
 }
 
-
-
-
-
 // Ollama has its own FIM, we should not use this if we use that
-export const extractCodeFromFIM = ({ text, recentlyAddedTextLen, midTag, }: { text: string, recentlyAddedTextLen: number, midTag: string }): [string, string, string] => {
-
+export const extractCodeFromFIM = ({
+	text,
+	recentlyAddedTextLen,
+	midTag,
+}: {
+	text: string
+	recentlyAddedTextLen: number
+	midTag: string
+}): [string, string, string] => {
 	/* ------------- summary of the regex -------------
 		[optional ` | `` | ```]
 		(match optional_language_name)
@@ -162,21 +161,20 @@ export const extractCodeFromFIM = ({ text, recentlyAddedTextLen, midTag, }: { te
 	return [s, delta, ignoredSuffix]
 }
 
-
-
 export type ExtractedSearchReplaceBlock = {
-	state: 'writingOriginal' | 'writingFinal' | 'done',
-	orig: string,
-	final: string,
+	state: 'writingOriginal' | 'writingFinal' | 'done'
+	orig: string
+	final: string
 }
 
-
 // JS substring swaps indices, so "ab".substr(1,0) will NOT be '', it will be 'a'!
-const voidSubstr = (str: string, start: number, end: number) => end < start ? '' : str.substring(start, end)
+const voidSubstr = (str: string, start: number, end: number) =>
+	end < start ? '' : str.substring(start, end)
 
 export const endsWithAnyPrefixOf = (str: string, anyPrefix: string) => {
 	// for each prefix
-	for (let i = anyPrefix.length; i >= 1; i--) { // i >= 1 because must not be empty string
+	for (let i = anyPrefix.length; i >= 1; i--) {
+		// i >= 1 because must not be empty string
 		const prefix = anyPrefix.slice(0, i)
 		if (str.endsWith(prefix)) return prefix
 	}
@@ -185,7 +183,6 @@ export const endsWithAnyPrefixOf = (str: string, anyPrefix: string) => {
 
 // guarantees if you keep adding text, array length will strictly grow and state will progress without going back
 export const extractSearchReplaceBlocks = (str: string) => {
-
 	const ORIGINAL_ = ORIGINAL + `\n`
 	const DIVIDER_ = '\n' + DIVIDER + `\n`
 	// logic for FINAL_ is slightly more complicated - should be '\n' + FINAL, but that ignores if the final output is empty
@@ -195,18 +192,21 @@ export const extractSearchReplaceBlocks = (str: string) => {
 	let i = 0 // search i and beyond (this is done by plain index, not by line number. much simpler this way)
 	while (true) {
 		let origStart = str.indexOf(ORIGINAL_, i)
-		if (origStart === -1) { return blocks }
+		if (origStart === -1) {
+			return blocks
+		}
 		origStart += ORIGINAL_.length
 		i = origStart
 		// wrote <<<< ORIGINAL\n
 
 		let dividerStart = str.indexOf(DIVIDER_, i)
-		if (dividerStart === -1) { // if didnt find DIVIDER_, either writing originalStr or DIVIDER_ right now
+		if (dividerStart === -1) {
+			// if didnt find DIVIDER_, either writing originalStr or DIVIDER_ right now
 			const writingDIVIDERlen = endsWithAnyPrefixOf(str, DIVIDER_)?.length ?? 0
 			blocks.push({
 				orig: voidSubstr(str, origStart, str.length - writingDIVIDERlen),
 				final: '',
-				state: 'writingOriginal'
+				state: 'writingOriginal',
 			})
 			return blocks
 		}
@@ -217,17 +217,18 @@ export const extractSearchReplaceBlocks = (str: string) => {
 
 		const fullFINALStart = str.indexOf(FINAL, i)
 		const fullFINALStart_ = str.indexOf('\n' + FINAL, i) // go with B if possible, else fallback to A, it's more permissive
-		const matchedFullFINAL_ = fullFINALStart_ !== -1 && fullFINALStart === fullFINALStart_ + 1  // this logic is really important, otherwise we might look for FINAL_ at a much later part of the string
+		const matchedFullFINAL_ = fullFINALStart_ !== -1 && fullFINALStart === fullFINALStart_ + 1 // this logic is really important, otherwise we might look for FINAL_ at a much later part of the string
 
 		let finalStart = matchedFullFINAL_ ? fullFINALStart_ : fullFINALStart
-		if (finalStart === -1) { // if didnt find FINAL_, either writing finalStr or FINAL or FINAL_ right now
+		if (finalStart === -1) {
+			// if didnt find FINAL_, either writing finalStr or FINAL or FINAL_ right now
 			const writingFINALlen = endsWithAnyPrefixOf(str, FINAL)?.length ?? 0
 			const writingFINALlen_ = endsWithAnyPrefixOf(str, '\n' + FINAL)?.length ?? 0 // this gets priority
 			const usingWritingFINALlen = Math.max(writingFINALlen, writingFINALlen_)
 			blocks.push({
 				orig: origStrDone,
 				final: voidSubstr(str, dividerStart, str.length - usingWritingFINALlen),
-				state: 'writingFinal'
+				state: 'writingFinal',
 			})
 			return blocks
 		}
@@ -240,24 +241,10 @@ export const extractSearchReplaceBlocks = (str: string) => {
 		blocks.push({
 			orig: origStrDone,
 			final: finalStrDone,
-			state: 'done'
+			state: 'done',
 		})
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // const tests: [string, { shape: Partial<ExtractedSearchReplaceBlock>[] }][] = [[
 // 	`\
@@ -341,7 +328,6 @@ export const extractSearchReplaceBlocks = (str: string) => {
 // \`\`\``, { shape: [{ state: 'done', orig: 'A\nB', final: '' }], }
 // ],
 
-
 // // alternatively
 // [
 // 	`\
@@ -406,11 +392,7 @@ export const extractSearchReplaceBlocks = (str: string) => {
 // \`\`\``, { shape: [{ state: 'done', orig: 'A\nB', final: 'X\nY' }], }
 // ]]
 
-
-
-
 // function runTests() {
-
 
 // 	let passedTests = 0;
 // 	let failedTests = 0;
@@ -453,8 +435,4 @@ export const extractSearchReplaceBlocks = (str: string) => {
 // 	return failedTests === 0;
 // }
 
-
-
 // runTests()
-
-

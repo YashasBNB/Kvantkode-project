@@ -3,39 +3,53 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as strings from '../../../base/common/strings.js';
-import { CursorColumns } from './cursorColumns.js';
+import * as strings from '../../../base/common/strings.js'
+import { CursorColumns } from './cursorColumns.js'
 
-function _normalizeIndentationFromWhitespace(str: string, indentSize: number, insertSpaces: boolean): string {
-	let spacesCnt = 0;
+function _normalizeIndentationFromWhitespace(
+	str: string,
+	indentSize: number,
+	insertSpaces: boolean,
+): string {
+	let spacesCnt = 0
 	for (let i = 0; i < str.length; i++) {
 		if (str.charAt(i) === '\t') {
-			spacesCnt = CursorColumns.nextIndentTabStop(spacesCnt, indentSize);
+			spacesCnt = CursorColumns.nextIndentTabStop(spacesCnt, indentSize)
 		} else {
-			spacesCnt++;
+			spacesCnt++
 		}
 	}
 
-	let result = '';
+	let result = ''
 	if (!insertSpaces) {
-		const tabsCnt = Math.floor(spacesCnt / indentSize);
-		spacesCnt = spacesCnt % indentSize;
+		const tabsCnt = Math.floor(spacesCnt / indentSize)
+		spacesCnt = spacesCnt % indentSize
 		for (let i = 0; i < tabsCnt; i++) {
-			result += '\t';
+			result += '\t'
 		}
 	}
 
 	for (let i = 0; i < spacesCnt; i++) {
-		result += ' ';
+		result += ' '
 	}
 
-	return result;
+	return result
 }
 
-export function normalizeIndentation(str: string, indentSize: number, insertSpaces: boolean): string {
-	let firstNonWhitespaceIndex = strings.firstNonWhitespaceIndex(str);
+export function normalizeIndentation(
+	str: string,
+	indentSize: number,
+	insertSpaces: boolean,
+): string {
+	let firstNonWhitespaceIndex = strings.firstNonWhitespaceIndex(str)
 	if (firstNonWhitespaceIndex === -1) {
-		firstNonWhitespaceIndex = str.length;
+		firstNonWhitespaceIndex = str.length
 	}
-	return _normalizeIndentationFromWhitespace(str.substring(0, firstNonWhitespaceIndex), indentSize, insertSpaces) + str.substring(firstNonWhitespaceIndex);
+	return (
+		_normalizeIndentationFromWhitespace(
+			str.substring(0, firstNonWhitespaceIndex),
+			indentSize,
+			insertSpaces,
+		) + str.substring(firstNonWhitespaceIndex)
+	)
 }

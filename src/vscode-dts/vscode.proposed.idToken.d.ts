@@ -11,6 +11,6 @@ declare module 'vscode' {
 		/**
 		 * An optional ID token that may be included in the session.
 		 */
-		readonly idToken?: string;
+		readonly idToken?: string
 	}
 }

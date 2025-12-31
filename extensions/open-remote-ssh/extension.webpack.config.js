@@ -5,23 +5,23 @@
 
 //@ts-check
 
-'use strict';
+'use strict'
 
-const withDefaults = require('../shared.webpack.config');
-const { IgnorePlugin } = require('webpack');
+const withDefaults = require('../shared.webpack.config')
+const { IgnorePlugin } = require('webpack')
 
 module.exports = withDefaults({
 	context: __dirname,
 	resolve: {
-		mainFields: ['module', 'main']
+		mainFields: ['module', 'main'],
 	},
 	entry: {
 		extension: './src/extension.ts',
 	},
 	externals: {
-		vscode: "commonjs vscode",
-		bufferutil: "commonjs bufferutil",
-		"utf-8-validate": "commonjs utf-8-validate",
+		vscode: 'commonjs vscode',
+		bufferutil: 'commonjs bufferutil',
+		'utf-8-validate': 'commonjs utf-8-validate',
 	},
 	plugins: [
 		new IgnorePlugin({
@@ -29,6 +29,6 @@ module.exports = withDefaults({
 		}),
 		new IgnorePlugin({
 			resourceRegExp: /cpu-features/,
-		})
-	]
-});
+		}),
+	],
+})

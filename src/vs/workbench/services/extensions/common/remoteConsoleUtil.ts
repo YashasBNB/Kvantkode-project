@@ -3,57 +3,65 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IRemoteConsoleLog, parse } from '../../../../base/common/console.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
+import { IRemoteConsoleLog, parse } from '../../../../base/common/console.js'
+import { ILogService } from '../../../../platform/log/common/log.js'
 
-export function logRemoteEntry(logService: ILogService, entry: IRemoteConsoleLog, label: string | null = null): void {
-	const args = parse(entry).args;
-	let firstArg = args.shift();
+export function logRemoteEntry(
+	logService: ILogService,
+	entry: IRemoteConsoleLog,
+	label: string | null = null,
+): void {
+	const args = parse(entry).args
+	let firstArg = args.shift()
 	if (typeof firstArg !== 'string') {
-		return;
+		return
 	}
 
 	if (!entry.severity) {
-		entry.severity = 'info';
+		entry.severity = 'info'
 	}
 
 	if (label) {
 		if (!/^\[/.test(label)) {
-			label = `[${label}]`;
+			label = `[${label}]`
 		}
 		if (!/ $/.test(label)) {
-			label = `${label} `;
+			label = `${label} `
 		}
-		firstArg = label + firstArg;
+		firstArg = label + firstArg
 	}
 
 	switch (entry.severity) {
 		case 'log':
 		case 'info':
-			logService.info(firstArg, ...args);
-			break;
+			logService.info(firstArg, ...args)
+			break
 		case 'warn':
-			logService.warn(firstArg, ...args);
-			break;
+			logService.warn(firstArg, ...args)
+			break
 		case 'error':
-			logService.error(firstArg, ...args);
-			break;
+			logService.error(firstArg, ...args)
+			break
 	}
 }
 
-export function logRemoteEntryIfError(logService: ILogService, entry: IRemoteConsoleLog, label: string): void {
-	const args = parse(entry).args;
-	const firstArg = args.shift();
+export function logRemoteEntryIfError(
+	logService: ILogService,
+	entry: IRemoteConsoleLog,
+	label: string,
+): void {
+	const args = parse(entry).args
+	const firstArg = args.shift()
 	if (typeof firstArg !== 'string' || entry.severity !== 'error') {
-		return;
+		return
 	}
 
 	if (!/^\[/.test(label)) {
-		label = `[${label}]`;
+		label = `[${label}]`
 	}
 	if (!/ $/.test(label)) {
-		label = `${label} `;
+		label = `${label} `
 	}
 
-	logService.error(label + firstArg, ...args);
+	logService.error(label + firstArg, ...args)
 }

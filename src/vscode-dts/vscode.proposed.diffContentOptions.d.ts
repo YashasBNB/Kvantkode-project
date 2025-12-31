@@ -11,6 +11,6 @@ declare module 'vscode' {
 		 * Controls if a cell metadata property should be reverted when the cell content
 		 * is reverted in notebook diff editor.
 		 */
-		cellContentMetadata?: { [key: string]: boolean | undefined };
+		cellContentMetadata?: { [key: string]: boolean | undefined }
 	}
 }

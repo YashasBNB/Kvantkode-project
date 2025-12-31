@@ -5,10 +5,10 @@
 
 //@ts-check
 
-'use strict';
+'use strict'
 
-const withDefaults = require('../shared.webpack.config');
-const path = require('path');
+const withDefaults = require('../shared.webpack.config')
+const path = require('path')
 
 module.exports = withDefaults({
 	context: path.join(__dirname, 'client'),
@@ -17,6 +17,6 @@ module.exports = withDefaults({
 	},
 	output: {
 		filename: 'cssClientMain.js',
-		path: path.join(__dirname, 'client', 'dist', 'node')
-	}
-});
+		path: path.join(__dirname, 'client', 'dist', 'node'),
+	},
+})

@@ -3,66 +3,81 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ILanguageIdCodec, ITreeSitterTokenizationSupport, TreeSitterTokenizationRegistry } from '../languages.js';
-import { LineTokens } from '../tokens/lineTokens.js';
-import { StandardTokenType } from '../encodedTokenAttributes.js';
-import { TextModel } from './textModel.js';
-import { IModelContentChangedEvent } from '../textModelEvents.js';
-import { AbstractTokens } from './tokens.js';
-import { IDisposable, MutableDisposable } from '../../../base/common/lifecycle.js';
-import { ITreeSitterTokenizationStoreService } from './treeSitterTokenStoreService.js';
-import { Range } from '../core/range.js';
-import { BackgroundTokenizationState } from '../tokenizationTextModelPart.js';
-import { Emitter, Event } from '../../../base/common/event.js';
+import {
+	ILanguageIdCodec,
+	ITreeSitterTokenizationSupport,
+	TreeSitterTokenizationRegistry,
+} from '../languages.js'
+import { LineTokens } from '../tokens/lineTokens.js'
+import { StandardTokenType } from '../encodedTokenAttributes.js'
+import { TextModel } from './textModel.js'
+import { IModelContentChangedEvent } from '../textModelEvents.js'
+import { AbstractTokens } from './tokens.js'
+import { IDisposable, MutableDisposable } from '../../../base/common/lifecycle.js'
+import { ITreeSitterTokenizationStoreService } from './treeSitterTokenStoreService.js'
+import { Range } from '../core/range.js'
+import { BackgroundTokenizationState } from '../tokenizationTextModelPart.js'
+import { Emitter, Event } from '../../../base/common/event.js'
 
 export class TreeSitterTokens extends AbstractTokens {
-	private _tokenizationSupport: ITreeSitterTokenizationSupport | null = null;
+	private _tokenizationSupport: ITreeSitterTokenizationSupport | null = null
 
-	protected _backgroundTokenizationState: BackgroundTokenizationState = BackgroundTokenizationState.InProgress;
-	protected readonly _onDidChangeBackgroundTokenizationState: Emitter<void> = this._register(new Emitter<void>());
-	public readonly onDidChangeBackgroundTokenizationState: Event<void> = this._onDidChangeBackgroundTokenizationState.event;
+	protected _backgroundTokenizationState: BackgroundTokenizationState =
+		BackgroundTokenizationState.InProgress
+	protected readonly _onDidChangeBackgroundTokenizationState: Emitter<void> = this._register(
+		new Emitter<void>(),
+	)
+	public readonly onDidChangeBackgroundTokenizationState: Event<void> =
+		this._onDidChangeBackgroundTokenizationState.event
 
-	private _lastLanguageId: string | undefined;
-	private readonly _tokensChangedListener: MutableDisposable<IDisposable> = this._register(new MutableDisposable());
-	private readonly _onDidChangeBackgroundTokenization: MutableDisposable<IDisposable> = this._register(new MutableDisposable());
+	private _lastLanguageId: string | undefined
+	private readonly _tokensChangedListener: MutableDisposable<IDisposable> = this._register(
+		new MutableDisposable(),
+	)
+	private readonly _onDidChangeBackgroundTokenization: MutableDisposable<IDisposable> =
+		this._register(new MutableDisposable())
 
-	constructor(languageIdCodec: ILanguageIdCodec,
+	constructor(
+		languageIdCodec: ILanguageIdCodec,
 		textModel: TextModel,
 		languageId: () => string,
-		@ITreeSitterTokenizationStoreService private readonly _tokenStore: ITreeSitterTokenizationStoreService) {
-		super(languageIdCodec, textModel, languageId);
+		@ITreeSitterTokenizationStoreService
+		private readonly _tokenStore: ITreeSitterTokenizationStoreService,
+	) {
+		super(languageIdCodec, textModel, languageId)
 
-		this._initialize();
+		this._initialize()
 	}
 
 	private _initialize() {
-		const newLanguage = this.getLanguageId();
+		const newLanguage = this.getLanguageId()
 		if (!this._tokenizationSupport || this._lastLanguageId !== newLanguage) {
-			this._lastLanguageId = newLanguage;
-			this._tokenizationSupport = TreeSitterTokenizationRegistry.get(newLanguage);
+			this._lastLanguageId = newLanguage
+			this._tokenizationSupport = TreeSitterTokenizationRegistry.get(newLanguage)
 			this._tokensChangedListener.value = this._tokenizationSupport?.onDidChangeTokens((e) => {
 				if (e.textModel === this._textModel) {
-					this._onDidChangeTokens.fire(e.changes);
+					this._onDidChangeTokens.fire(e.changes)
 				}
-			});
-			this._onDidChangeBackgroundTokenization.value = this._tokenizationSupport?.onDidChangeBackgroundTokenization(e => {
-				if (e.textModel === this._textModel) {
-					this._backgroundTokenizationState = BackgroundTokenizationState.Completed;
-					this._onDidChangeBackgroundTokenizationState.fire();
-				}
-			});
+			})
+			this._onDidChangeBackgroundTokenization.value =
+				this._tokenizationSupport?.onDidChangeBackgroundTokenization((e) => {
+					if (e.textModel === this._textModel) {
+						this._backgroundTokenizationState = BackgroundTokenizationState.Completed
+						this._onDidChangeBackgroundTokenizationState.fire()
+					}
+				})
 		}
 	}
 
 	public getLineTokens(lineNumber: number): LineTokens {
-		const content = this._textModel.getLineContent(lineNumber);
+		const content = this._textModel.getLineContent(lineNumber)
 		if (this._tokenizationSupport && content.length > 0) {
-			const rawTokens = this._tokenStore.getTokens(this._textModel, lineNumber);
+			const rawTokens = this._tokenStore.getTokens(this._textModel, lineNumber)
 			if (rawTokens && rawTokens.length > 0) {
-				return new LineTokens(rawTokens, content, this._languageIdCodec);
+				return new LineTokens(rawTokens, content, this._languageIdCodec)
 			}
 		}
-		return LineTokens.createEmpty(content, this._languageIdCodec);
+		return LineTokens.createEmpty(content, this._languageIdCodec)
 	}
 
 	public resetTokenization(fireTokenChangeEvent: boolean = true): void {
@@ -75,9 +90,9 @@ export class TreeSitterTokens extends AbstractTokens {
 						toLineNumber: this._textModel.getLineCount(),
 					},
 				],
-			});
+			})
 		}
-		this._initialize();
+		this._initialize()
 	}
 
 	public override handleDidChangeAttached(): void {
@@ -87,47 +102,58 @@ export class TreeSitterTokens extends AbstractTokens {
 	public override handleDidChangeContent(e: IModelContentChangedEvent): void {
 		if (e.isFlush) {
 			// Don't fire the event, as the view might not have got the text change event yet
-			this.resetTokenization(false);
+			this.resetTokenization(false)
 		} else {
-			this._tokenStore.handleContentChanged(this._textModel, e);
+			this._tokenStore.handleContentChanged(this._textModel, e)
 		}
 	}
 
 	public override forceTokenization(lineNumber: number): void {
 		if (this._tokenizationSupport && !this.hasAccurateTokensForLine(lineNumber)) {
-			this._tokenizationSupport.tokenizeEncoded(lineNumber, this._textModel);
+			this._tokenizationSupport.tokenizeEncoded(lineNumber, this._textModel)
 		}
 	}
 
 	public override hasAccurateTokensForLine(lineNumber: number): boolean {
-		return this._tokenStore.hasTokens(this._textModel, new Range(lineNumber, 1, lineNumber, this._textModel.getLineMaxColumn(lineNumber)));
+		return this._tokenStore.hasTokens(
+			this._textModel,
+			new Range(lineNumber, 1, lineNumber, this._textModel.getLineMaxColumn(lineNumber)),
+		)
 	}
 
 	public override isCheapToTokenize(lineNumber: number): boolean {
 		// TODO @alexr00 determine what makes it cheap to tokenize?
-		return true;
+		return true
 	}
 
-	public override getTokenTypeIfInsertingCharacter(lineNumber: number, column: number, character: string): StandardTokenType {
+	public override getTokenTypeIfInsertingCharacter(
+		lineNumber: number,
+		column: number,
+		character: string,
+	): StandardTokenType {
 		// TODO @alexr00 implement once we have custom parsing and don't just feed in the whole text model value
-		return StandardTokenType.Other;
+		return StandardTokenType.Other
 	}
 
 	public override tokenizeLinesAt(lineNumber: number, lines: string[]): LineTokens[] | null {
 		if (this._tokenizationSupport) {
-			const rawLineTokens = this._tokenizationSupport.guessTokensForLinesContent(lineNumber, this._textModel, lines);
-			const lineTokens: LineTokens[] = [];
+			const rawLineTokens = this._tokenizationSupport.guessTokensForLinesContent(
+				lineNumber,
+				this._textModel,
+				lines,
+			)
+			const lineTokens: LineTokens[] = []
 			if (rawLineTokens) {
 				for (let i = 0; i < rawLineTokens.length; i++) {
-					lineTokens.push(new LineTokens(rawLineTokens[i], lines[i], this._languageIdCodec));
+					lineTokens.push(new LineTokens(rawLineTokens[i], lines[i], this._languageIdCodec))
 				}
-				return lineTokens;
+				return lineTokens
 			}
 		}
-		return null;
+		return null
 	}
 
 	public override get hasTokens(): boolean {
-		return this._tokenStore.hasTokens(this._textModel);
+		return this._tokenStore.hasTokens(this._textModel)
 	}
 }

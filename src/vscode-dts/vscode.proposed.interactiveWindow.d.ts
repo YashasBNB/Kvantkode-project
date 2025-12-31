@@ -11,15 +11,24 @@ declare module 'vscode' {
 		/**
 		 * The uri of the history notebook in the interactive window.
 		 */
-		readonly uri: Uri;
+		readonly uri: Uri
 		/**
 		 * The uri of the input box in the interactive window.
 		 */
-		readonly inputBoxUri: Uri;
-		private constructor(uri: Uri, inputBoxUri: Uri);
+		readonly inputBoxUri: Uri
+		private constructor(uri: Uri, inputBoxUri: Uri)
 	}
 
 	export interface Tab {
-		readonly input: TabInputText | TabInputTextDiff | TabInputCustom | TabInputWebview | TabInputNotebook | TabInputNotebookDiff | TabInputTerminal | TabInputInteractiveWindow | unknown;
+		readonly input:
+			| TabInputText
+			| TabInputTextDiff
+			| TabInputCustom
+			| TabInputWebview
+			| TabInputNotebook
+			| TabInputNotebookDiff
+			| TabInputTerminal
+			| TabInputInteractiveWindow
+			| unknown
 	}
 }

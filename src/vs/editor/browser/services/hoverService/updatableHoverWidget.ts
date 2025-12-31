@@ -3,80 +3,101 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isHTMLElement } from '../../../../base/browser/dom.js';
-import { isManagedHoverTooltipMarkdownString, type IHoverWidget, type IManagedHoverContent, type IManagedHoverOptions } from '../../../../base/browser/ui/hover/hover.js';
-import type { IHoverDelegate, IHoverDelegateOptions, IHoverDelegateTarget } from '../../../../base/browser/ui/hover/hoverDelegate.js';
-import { HoverPosition } from '../../../../base/browser/ui/hover/hoverWidget.js';
-import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { isMarkdownString, type IMarkdownString } from '../../../../base/common/htmlContent.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { isFunction, isString } from '../../../../base/common/types.js';
-import { localize } from '../../../../nls.js';
+import { isHTMLElement } from '../../../../base/browser/dom.js'
+import {
+	isManagedHoverTooltipMarkdownString,
+	type IHoverWidget,
+	type IManagedHoverContent,
+	type IManagedHoverOptions,
+} from '../../../../base/browser/ui/hover/hover.js'
+import type {
+	IHoverDelegate,
+	IHoverDelegateOptions,
+	IHoverDelegateTarget,
+} from '../../../../base/browser/ui/hover/hoverDelegate.js'
+import { HoverPosition } from '../../../../base/browser/ui/hover/hoverWidget.js'
+import { CancellationTokenSource } from '../../../../base/common/cancellation.js'
+import { isMarkdownString, type IMarkdownString } from '../../../../base/common/htmlContent.js'
+import { IDisposable } from '../../../../base/common/lifecycle.js'
+import { isFunction, isString } from '../../../../base/common/types.js'
+import { localize } from '../../../../nls.js'
 
-type IManagedHoverResolvedContent = IMarkdownString | string | HTMLElement | undefined;
+type IManagedHoverResolvedContent = IMarkdownString | string | HTMLElement | undefined
 
 export class ManagedHoverWidget implements IDisposable {
+	private _hoverWidget: IHoverWidget | undefined
+	private _cancellationTokenSource: CancellationTokenSource | undefined
 
-	private _hoverWidget: IHoverWidget | undefined;
-	private _cancellationTokenSource: CancellationTokenSource | undefined;
+	constructor(
+		private hoverDelegate: IHoverDelegate,
+		private target: IHoverDelegateTarget | HTMLElement,
+		private fadeInAnimation: boolean,
+	) {}
 
-	constructor(private hoverDelegate: IHoverDelegate, private target: IHoverDelegateTarget | HTMLElement, private fadeInAnimation: boolean) { }
-
-	async update(content: IManagedHoverContent, focus?: boolean, options?: IManagedHoverOptions): Promise<void> {
+	async update(
+		content: IManagedHoverContent,
+		focus?: boolean,
+		options?: IManagedHoverOptions,
+	): Promise<void> {
 		if (this._cancellationTokenSource) {
 			// there's an computation ongoing, cancel it
-			this._cancellationTokenSource.dispose(true);
-			this._cancellationTokenSource = undefined;
+			this._cancellationTokenSource.dispose(true)
+			this._cancellationTokenSource = undefined
 		}
 		if (this.isDisposed) {
-			return;
+			return
 		}
 
-		let resolvedContent: string | HTMLElement | IMarkdownString | undefined;
+		let resolvedContent: string | HTMLElement | IMarkdownString | undefined
 		if (isString(content) || isHTMLElement(content) || content === undefined) {
-			resolvedContent = content;
+			resolvedContent = content
 		} else {
 			// compute the content, potentially long-running
 
-			this._cancellationTokenSource = new CancellationTokenSource();
-			const token = this._cancellationTokenSource.token;
+			this._cancellationTokenSource = new CancellationTokenSource()
+			const token = this._cancellationTokenSource.token
 
-			let managedContent;
+			let managedContent
 			if (isManagedHoverTooltipMarkdownString(content)) {
 				if (isFunction(content.markdown)) {
-					managedContent = content.markdown(token).then(resolvedContent => resolvedContent ?? content.markdownNotSupportedFallback);
+					managedContent = content
+						.markdown(token)
+						.then((resolvedContent) => resolvedContent ?? content.markdownNotSupportedFallback)
 				} else {
-					managedContent = content.markdown ?? content.markdownNotSupportedFallback;
+					managedContent = content.markdown ?? content.markdownNotSupportedFallback
 				}
 			} else {
-				managedContent = content.element(token);
+				managedContent = content.element(token)
 			}
 
 			// compute the content
 			if (managedContent instanceof Promise) {
-
 				// show 'Loading' if no hover is up yet
 				if (!this._hoverWidget) {
-					this.show(localize('iconLabel.loading', "Loading..."), focus, options);
+					this.show(localize('iconLabel.loading', 'Loading...'), focus, options)
 				}
 
-				resolvedContent = await managedContent;
+				resolvedContent = await managedContent
 			} else {
-				resolvedContent = managedContent;
+				resolvedContent = managedContent
 			}
 
 			if (this.isDisposed || token.isCancellationRequested) {
 				// either the widget has been closed in the meantime
 				// or there has been a new call to `update`
-				return;
+				return
 			}
 		}
 
-		this.show(resolvedContent, focus, options);
+		this.show(resolvedContent, focus, options)
 	}
 
-	private show(content: IManagedHoverResolvedContent, focus?: boolean, options?: IManagedHoverOptions): void {
-		const oldHoverWidget = this._hoverWidget;
+	private show(
+		content: IManagedHoverResolvedContent,
+		focus?: boolean,
+		options?: IManagedHoverOptions,
+	): void {
+		const oldHoverWidget = this._hoverWidget
 
 		if (this.hasContent(content)) {
 			const hoverOptions: IHoverDelegateOptions = {
@@ -93,32 +114,34 @@ export class ManagedHoverWidget implements IDisposable {
 				position: {
 					hoverPosition: HoverPosition.BELOW,
 				},
-			};
+			}
 
-			this._hoverWidget = this.hoverDelegate.showHover(hoverOptions, focus);
+			this._hoverWidget = this.hoverDelegate.showHover(hoverOptions, focus)
 		}
-		oldHoverWidget?.dispose();
+		oldHoverWidget?.dispose()
 	}
 
-	private hasContent(content: IManagedHoverResolvedContent): content is NonNullable<IManagedHoverResolvedContent> {
+	private hasContent(
+		content: IManagedHoverResolvedContent,
+	): content is NonNullable<IManagedHoverResolvedContent> {
 		if (!content) {
-			return false;
+			return false
 		}
 
 		if (isMarkdownString(content)) {
-			return !!content.value;
+			return !!content.value
 		}
 
-		return true;
+		return true
 	}
 
 	get isDisposed() {
-		return this._hoverWidget?.isDisposed;
+		return this._hoverWidget?.isDisposed
 	}
 
 	dispose(): void {
-		this._hoverWidget?.dispose();
-		this._cancellationTokenSource?.dispose(true);
-		this._cancellationTokenSource = undefined;
+		this._hoverWidget?.dispose()
+		this._cancellationTokenSource?.dispose(true)
+		this._cancellationTokenSource = undefined
 	}
 }

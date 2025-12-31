@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../../../base/common/buffer.js';
-import { ReadableStream } from '../../../../../../base/common/stream.js';
-import { ChatPromptDecoder, TChatPromptToken } from './chatPromptDecoder.js';
-import { ICodec } from '../../../../../../base/common/codecs/types/ICodec.js';
+import { VSBuffer } from '../../../../../../base/common/buffer.js'
+import { ReadableStream } from '../../../../../../base/common/stream.js'
+import { ChatPromptDecoder, TChatPromptToken } from './chatPromptDecoder.js'
+import { ICodec } from '../../../../../../base/common/codecs/types/ICodec.js'
 
 /**
  * `ChatPromptCodec` type is a `ICodec<T, K>` with specific types for
@@ -21,7 +21,7 @@ interface IChatPromptCodec extends ICodec<VSBuffer, TChatPromptToken> {
 	 * @see {@linkcode VSBuffer}
 	 * @see {@linkcode ChatPromptDecoder}
 	 */
-	decode: (value: ReadableStream<VSBuffer>) => ChatPromptDecoder;
+	decode: (value: ReadableStream<VSBuffer>) => ChatPromptDecoder
 }
 
 /**
@@ -35,7 +35,7 @@ export const ChatPromptCodec: IChatPromptCodec = Object.freeze({
 	 * @see {@linkcode VSBuffer}
 	 */
 	encode: (_stream: ReadableStream<TChatPromptToken>): ReadableStream<VSBuffer> => {
-		throw new Error('The `encode` method is not implemented.');
+		throw new Error('The `encode` method is not implemented.')
 	},
 
 	/**
@@ -47,6 +47,6 @@ export const ChatPromptCodec: IChatPromptCodec = Object.freeze({
 	 * @see {@linkcode ReadableStream}
 	 */
 	decode: (stream: ReadableStream<VSBuffer>): ChatPromptDecoder => {
-		return new ChatPromptDecoder(stream);
+		return new ChatPromptDecoder(stream)
 	},
-});
+})

@@ -188,5 +188,18 @@ for (let dir of dirs) {
 	npmInstall(dir, opts);
 }
 
+// Install/update Python trading dependencies (non-fatal)
+try {
+    log('.', 'Installing Python trading dependencies...');
+    const installer = path.join(root, 'scripts', 'install-python-deps.js');
+    if (fs.existsSync(installer)) {
+        cp.spawnSync(process.execPath, [installer], { stdio: 'inherit', env: { ...process.env } });
+    } else {
+        log('.', 'Python installer script not found, skipping');
+    }
+} catch (e) {
+    console.warn('[python-install] Skipped due to error:', e && e.message ? e.message : String(e));
+}
+
 cp.execSync('git config pull.rebase merges');
 cp.execSync('git config blame.ignoreRevsFile .git-blame-ignore-revs');

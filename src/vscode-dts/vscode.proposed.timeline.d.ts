@@ -4,46 +4,45 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/84297
 
 	export class TimelineItem {
 		/**
 		 * A timestamp (in milliseconds since 1 January 1970 00:00:00) for when the timeline item occurred.
 		 */
-		timestamp: number;
+		timestamp: number
 
 		/**
 		 * A human-readable string describing the timeline item.
 		 */
-		label: string;
+		label: string
 
 		/**
 		 * Optional id for the timeline item. It must be unique across all the timeline items provided by this source.
 		 *
 		 * If not provided, an id is generated using the timeline item's timestamp.
 		 */
-		id?: string;
+		id?: string
 
 		/**
 		 * The icon path or {@link ThemeIcon} for the timeline item.
 		 */
-		iconPath?: Uri | { light: Uri; dark: Uri } | ThemeIcon;
+		iconPath?: Uri | { light: Uri; dark: Uri } | ThemeIcon
 
 		/**
 		 * A human readable string describing less prominent details of the timeline item.
 		 */
-		description?: string;
+		description?: string
 
 		/**
 		 * The tooltip text when you hover over the timeline item.
 		 */
-		tooltip?: string | MarkdownString | undefined;
+		tooltip?: string | MarkdownString | undefined
 
 		/**
 		 * The {@link Command} that should be executed when the timeline item is selected.
 		 */
-		command?: Command;
+		command?: Command
 
 		/**
 		 * Context value of the timeline item. This can be used to contribute specific actions to the item.
@@ -63,30 +62,30 @@ declare module 'vscode' {
 		 * ```
 		 * This will show the `extension.copyCommitId` action only for items where `contextValue` is `commit`.
 		 */
-		contextValue?: string;
+		contextValue?: string
 
 		/**
 		 * Accessibility information used when screen reader interacts with this timeline item.
 		 */
-		accessibilityInformation?: AccessibilityInformation;
+		accessibilityInformation?: AccessibilityInformation
 
 		/**
 		 * @param label A human-readable string describing the timeline item
 		 * @param timestamp A timestamp (in milliseconds since 1 January 1970 00:00:00) for when the timeline item occurred
 		 */
-		constructor(label: string, timestamp: number);
+		constructor(label: string, timestamp: number)
 	}
 
 	export interface TimelineChangeEvent {
 		/**
 		 * The {@link Uri} of the resource for which the timeline changed.
 		 */
-		uri: Uri;
+		uri: Uri
 
 		/**
 		 * A flag which indicates whether the entire timeline should be reset.
 		 */
-		reset?: boolean;
+		reset?: boolean
 	}
 
 	export interface Timeline {
@@ -95,26 +94,26 @@ declare module 'vscode' {
 			 * A provider-defined cursor specifying the starting point of timeline items which are after the ones returned.
 			 * Use `undefined` to signal that there are no more items to be returned.
 			 */
-			readonly cursor: string | undefined;
-		};
+			readonly cursor: string | undefined
+		}
 
 		/**
 		 * An array of {@link TimelineItem timeline items}.
 		 */
-		readonly items: readonly TimelineItem[];
+		readonly items: readonly TimelineItem[]
 	}
 
 	export interface TimelineOptions {
 		/**
 		 * A provider-defined cursor specifying the starting point of the timeline items that should be returned.
 		 */
-		cursor?: string;
+		cursor?: string
 
 		/**
 		 * An optional maximum number timeline items or the all timeline items newer (inclusive) than the timestamp or id that should be returned.
 		 * If `undefined` all timeline items should be returned.
 		 */
-		limit?: number | { timestamp: number; id?: string };
+		limit?: number | { timestamp: number; id?: string }
 	}
 
 	export interface TimelineProvider {
@@ -122,17 +121,17 @@ declare module 'vscode' {
 		 * An optional event to signal that the timeline for a source has changed.
 		 * To signal that the timeline for all resources (uris) has changed, do not pass any argument or pass `undefined`.
 		 */
-		onDidChange?: Event<TimelineChangeEvent | undefined>;
+		onDidChange?: Event<TimelineChangeEvent | undefined>
 
 		/**
 		 * An identifier of the source of the timeline items. This can be used to filter sources.
 		 */
-		readonly id: string;
+		readonly id: string
 
 		/**
 		 * A human-readable string describing the source of the timeline items. This can be used as the display label when filtering sources.
 		 */
-		readonly label: string;
+		readonly label: string
 
 		/**
 		 * Provide {@link TimelineItem timeline items} for a {@link Uri}.
@@ -143,7 +142,11 @@ declare module 'vscode' {
 		 * @return The {@link TimelineResult timeline result} or a thenable that resolves to such. The lack of a result
 		 * can be signaled by returning `undefined`, `null`, or an empty array.
 		 */
-		provideTimeline(uri: Uri, options: TimelineOptions, token: CancellationToken): ProviderResult<Timeline>;
+		provideTimeline(
+			uri: Uri,
+			options: TimelineOptions,
+			token: CancellationToken,
+		): ProviderResult<Timeline>
 	}
 
 	export namespace workspace {
@@ -157,7 +160,10 @@ declare module 'vscode' {
 		 * @param scheme A scheme or schemes that defines which documents this provider is applicable to. Can be `*` to target all documents.
 		 * @param provider A timeline provider.
 		 * @return A {@link Disposable} that unregisters this provider when being disposed.
-		*/
-		export function registerTimelineProvider(scheme: string | string[], provider: TimelineProvider): Disposable;
+		 */
+		export function registerTimelineProvider(
+			scheme: string | string[],
+			provider: TimelineProvider,
+		): Disposable
 	}
 }

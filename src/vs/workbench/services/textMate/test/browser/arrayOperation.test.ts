@@ -3,17 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { ArrayEdit, MonotonousIndexTransformer, SingleArrayEdit } from '../../browser/arrayOperation.js';
+import assert from 'assert'
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js'
+import {
+	ArrayEdit,
+	MonotonousIndexTransformer,
+	SingleArrayEdit,
+} from '../../browser/arrayOperation.js'
 
 suite('array operation', () => {
 	function seq(start: number, end: number) {
-		const result: number[] = [];
+		const result: number[] = []
 		for (let i = start; i < end; i++) {
-			result.push(i);
+			result.push(i)
 		}
-		return result;
+		return result
 	}
 
 	test('simple', () => {
@@ -21,12 +25,12 @@ suite('array operation', () => {
 			new SingleArrayEdit(4, 3, 2),
 			new SingleArrayEdit(8, 0, 2),
 			new SingleArrayEdit(9, 2, 0),
-		]);
+		])
 
-		const arr = seq(0, 15).map(x => `item${x}`);
-		const newArr = arr.slice();
+		const arr = seq(0, 15).map((x) => `item${x}`)
+		const newArr = arr.slice()
 
-		edit.applyToArray(newArr);
+		edit.applyToArray(newArr)
 		assert.deepStrictEqual(newArr, [
 			'item0',
 			'item1',
@@ -42,19 +46,19 @@ suite('array operation', () => {
 			'item12',
 			'item13',
 			'item14',
-		]);
+		])
 
-		const transformer = new MonotonousIndexTransformer(edit);
+		const transformer = new MonotonousIndexTransformer(edit)
 		assert.deepStrictEqual(
 			seq(0, 15).map((x) => {
-				const t = transformer.transform(x);
-				let r = `arr[${x}]: ${arr[x]} -> `;
+				const t = transformer.transform(x)
+				let r = `arr[${x}]: ${arr[x]} -> `
 				if (t !== undefined) {
-					r += `newArr[${t}]: ${newArr[t]}`;
+					r += `newArr[${t}]: ${newArr[t]}`
 				} else {
-					r += 'undefined';
+					r += 'undefined'
 				}
-				return r;
+				return r
 			}),
 			[
 				'arr[0]: item0 -> newArr[0]: item0',
@@ -72,9 +76,9 @@ suite('array operation', () => {
 				'arr[12]: item12 -> newArr[11]: item12',
 				'arr[13]: item13 -> newArr[12]: item13',
 				'arr[14]: item14 -> newArr[13]: item14',
-			]
-		);
-	});
+			],
+		)
+	})
 
-	ensureNoDisposablesAreLeakedInTestSuite();
-});
+	ensureNoDisposablesAreLeakedInTestSuite()
+})

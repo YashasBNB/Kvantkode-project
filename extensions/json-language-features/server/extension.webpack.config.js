@@ -5,10 +5,10 @@
 
 //@ts-check
 
-'use strict';
+'use strict'
 
-const withDefaults = require('../../shared.webpack.config');
-const path = require('path');
+const withDefaults = require('../../shared.webpack.config')
+const path = require('path')
 
 const config = withDefaults({
 	context: path.join(__dirname),
@@ -18,7 +18,7 @@ const config = withDefaults({
 	output: {
 		filename: 'jsonServerMain.js',
 		path: path.join(__dirname, 'dist', 'node'),
-	}
-});
+	},
+})
 
-module.exports = config;
+module.exports = config

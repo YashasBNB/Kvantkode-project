@@ -4,21 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/84899
 
 	/**
 	 * The contiguous set of modified lines in a diff.
 	 */
 	export interface LineChange {
-		readonly originalStartLineNumber: number;
-		readonly originalEndLineNumber: number;
-		readonly modifiedStartLineNumber: number;
-		readonly modifiedEndLineNumber: number;
+		readonly originalStartLineNumber: number
+		readonly originalEndLineNumber: number
+		readonly modifiedStartLineNumber: number
+		readonly modifiedEndLineNumber: number
 	}
 
 	export namespace commands {
-
 		/**
 		 * Registers a diff information command that can be invoked via a keyboard shortcut,
 		 * a menu item, an action, or directly.
@@ -33,6 +31,10 @@ declare module 'vscode' {
 		 * @param thisArg The `this` context used when invoking the handler function.
 		 * @return Disposable which unregisters this command on disposal.
 		 */
-		export function registerDiffInformationCommand(command: string, callback: (diff: LineChange[], ...args: any[]) => any, thisArg?: any): Disposable;
+		export function registerDiffInformationCommand(
+			command: string,
+			callback: (diff: LineChange[], ...args: any[]) => any,
+			thisArg?: any,
+		): Disposable
 	}
 }

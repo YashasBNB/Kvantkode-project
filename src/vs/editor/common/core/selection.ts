@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IPosition, Position } from './position.js';
-import { Range } from './range.js';
+import { IPosition, Position } from './position.js'
+import { Range } from './range.js'
 
 /**
  * A selection in the editor.
@@ -14,19 +14,19 @@ export interface ISelection {
 	/**
 	 * The line number on which the selection has started.
 	 */
-	readonly selectionStartLineNumber: number;
+	readonly selectionStartLineNumber: number
 	/**
 	 * The column on `selectionStartLineNumber` where the selection has started.
 	 */
-	readonly selectionStartColumn: number;
+	readonly selectionStartColumn: number
 	/**
 	 * The line number on which the selection has ended.
 	 */
-	readonly positionLineNumber: number;
+	readonly positionLineNumber: number
 	/**
 	 * The column on `positionLineNumber` where the selection has ended.
 	 */
-	readonly positionColumn: number;
+	readonly positionColumn: number
 }
 
 /**
@@ -40,7 +40,7 @@ export const enum SelectionDirection {
 	/**
 	 * The selection starts below where it ends.
 	 */
-	RTL
+	RTL,
 }
 
 /**
@@ -51,42 +51,55 @@ export class Selection extends Range {
 	/**
 	 * The line number on which the selection has started.
 	 */
-	public readonly selectionStartLineNumber: number;
+	public readonly selectionStartLineNumber: number
 	/**
 	 * The column on `selectionStartLineNumber` where the selection has started.
 	 */
-	public readonly selectionStartColumn: number;
+	public readonly selectionStartColumn: number
 	/**
 	 * The line number on which the selection has ended.
 	 */
-	public readonly positionLineNumber: number;
+	public readonly positionLineNumber: number
 	/**
 	 * The column on `positionLineNumber` where the selection has ended.
 	 */
-	public readonly positionColumn: number;
+	public readonly positionColumn: number
 
-	constructor(selectionStartLineNumber: number, selectionStartColumn: number, positionLineNumber: number, positionColumn: number) {
-		super(selectionStartLineNumber, selectionStartColumn, positionLineNumber, positionColumn);
-		this.selectionStartLineNumber = selectionStartLineNumber;
-		this.selectionStartColumn = selectionStartColumn;
-		this.positionLineNumber = positionLineNumber;
-		this.positionColumn = positionColumn;
+	constructor(
+		selectionStartLineNumber: number,
+		selectionStartColumn: number,
+		positionLineNumber: number,
+		positionColumn: number,
+	) {
+		super(selectionStartLineNumber, selectionStartColumn, positionLineNumber, positionColumn)
+		this.selectionStartLineNumber = selectionStartLineNumber
+		this.selectionStartColumn = selectionStartColumn
+		this.positionLineNumber = positionLineNumber
+		this.positionColumn = positionColumn
 	}
 
 	/**
 	 * Transform to a human-readable representation.
 	 */
 	public override toString(): string {
-		return '[' + this.selectionStartLineNumber + ',' + this.selectionStartColumn + ' -> ' + this.positionLineNumber + ',' + this.positionColumn + ']';
+		return (
+			'[' +
+			this.selectionStartLineNumber +
+			',' +
+			this.selectionStartColumn +
+			' -> ' +
+			this.positionLineNumber +
+			',' +
+			this.positionColumn +
+			']'
+		)
 	}
 
 	/**
 	 * Test if equals other selection.
 	 */
 	public equalsSelection(other: ISelection): boolean {
-		return (
-			Selection.selectionsEqual(this, other)
-		);
+		return Selection.selectionsEqual(this, other)
 	}
 
 	/**
@@ -98,17 +111,20 @@ export class Selection extends Range {
 			a.selectionStartColumn === b.selectionStartColumn &&
 			a.positionLineNumber === b.positionLineNumber &&
 			a.positionColumn === b.positionColumn
-		);
+		)
 	}
 
 	/**
 	 * Get directions (LTR or RTL).
 	 */
 	public getDirection(): SelectionDirection {
-		if (this.selectionStartLineNumber === this.startLineNumber && this.selectionStartColumn === this.startColumn) {
-			return SelectionDirection.LTR;
+		if (
+			this.selectionStartLineNumber === this.startLineNumber &&
+			this.selectionStartColumn === this.startColumn
+		) {
+			return SelectionDirection.LTR
 		}
-		return SelectionDirection.RTL;
+		return SelectionDirection.RTL
 	}
 
 	/**
@@ -116,23 +132,23 @@ export class Selection extends Range {
 	 */
 	public override setEndPosition(endLineNumber: number, endColumn: number): Selection {
 		if (this.getDirection() === SelectionDirection.LTR) {
-			return new Selection(this.startLineNumber, this.startColumn, endLineNumber, endColumn);
+			return new Selection(this.startLineNumber, this.startColumn, endLineNumber, endColumn)
 		}
-		return new Selection(endLineNumber, endColumn, this.startLineNumber, this.startColumn);
+		return new Selection(endLineNumber, endColumn, this.startLineNumber, this.startColumn)
 	}
 
 	/**
 	 * Get the position at `positionLineNumber` and `positionColumn`.
 	 */
 	public getPosition(): Position {
-		return new Position(this.positionLineNumber, this.positionColumn);
+		return new Position(this.positionLineNumber, this.positionColumn)
 	}
 
 	/**
 	 * Get the position at the start of the selection.
-	*/
+	 */
 	public getSelectionStart(): Position {
-		return new Position(this.selectionStartLineNumber, this.selectionStartColumn);
+		return new Position(this.selectionStartLineNumber, this.selectionStartColumn)
 	}
 
 	/**
@@ -140,9 +156,9 @@ export class Selection extends Range {
 	 */
 	public override setStartPosition(startLineNumber: number, startColumn: number): Selection {
 		if (this.getDirection() === SelectionDirection.LTR) {
-			return new Selection(startLineNumber, startColumn, this.endLineNumber, this.endColumn);
+			return new Selection(startLineNumber, startColumn, this.endLineNumber, this.endColumn)
 		}
-		return new Selection(this.endLineNumber, this.endColumn, startLineNumber, startColumn);
+		return new Selection(this.endLineNumber, this.endColumn, startLineNumber, startColumn)
 	}
 
 	// ----
@@ -151,7 +167,7 @@ export class Selection extends Range {
 	 * Create a `Selection` from one or two positions
 	 */
 	public static override fromPositions(start: IPosition, end: IPosition = start): Selection {
-		return new Selection(start.lineNumber, start.column, end.lineNumber, end.column);
+		return new Selection(start.lineNumber, start.column, end.lineNumber, end.column)
 	}
 
 	/**
@@ -159,9 +175,19 @@ export class Selection extends Range {
 	 */
 	public static fromRange(range: Range, direction: SelectionDirection): Selection {
 		if (direction === SelectionDirection.LTR) {
-			return new Selection(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn);
+			return new Selection(
+				range.startLineNumber,
+				range.startColumn,
+				range.endLineNumber,
+				range.endColumn,
+			)
 		} else {
-			return new Selection(range.endLineNumber, range.endColumn, range.startLineNumber, range.startColumn);
+			return new Selection(
+				range.endLineNumber,
+				range.endColumn,
+				range.startLineNumber,
+				range.startColumn,
+			)
 		}
 	}
 
@@ -169,28 +195,33 @@ export class Selection extends Range {
 	 * Create a `Selection` from an `ISelection`.
 	 */
 	public static liftSelection(sel: ISelection): Selection {
-		return new Selection(sel.selectionStartLineNumber, sel.selectionStartColumn, sel.positionLineNumber, sel.positionColumn);
+		return new Selection(
+			sel.selectionStartLineNumber,
+			sel.selectionStartColumn,
+			sel.positionLineNumber,
+			sel.positionColumn,
+		)
 	}
 
 	/**
 	 * `a` equals `b`.
 	 */
 	public static selectionsArrEqual(a: ISelection[], b: ISelection[]): boolean {
-		if (a && !b || !a && b) {
-			return false;
+		if ((a && !b) || (!a && b)) {
+			return false
 		}
 		if (!a && !b) {
-			return true;
+			return true
 		}
 		if (a.length !== b.length) {
-			return false;
+			return false
 		}
 		for (let i = 0, len = a.length; i < len; i++) {
 			if (!this.selectionsEqual(a[i], b[i])) {
-				return false;
+				return false
 			}
 		}
-		return true;
+		return true
 	}
 
 	/**
@@ -198,23 +229,28 @@ export class Selection extends Range {
 	 */
 	public static isISelection(obj: any): obj is ISelection {
 		return (
-			obj
-			&& (typeof obj.selectionStartLineNumber === 'number')
-			&& (typeof obj.selectionStartColumn === 'number')
-			&& (typeof obj.positionLineNumber === 'number')
-			&& (typeof obj.positionColumn === 'number')
-		);
+			obj &&
+			typeof obj.selectionStartLineNumber === 'number' &&
+			typeof obj.selectionStartColumn === 'number' &&
+			typeof obj.positionLineNumber === 'number' &&
+			typeof obj.positionColumn === 'number'
+		)
 	}
 
 	/**
 	 * Create with a direction.
 	 */
-	public static createWithDirection(startLineNumber: number, startColumn: number, endLineNumber: number, endColumn: number, direction: SelectionDirection): Selection {
-
+	public static createWithDirection(
+		startLineNumber: number,
+		startColumn: number,
+		endLineNumber: number,
+		endColumn: number,
+		direction: SelectionDirection,
+	): Selection {
 		if (direction === SelectionDirection.LTR) {
-			return new Selection(startLineNumber, startColumn, endLineNumber, endColumn);
+			return new Selection(startLineNumber, startColumn, endLineNumber, endColumn)
 		}
 
-		return new Selection(endLineNumber, endColumn, startLineNumber, startColumn);
+		return new Selection(endLineNumber, endColumn, startLineNumber, startColumn)
 	}
 }

@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
-
 	// https://github.com/microsoft/vscode/issues/135591 @alexr00
 
 	// export interface FileDecorationProvider {
@@ -18,23 +17,23 @@ declare module 'vscode' {
 		/**
 		 * A very short string that represents this decoration.
 		 */
-		badge?: string | ThemeIcon;
+		badge?: string | ThemeIcon
 
 		/**
 		 * A human-readable tooltip for this decoration.
 		 */
-		tooltip?: string;
+		tooltip?: string
 
 		/**
 		 * The color of this decoration.
 		 */
-		color?: ThemeColor;
+		color?: ThemeColor
 
 		/**
 		 * A flag expressing that this decoration should be
 		 * propagated to its parents.
 		 */
-		propagate?: boolean;
+		propagate?: boolean
 
 		/**
 		 * Creates a new decoration.
@@ -43,6 +42,6 @@ declare module 'vscode' {
 		 * @param tooltip The tooltip of the decoration.
 		 * @param color The color of the decoration.
 		 */
-		constructor(badge?: string | ThemeIcon, tooltip?: string, color?: ThemeColor);
+		constructor(badge?: string | ThemeIcon, tooltip?: string, color?: ThemeColor)
 	}
 }

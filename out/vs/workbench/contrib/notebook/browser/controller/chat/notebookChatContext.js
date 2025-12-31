@@ -1,0 +1,18 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { localize } from '../../../../../../nls.js';
+import { MenuId } from '../../../../../../platform/actions/common/actions.js';
+import { RawContextKey } from '../../../../../../platform/contextkey/common/contextkey.js';
+export const CTX_NOTEBOOK_CELL_CHAT_FOCUSED = new RawContextKey('notebookCellChatFocused', false, localize('notebookCellChatFocused', 'Whether the cell chat editor is focused'));
+export const CTX_NOTEBOOK_CHAT_HAS_ACTIVE_REQUEST = new RawContextKey('notebookChatHasActiveRequest', false, localize('notebookChatHasActiveRequest', 'Whether the cell chat editor has an active request'));
+export const CTX_NOTEBOOK_CHAT_USER_DID_EDIT = new RawContextKey('notebookChatUserDidEdit', false, localize('notebookChatUserDidEdit', 'Whether the user did changes ontop of the notebook cell chat'));
+export const CTX_NOTEBOOK_CHAT_OUTER_FOCUS_POSITION = new RawContextKey('notebookChatOuterFocusPosition', '', localize('notebookChatOuterFocusPosition', 'Whether the focus of the notebook editor is above or below the cell chat'));
+export const MENU_CELL_CHAT_INPUT = MenuId.for('cellChatInput');
+export const MENU_CELL_CHAT_WIDGET = MenuId.for('cellChatWidget');
+export const MENU_CELL_CHAT_WIDGET_STATUS = MenuId.for('cellChatWidget.status');
+export const MENU_CELL_CHAT_WIDGET_FEEDBACK = MenuId.for('cellChatWidget.feedback');
+export const MENU_CELL_CHAT_WIDGET_TOOLBAR = MenuId.for('cellChatWidget.toolbar');
+export const CTX_NOTEBOOK_CHAT_HAS_AGENT = new RawContextKey('notebookChatAgentRegistered', false, localize('notebookChatAgentRegistered', 'Whether a chat agent for notebook is registered'));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibm90ZWJvb2tDaGF0Q29udGV4dC5qcyIsInNvdXJjZVJvb3QiOiJmaWxlOi8vL1VzZXJzL3lhc2hhc25haWR1L0t2YW50Y29kZS92b2lkL3NyYy8iLCJzb3VyY2VzIjpbInZzL3dvcmtiZW5jaC9jb250cmliL25vdGVib29rL2Jyb3dzZXIvY29udHJvbGxlci9jaGF0L25vdGVib29rQ2hhdENvbnRleHQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7OztnR0FHZ0c7QUFFaEcsT0FBTyxFQUFFLFFBQVEsRUFBRSxNQUFNLDBCQUEwQixDQUFBO0FBQ25ELE9BQU8sRUFBRSxNQUFNLEVBQUUsTUFBTSxzREFBc0QsQ0FBQTtBQUM3RSxPQUFPLEVBQUUsYUFBYSxFQUFFLE1BQU0sNERBQTRELENBQUE7QUFFMUYsTUFBTSxDQUFDLE1BQU0sOEJBQThCLEdBQUcsSUFBSSxhQUFhLENBQzlELHlCQUF5QixFQUN6QixLQUFLLEVBQ0wsUUFBUSxDQUFDLHlCQUF5QixFQUFFLHlDQUF5QyxDQUFDLENBQzlFLENBQUE7QUFDRCxNQUFNLENBQUMsTUFBTSxvQ0FBb0MsR0FBRyxJQUFJLGFBQWEsQ0FDcEUsOEJBQThCLEVBQzlCLEtBQUssRUFDTCxRQUFRLENBQUMsOEJBQThCLEVBQUUsb0RBQW9ELENBQUMsQ0FDOUYsQ0FBQTtBQUNELE1BQU0sQ0FBQyxNQUFNLCtCQUErQixHQUFHLElBQUksYUFBYSxDQUMvRCx5QkFBeUIsRUFDekIsS0FBSyxFQUNMLFFBQVEsQ0FDUCx5QkFBeUIsRUFDekIsOERBQThELENBQzlELENBQ0QsQ0FBQTtBQUNELE1BQU0sQ0FBQyxNQUFNLHNDQUFzQyxHQUFHLElBQUksYUFBYSxDQUN0RSxnQ0FBZ0MsRUFDaEMsRUFBRSxFQUNGLFFBQVEsQ0FDUCxnQ0FBZ0MsRUFDaEMsMEVBQTBFLENBQzFFLENBQ0QsQ0FBQTtBQUVELE1BQU0sQ0FBQyxNQUFNLG9CQUFvQixHQUFHLE1BQU0sQ0FBQyxHQUFHLENBQUMsZUFBZSxDQUFDLENBQUE7QUFDL0QsTUFBTSxDQUFDLE1BQU0scUJBQXFCLEdBQUcsTUFBTSxDQUFDLEdBQUcsQ0FBQyxnQkFBZ0IsQ0FBQyxDQUFBO0FBQ2pFLE1BQU0sQ0FBQyxNQUFNLDRCQUE0QixHQUFHLE1BQU0sQ0FBQyxHQUFHLENBQUMsdUJBQXVCLENBQUMsQ0FBQTtBQUMvRSxNQUFNLENBQUMsTUFBTSw4QkFBOEIsR0FBRyxNQUFNLENBQUMsR0FBRyxDQUFDLHlCQUF5QixDQUFDLENBQUE7QUFDbkYsTUFBTSxDQUFDLE1BQU0sNkJBQTZCLEdBQUcsTUFBTSxDQUFDLEdBQUcsQ0FBQyx3QkFBd0IsQ0FBQyxDQUFBO0FBRWpGLE1BQU0sQ0FBQyxNQUFNLDJCQUEyQixHQUFHLElBQUksYUFBYSxDQUMzRCw2QkFBNkIsRUFDN0IsS0FBSyxFQUNMLFFBQVEsQ0FBQyw2QkFBNkIsRUFBRSxpREFBaUQsQ0FBQyxDQUMxRixDQUFBIn0=

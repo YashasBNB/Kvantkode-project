@@ -3,56 +3,59 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { addDisposableListener } from './dom.js';
-import { Disposable } from '../common/lifecycle.js';
-import { Mimes } from '../common/mime.js';
+import { addDisposableListener } from './dom.js'
+import { Disposable } from '../common/lifecycle.js'
+import { Mimes } from '../common/mime.js'
 
 /**
  * A helper that will execute a provided function when the provided HTMLElement receives
  *  dragover event for 800ms. If the drag is aborted before, the callback will not be triggered.
  */
 export class DelayedDragHandler extends Disposable {
-	private timeout: any;
+	private timeout: any
 
 	constructor(container: HTMLElement, callback: () => void) {
-		super();
+		super()
 
-		this._register(addDisposableListener(container, 'dragover', e => {
-			e.preventDefault(); // needed so that the drop event fires (https://stackoverflow.com/questions/21339924/drop-event-not-firing-in-chrome)
+		this._register(
+			addDisposableListener(container, 'dragover', (e) => {
+				e.preventDefault() // needed so that the drop event fires (https://stackoverflow.com/questions/21339924/drop-event-not-firing-in-chrome)
 
-			if (!this.timeout) {
-				this.timeout = setTimeout(() => {
-					callback();
+				if (!this.timeout) {
+					this.timeout = setTimeout(() => {
+						callback()
 
-					this.timeout = null;
-				}, 800);
-			}
-		}));
+						this.timeout = null
+					}, 800)
+				}
+			}),
+		)
 
-		['dragleave', 'drop', 'dragend'].forEach(type => {
-			this._register(addDisposableListener(container, type, () => {
-				this.clearDragTimeout();
-			}));
-		});
+		;['dragleave', 'drop', 'dragend'].forEach((type) => {
+			this._register(
+				addDisposableListener(container, type, () => {
+					this.clearDragTimeout()
+				}),
+			)
+		})
 	}
 
 	private clearDragTimeout(): void {
 		if (this.timeout) {
-			clearTimeout(this.timeout);
-			this.timeout = null;
+			clearTimeout(this.timeout)
+			this.timeout = null
 		}
 	}
 
 	override dispose(): void {
-		super.dispose();
+		super.dispose()
 
-		this.clearDragTimeout();
+		this.clearDragTimeout()
 	}
 }
 
 // Common data transfers
 export const DataTransfers = {
-
 	/**
 	 * Application specific resource transfer type
 	 */
@@ -79,9 +82,9 @@ export const DataTransfers = {
 	 * This is needed to work around https://bugs.chromium.org/p/chromium/issues/detail?id=239745.
 	 */
 	INTERNAL_URI_LIST: 'application/vnd.code.uri-list',
-};
+}
 
 export interface IDragAndDropData {
-	update(dataTransfer: DataTransfer): void;
-	getData(): unknown;
+	update(dataTransfer: DataTransfer): void
+	getData(): unknown
 }

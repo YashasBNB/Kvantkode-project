@@ -30,4 +30,4 @@ export const defaultTerminalSuggestCommandsToSkipShell = [
 	TerminalSuggestCommandId.RequestCompletions,
 	TerminalSuggestCommandId.ToggleDetails,
 	TerminalSuggestCommandId.ToggleDetailsFocus,
-];
+]

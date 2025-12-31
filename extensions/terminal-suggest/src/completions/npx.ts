@@ -13,16 +13,14 @@ const completionSpec: Fig.Spec = {
 			script: [
 				'bash',
 				'-c',
-				'until [[ -d node_modules/ ]] || [[ $PWD = \'/\' ]]; do cd ..; done; ls -1 node_modules/.bin/',
+				"until [[ -d node_modules/ ]] || [[ $PWD = '/' ]]; do cd ..; done; ls -1 node_modules/.bin/",
 			],
 			postProcess: function (out) {
-				return out
-					.split('\n')
-					.map((name) => ({
-						name,
-						icon: 'fig://icon?type=command',
-						loadSpec: name,
-					}));
+				return out.split('\n').map((name) => ({
+					name,
+					icon: 'fig://icon?type=command',
+					loadSpec: name,
+				}))
 			},
 		},
 		isOptional: true,
@@ -105,8 +103,7 @@ const completionSpec: Fig.Spec = {
 				],
 			},
 			name: '--shell-auto-fallback',
-			description:
-				'Generate shell code to use npx as the "command not found" fallback',
+			description: 'Generate shell code to use npx as the "command not found" fallback',
 		},
 		{
 			name: '--ignore-existing',
@@ -115,8 +112,7 @@ const completionSpec: Fig.Spec = {
 		},
 		{
 			name: ['--quiet', '-q'],
-			description:
-				'Suppress output from npx itself. Subcommands will not be affected',
+			description: 'Suppress output from npx itself. Subcommands will not be affected',
 		},
 		{
 			name: '--npm',
@@ -140,6 +136,6 @@ const completionSpec: Fig.Spec = {
 			name: ['--help', '-h'],
 		},
 	],
-};
+}
 
-export default completionSpec;
+export default completionSpec

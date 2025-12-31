@@ -3,85 +3,92 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { IProductService } from '../../product/common/productService.js';
-import { ExtensionGalleryResourceType, Flag, IExtensionGalleryManifest, IExtensionGalleryManifestService } from './extensionGalleryManifest.js';
-import { FilterType, SortBy } from './extensionManagement.js';
+import { Event } from '../../../base/common/event.js'
+import { Disposable } from '../../../base/common/lifecycle.js'
+import { IProductService } from '../../product/common/productService.js'
+import {
+	ExtensionGalleryResourceType,
+	Flag,
+	IExtensionGalleryManifest,
+	IExtensionGalleryManifestService,
+} from './extensionGalleryManifest.js'
+import { FilterType, SortBy } from './extensionManagement.js'
 
 type ExtensionGalleryConfig = {
-	readonly serviceUrl: string;
-	readonly itemUrl: string;
-	readonly publisherUrl: string;
-	readonly resourceUrlTemplate: string;
-	readonly extensionUrlTemplate: string;
-	readonly controlUrl: string;
-	readonly nlsBaseUrl: string;
-};
+	readonly serviceUrl: string
+	readonly itemUrl: string
+	readonly publisherUrl: string
+	readonly resourceUrlTemplate: string
+	readonly extensionUrlTemplate: string
+	readonly controlUrl: string
+	readonly nlsBaseUrl: string
+}
 
-export class ExtensionGalleryManifestService extends Disposable implements IExtensionGalleryManifestService {
+export class ExtensionGalleryManifestService
+	extends Disposable
+	implements IExtensionGalleryManifestService
+{
+	readonly _serviceBrand: undefined
+	readonly onDidChangeExtensionGalleryManifest = Event.None
 
-	readonly _serviceBrand: undefined;
-	readonly onDidChangeExtensionGalleryManifest = Event.None;
-
-	constructor(
-		@IProductService protected readonly productService: IProductService,
-	) {
-		super();
+	constructor(@IProductService protected readonly productService: IProductService) {
+		super()
 	}
 
 	isEnabled(): boolean {
-		return !!this.productService.extensionsGallery?.serviceUrl;
+		return !!this.productService.extensionsGallery?.serviceUrl
 	}
 
 	async getExtensionGalleryManifest(): Promise<IExtensionGalleryManifest | null> {
-		const extensionsGallery = this.productService.extensionsGallery as ExtensionGalleryConfig | undefined;
+		const extensionsGallery = this.productService.extensionsGallery as
+			| ExtensionGalleryConfig
+			| undefined
 		if (!extensionsGallery?.serviceUrl) {
-			return null;
+			return null
 		}
 
 		const resources = [
 			{
 				id: `${extensionsGallery.serviceUrl}/extensionquery`,
-				type: ExtensionGalleryResourceType.ExtensionQueryService
+				type: ExtensionGalleryResourceType.ExtensionQueryService,
 			},
 			{
 				id: `${extensionsGallery.serviceUrl}/vscode/{publisher}/{name}/latest`,
-				type: ExtensionGalleryResourceType.ExtensionLatestVersionUri
+				type: ExtensionGalleryResourceType.ExtensionLatestVersionUri,
 			},
 			{
 				id: `${extensionsGallery.serviceUrl}/publishers/{publisher}/extensions/{name}/{version}/stats?statType={statTypeName}`,
-				type: ExtensionGalleryResourceType.ExtensionStatisticsUri
+				type: ExtensionGalleryResourceType.ExtensionStatisticsUri,
 			},
 			{
 				id: `${extensionsGallery.serviceUrl}/itemName/{publisher}.{name}/version/{version}/statType/{statTypeValue}/vscodewebextension`,
-				type: ExtensionGalleryResourceType.WebExtensionStatisticsUri
+				type: ExtensionGalleryResourceType.WebExtensionStatisticsUri,
 			},
-		];
+		]
 
 		if (extensionsGallery.publisherUrl) {
 			resources.push({
 				id: `${extensionsGallery.publisherUrl}/{publisher}`,
-				type: ExtensionGalleryResourceType.PublisherViewUri
-			});
+				type: ExtensionGalleryResourceType.PublisherViewUri,
+			})
 		}
 
 		if (extensionsGallery.itemUrl) {
 			resources.push({
 				id: `${extensionsGallery.itemUrl}/?itemName={publisher}.{name}`,
-				type: ExtensionGalleryResourceType.ExtensionDetailsViewUri
-			});
+				type: ExtensionGalleryResourceType.ExtensionDetailsViewUri,
+			})
 			resources.push({
 				id: `${extensionsGallery.itemUrl}/?itemName={publisher}.{name}&ssr=false#review-details`,
-				type: ExtensionGalleryResourceType.ExtensionRatingViewUri
-			});
+				type: ExtensionGalleryResourceType.ExtensionRatingViewUri,
+			})
 		}
 
 		if (extensionsGallery.resourceUrlTemplate) {
 			resources.push({
 				id: extensionsGallery.resourceUrlTemplate,
-				type: ExtensionGalleryResourceType.ExtensionResourceUri
-			});
+				type: ExtensionGalleryResourceType.ExtensionResourceUri,
+			})
 		}
 
 		const filtering = [
@@ -117,7 +124,7 @@ export class ExtensionGalleryManifestService extends Disposable implements IExte
 				name: FilterType.ExcludeWithFlags,
 				value: 12,
 			},
-		];
+		]
 
 		const sorting = [
 			{
@@ -152,7 +159,7 @@ export class ExtensionGalleryManifestService extends Disposable implements IExte
 				name: SortBy.WeightedRating,
 				value: 12,
 			},
-		];
+		]
 
 		const flags = [
 			{
@@ -211,7 +218,7 @@ export class ExtensionGalleryManifestService extends Disposable implements IExte
 				name: Flag.IncludeLatestPrereleaseAndStableVersionOnly,
 				value: 0x10000,
 			},
-		];
+		]
 
 		return {
 			version: '',
@@ -224,8 +231,8 @@ export class ExtensionGalleryManifestService extends Disposable implements IExte
 				},
 				signing: {
 					allRepositorySigned: true,
-				}
-			}
-		};
+				},
+			},
+		}
 	}
 }

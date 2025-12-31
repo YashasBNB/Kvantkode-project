@@ -1,0 +1,13 @@
+[Unit]
+Description=Void weekly Python dependency update (user)
+
+[Service]
+Type=oneshot
+Environment=PY_TRADING_PATH=%h/Kvantcode/python
+Environment=UPDATE_IF_OLD=1
+# Use bash wrapper that calls the Node updater
+ExecStart=/usr/bin/env bash /Users/yashasnaidu/Kvantcode/void/scripts/update-python-weekly.sh
+WorkingDirectory=/Users/yashasnaidu/Kvantcode/void
+
+[Install]
+WantedBy=default.target

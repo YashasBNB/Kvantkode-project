@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { checkWindows, execAsync, copyright } from './terminalScriptHelpers';
+import * as fs from 'fs/promises'
+import * as path from 'path'
+import { checkWindows, execAsync, copyright } from './terminalScriptHelpers'
 
-checkWindows();
+checkWindows()
 
-const latestZshVersion = 5.9;
+const latestZshVersion = 5.9
 
 const shortDescriptions: Map<string, string> = new Map([
 	['.', 'Source a file'],
@@ -119,104 +119,114 @@ const shortDescriptions: Map<string, string> = new Map([
 	['zsocket', 'Zsh socket interface'],
 	['zstyle', 'Define styles'],
 	['ztcp', 'Manipulate TCP sockets'],
-]);
+])
 
 interface ICommandDetails {
-	description: string;
-	args: string | undefined;
-	shortDescription?: string;
+	description: string
+	args: string | undefined
+	shortDescription?: string
 }
 
-let zshBuiltinsCommandDescriptionsCache = new Map<string, ICommandDetails>();
+let zshBuiltinsCommandDescriptionsCache = new Map<string, ICommandDetails>()
 
 async function createCommandDescriptionsCache(): Promise<void> {
-	const cachedCommandDescriptions: Map<string, { shortDescription?: string; description: string; args: string | undefined }> = new Map();
-	let output = '';
-	const zshVersionOutput = await execAsync('zsh --version').then(r => r.stdout);
-	const zshVersionMatch = zshVersionOutput.match(/zsh (\d+\.\d+)/);
+	const cachedCommandDescriptions: Map<
+		string,
+		{ shortDescription?: string; description: string; args: string | undefined }
+	> = new Map()
+	let output = ''
+	const zshVersionOutput = await execAsync('zsh --version').then((r) => r.stdout)
+	const zshVersionMatch = zshVersionOutput.match(/zsh (\d+\.\d+)/)
 	if (!zshVersionMatch) {
-		console.error('\x1b[31mFailed to determine zsh version\x1b[0m');
-		process.exit(1);
+		console.error('\x1b[31mFailed to determine zsh version\x1b[0m')
+		process.exit(1)
 	}
-	const zshVersion = parseFloat(zshVersionMatch[1]);
+	const zshVersion = parseFloat(zshVersionMatch[1])
 	if (zshVersion < latestZshVersion) {
-		console.error(`\x1b[31mZsh version must be ${latestZshVersion} or higher\x1b[0m`);
-		process.exit(1);
+		console.error(`\x1b[31mZsh version must be ${latestZshVersion} or higher\x1b[0m`)
+		process.exit(1)
 	}
 	try {
-		output = await execAsync('pandoc --from man --to markdown --wrap=none < $(man -w zshbuiltins)').then(r => r.stdout);
-	} catch {
-	}
+		output = await execAsync(
+			'pandoc --from man --to markdown --wrap=none < $(man -w zshbuiltins)',
+		).then((r) => r.stdout)
+	} catch {}
 
-	const commands: Map<string, string[]> = new Map();
-	const commandRegex = /^\*\*(?<command>[a-z\.:]+)\*\*(?:\s\*.+\*)?(?:\s\\\[.+\\\])?$/;
+	const commands: Map<string, string[]> = new Map()
+	const commandRegex = /^\*\*(?<command>[a-z\.:]+)\*\*(?:\s\*.+\*)?(?:\s\\\[.+\\\])?$/
 	if (output) {
-		const lines = output.split('\n');
-		let currentCommand: string | undefined;
-		let currentCommandStart = 0;
-		let seenOutput = false;
-		let i = 0;
+		const lines = output.split('\n')
+		let currentCommand: string | undefined
+		let currentCommandStart = 0
+		let seenOutput = false
+		let i = 0
 		for (; i < lines.length; i++) {
 			if (!currentCommand || seenOutput) {
-				const match = lines[i].match(commandRegex);
+				const match = lines[i].match(commandRegex)
 				if (match?.groups?.command) {
 					if (currentCommand) {
-						commands.set(currentCommand, lines.slice(currentCommandStart, i));
+						commands.set(currentCommand, lines.slice(currentCommandStart, i))
 					}
-					currentCommand = match.groups.command;
-					currentCommandStart = i;
-					seenOutput = false;
+					currentCommand = match.groups.command
+					currentCommandStart = i
+					seenOutput = false
 				}
 			}
 			if (!currentCommand) {
-				continue;
+				continue
 			}
 			// There may be several examples of usage
 			if (!seenOutput) {
-				seenOutput = lines[i].length > 0 && !lines[i].match(commandRegex);
+				seenOutput = lines[i].length > 0 && !lines[i].match(commandRegex)
 			}
 		}
 		if (currentCommand) {
-			commands.set(currentCommand, lines.slice(currentCommandStart, i - 1));
+			commands.set(currentCommand, lines.slice(currentCommandStart, i - 1))
 		}
 	}
 
 	if (commands.size === 0) {
-		console.error('\x1b[31mFailed to parse command descriptions\x1b[30m');
-		process.exit(1);
+		console.error('\x1b[31mFailed to parse command descriptions\x1b[30m')
+		process.exit(1)
 	}
 
 	for (const [command, lines] of commands) {
-		const shortDescription = shortDescriptions.get(command);
-		let argsEnd = 0;
+		const shortDescription = shortDescriptions.get(command)
+		let argsEnd = 0
 		try {
 			while (true) {
-				const line = lines[++argsEnd];
+				const line = lines[++argsEnd]
 				if (line.trim().length > 0 && !line.match(commandRegex)) {
-					break;
+					break
 				}
 			}
 		} catch (e) {
-			console.log(e);
+			console.log(e)
 		}
-		const formattedArgs = lines.slice(0, argsEnd - 1).join('\n');
-		const args = (await execAsync(`pandoc --from markdown --to plain <<< "${formattedArgs}"`)).stdout.trim();
-		const description = lines.slice(argsEnd).map(e => formatLineAsMarkdown(e)).join('\n').trim();
+		const formattedArgs = lines.slice(0, argsEnd - 1).join('\n')
+		const args = (
+			await execAsync(`pandoc --from markdown --to plain <<< "${formattedArgs}"`)
+		).stdout.trim()
+		const description = lines
+			.slice(argsEnd)
+			.map((e) => formatLineAsMarkdown(e))
+			.join('\n')
+			.trim()
 		if (shortDescription) {
 			cachedCommandDescriptions.set(command, {
 				shortDescription,
 				description,
-				args
-			});
+				args,
+			})
 		} else {
 			cachedCommandDescriptions.set(command, {
 				description,
-				args
-			});
+				args,
+			})
 		}
 	}
 
-	zshBuiltinsCommandDescriptionsCache = cachedCommandDescriptions;
+	zshBuiltinsCommandDescriptionsCache = cachedCommandDescriptions
 }
 
 function formatLineAsMarkdown(text: string): string {
@@ -224,34 +234,46 @@ function formatLineAsMarkdown(text: string): string {
 	// them to standard markdown `code` (backtick, backtick). This doesn't attempt to remove
 	// formatting inside the code blocks. We probably need to use the original .troff format to do
 	// this
-	const formattedText = text.replace(/\\`([^']+)\\'/g, '`$1`');
-	return formattedText;
+	const formattedText = text.replace(/\\`([^']+)\\'/g, '`$1`')
+	return formattedText
 }
 
 const main = async () => {
 	try {
-		await createCommandDescriptionsCache();
-		console.log('created command descriptions cache with ', zshBuiltinsCommandDescriptionsCache.size, 'entries');
+		await createCommandDescriptionsCache()
+		console.log(
+			'created command descriptions cache with ',
+			zshBuiltinsCommandDescriptionsCache.size,
+			'entries',
+		)
 
-		const missingShortDescription: string[] = [];
+		const missingShortDescription: string[] = []
 		for (const [command, entry] of zshBuiltinsCommandDescriptionsCache.entries()) {
 			if (entry.shortDescription === undefined) {
-				missingShortDescription.push(command);
+				missingShortDescription.push(command)
 			}
 		}
 		if (missingShortDescription.length > 0) {
-			console.log('\x1b[31mmissing short description for commands:\n' + missingShortDescription.join('\n') + '\x1b[0m');
+			console.log(
+				'\x1b[31mmissing short description for commands:\n' +
+					missingShortDescription.join('\n') +
+					'\x1b[0m',
+			)
 		}
 
 		// Save the cache to a TypeScript file
-		const cacheFilePath = path.join(__dirname, '../src/shell/zshBuiltinsCache.ts');
-		const cacheObject = Object.fromEntries(zshBuiltinsCommandDescriptionsCache);
-		const tsContent = `${copyright}\n\nexport const zshBuiltinsCommandDescriptionsCache = ${JSON.stringify(cacheObject, null, 2)} as const;`;
-		await fs.writeFile(cacheFilePath, tsContent, 'utf8');
-		console.log('saved command descriptions cache to zshBuiltinsCache.ts with ', Object.keys(cacheObject).length, 'entries');
+		const cacheFilePath = path.join(__dirname, '../src/shell/zshBuiltinsCache.ts')
+		const cacheObject = Object.fromEntries(zshBuiltinsCommandDescriptionsCache)
+		const tsContent = `${copyright}\n\nexport const zshBuiltinsCommandDescriptionsCache = ${JSON.stringify(cacheObject, null, 2)} as const;`
+		await fs.writeFile(cacheFilePath, tsContent, 'utf8')
+		console.log(
+			'saved command descriptions cache to zshBuiltinsCache.ts with ',
+			Object.keys(cacheObject).length,
+			'entries',
+		)
 	} catch (error) {
-		console.error('Error:', error);
+		console.error('Error:', error)
 	}
-};
+}
 
-main();
+main()

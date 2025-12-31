@@ -1,40 +1,39 @@
 const completionSpec: Fig.Spec = {
-	name: "mv",
-	description: "Move & rename files and folders",
+	name: 'mv',
+	description: 'Move & rename files and folders',
 	args: [
 		{
-			name: "source",
+			name: 'source',
 			isVariadic: true,
-			template: ["filepaths", "folders"],
+			template: ['filepaths', 'folders'],
 		},
 		{
-			name: "target",
-			template: ["filepaths", "folders"],
+			name: 'target',
+			template: ['filepaths', 'folders'],
 		},
 	],
 	options: [
 		{
-			name: "-f",
+			name: '-f',
+			description: 'Do not prompt for confirmation before overwriting the destination path',
+			exclusiveOn: ['-i', '-n'],
+		},
+		{
+			name: '-i',
 			description:
-				"Do not prompt for confirmation before overwriting the destination path",
-			exclusiveOn: ["-i", "-n"],
+				'Cause mv to write a prompt to standard error before moving a file that would overwrite an existing file',
+			exclusiveOn: ['-f', '-n'],
 		},
 		{
-			name: "-i",
-			description:
-				"Cause mv to write a prompt to standard error before moving a file that would overwrite an existing file",
-			exclusiveOn: ["-f", "-n"],
+			name: '-n',
+			description: 'Do not overwrite existing file',
+			exclusiveOn: ['-f', '-i'],
 		},
 		{
-			name: "-n",
-			description: "Do not overwrite existing file",
-			exclusiveOn: ["-f", "-i"],
-		},
-		{
-			name: "-v",
-			description: "Cause mv to be verbose, showing files after they are moved",
+			name: '-v',
+			description: 'Cause mv to be verbose, showing files after they are moved',
 		},
 	],
-};
+}
 
-export default completionSpec;
+export default completionSpec

@@ -5,9 +5,9 @@
 
 //@ts-check
 
-'use strict';
+'use strict'
 
-const withDefaults = require('../shared.webpack.config');
+const withDefaults = require('../shared.webpack.config')
 
 module.exports = withDefaults({
 	context: __dirname,
@@ -19,6 +19,6 @@ module.exports = withDefaults({
 	},
 	resolve: {
 		mainFields: ['module', 'main'],
-		extensions: ['.ts', '.js'] // support ts-files and js-files
-	}
-});
+		extensions: ['.ts', '.js'], // support ts-files and js-files
+	},
+})

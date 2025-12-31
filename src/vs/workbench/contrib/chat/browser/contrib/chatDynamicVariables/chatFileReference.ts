@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../../../base/common/uri.js';
-import { assert } from '../../../../../../base/common/assert.js';
-import { IDynamicVariable } from '../../../common/chatVariables.js';
-import { IRange } from '../../../../../../editor/common/core/range.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { FilePromptParser } from '../../../common/promptSyntax/parsers/filePromptParser.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
+import { URI } from '../../../../../../base/common/uri.js'
+import { assert } from '../../../../../../base/common/assert.js'
+import { IDynamicVariable } from '../../../common/chatVariables.js'
+import { IRange } from '../../../../../../editor/common/core/range.js'
+import { ILogService } from '../../../../../../platform/log/common/log.js'
+import { FilePromptParser } from '../../../common/promptSyntax/parsers/filePromptParser.js'
+import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js'
 
 /**
  * A wrapper class for an `IDynamicVariable` object that that adds functionality
@@ -25,14 +25,11 @@ export class ChatFileReference extends FilePromptParser implements IDynamicVaria
 		@IInstantiationService initService: IInstantiationService,
 		@ILogService logService: ILogService,
 	) {
-		const { data } = reference;
+		const { data } = reference
 
-		assert(
-			data instanceof URI,
-			`Variable data must be an URI, got '${data}'.`,
-		);
+		assert(data instanceof URI, `Variable data must be an URI, got '${data}'.`)
 
-		super(data, [], initService, logService);
+		super(data, [], initService, logService)
 	}
 
 	/**
@@ -42,38 +39,38 @@ export class ChatFileReference extends FilePromptParser implements IDynamicVaria
 	 */
 
 	public get id() {
-		return this.reference.id;
+		return this.reference.id
 	}
 
 	public get range() {
-		return this.reference.range;
+		return this.reference.range
 	}
 
 	public set range(range: IRange) {
-		this.reference.range = range;
+		this.reference.range = range
 	}
 
 	public get data(): URI {
-		return this.uri;
+		return this.uri
 	}
 
 	public get prefix() {
-		return this.reference.prefix;
+		return this.reference.prefix
 	}
 
 	public get isFile() {
-		return this.reference.isFile;
+		return this.reference.isFile
 	}
 
 	public get fullName() {
-		return this.reference.fullName;
+		return this.reference.fullName
 	}
 
 	public get icon() {
-		return this.reference.icon;
+		return this.reference.icon
 	}
 
 	public get modelDescription() {
-		return this.reference.modelDescription;
+		return this.reference.modelDescription
 	}
 }

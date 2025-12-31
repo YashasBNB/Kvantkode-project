@@ -3,123 +3,140 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { RemoteAgentConnectionContext, IRemoteAgentEnvironment } from '../../../../platform/remote/common/remoteAgentEnvironment.js';
-import { IChannel, IServerChannel } from '../../../../base/parts/ipc/common/ipc.js';
-import { IDiagnosticInfoOptions, IDiagnosticInfo } from '../../../../platform/diagnostics/common/diagnostics.js';
-import { Event } from '../../../../base/common/event.js';
-import { PersistentConnectionEvent } from '../../../../platform/remote/common/remoteAgentConnection.js';
-import { ITelemetryData, TelemetryLevel } from '../../../../platform/telemetry/common/telemetry.js';
-import { timeout } from '../../../../base/common/async.js';
+import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js'
+import {
+	RemoteAgentConnectionContext,
+	IRemoteAgentEnvironment,
+} from '../../../../platform/remote/common/remoteAgentEnvironment.js'
+import { IChannel, IServerChannel } from '../../../../base/parts/ipc/common/ipc.js'
+import {
+	IDiagnosticInfoOptions,
+	IDiagnosticInfo,
+} from '../../../../platform/diagnostics/common/diagnostics.js'
+import { Event } from '../../../../base/common/event.js'
+import { PersistentConnectionEvent } from '../../../../platform/remote/common/remoteAgentConnection.js'
+import { ITelemetryData, TelemetryLevel } from '../../../../platform/telemetry/common/telemetry.js'
+import { timeout } from '../../../../base/common/async.js'
 
-export const IRemoteAgentService = createDecorator<IRemoteAgentService>('remoteAgentService');
+export const IRemoteAgentService = createDecorator<IRemoteAgentService>('remoteAgentService')
 
 export interface IRemoteAgentService {
-	readonly _serviceBrand: undefined;
+	readonly _serviceBrand: undefined
 
-	getConnection(): IRemoteAgentConnection | null;
+	getConnection(): IRemoteAgentConnection | null
 	/**
 	 * Get the remote environment. In case of an error, returns `null`.
 	 */
-	getEnvironment(): Promise<IRemoteAgentEnvironment | null>;
+	getEnvironment(): Promise<IRemoteAgentEnvironment | null>
 	/**
 	 * Get the remote environment. Can return an error.
 	 */
-	getRawEnvironment(): Promise<IRemoteAgentEnvironment | null>;
+	getRawEnvironment(): Promise<IRemoteAgentEnvironment | null>
 	/**
 	 * Get exit information for a remote extension host.
 	 */
-	getExtensionHostExitInfo(reconnectionToken: string): Promise<IExtensionHostExitInfo | null>;
+	getExtensionHostExitInfo(reconnectionToken: string): Promise<IExtensionHostExitInfo | null>
 
 	/**
 	 * Gets the round trip time from the remote extension host. Note that this
 	 * may be delayed if the extension host is busy.
 	 */
-	getRoundTripTime(): Promise<number | undefined>;
+	getRoundTripTime(): Promise<number | undefined>
 
 	/**
 	 * Gracefully ends the current connection, if any.
 	 */
-	endConnection(): Promise<void>;
+	endConnection(): Promise<void>
 
-	getDiagnosticInfo(options: IDiagnosticInfoOptions): Promise<IDiagnosticInfo | undefined>;
-	updateTelemetryLevel(telemetryLevel: TelemetryLevel): Promise<void>;
-	logTelemetry(eventName: string, data?: ITelemetryData): Promise<void>;
-	flushTelemetry(): Promise<void>;
+	getDiagnosticInfo(options: IDiagnosticInfoOptions): Promise<IDiagnosticInfo | undefined>
+	updateTelemetryLevel(telemetryLevel: TelemetryLevel): Promise<void>
+	logTelemetry(eventName: string, data?: ITelemetryData): Promise<void>
+	flushTelemetry(): Promise<void>
 }
 
 export interface IExtensionHostExitInfo {
-	code: number;
-	signal: string;
+	code: number
+	signal: string
 }
 
 export interface IRemoteAgentConnection {
-	readonly remoteAuthority: string;
+	readonly remoteAuthority: string
 
-	readonly onReconnecting: Event<void>;
-	readonly onDidStateChange: Event<PersistentConnectionEvent>;
+	readonly onReconnecting: Event<void>
+	readonly onDidStateChange: Event<PersistentConnectionEvent>
 
-	end(): Promise<void>;
-	dispose(): void;
-	getChannel<T extends IChannel>(channelName: string): T;
-	withChannel<T extends IChannel, R>(channelName: string, callback: (channel: T) => Promise<R>): Promise<R>;
-	registerChannel<T extends IServerChannel<RemoteAgentConnectionContext>>(channelName: string, channel: T): void;
-	getInitialConnectionTimeMs(): Promise<number>;
+	end(): Promise<void>
+	dispose(): void
+	getChannel<T extends IChannel>(channelName: string): T
+	withChannel<T extends IChannel, R>(
+		channelName: string,
+		callback: (channel: T) => Promise<R>,
+	): Promise<R>
+	registerChannel<T extends IServerChannel<RemoteAgentConnectionContext>>(
+		channelName: string,
+		channel: T,
+	): void
+	getInitialConnectionTimeMs(): Promise<number>
 }
 
 export interface IRemoteConnectionLatencyMeasurement {
+	readonly initial: number | undefined
+	readonly current: number
+	readonly average: number
 
-	readonly initial: number | undefined;
-	readonly current: number;
-	readonly average: number;
-
-	readonly high: boolean;
+	readonly high: boolean
 }
 
-export const remoteConnectionLatencyMeasurer = new class {
+export const remoteConnectionLatencyMeasurer = new (class {
+	readonly maxSampleCount = 5
+	readonly sampleDelay = 2000
 
-	readonly maxSampleCount = 5;
-	readonly sampleDelay = 2000;
+	readonly initial: number[] = []
+	readonly maxInitialCount = 3
 
-	readonly initial: number[] = [];
-	readonly maxInitialCount = 3;
+	readonly average: number[] = []
+	readonly maxAverageCount = 100
 
-	readonly average: number[] = [];
-	readonly maxAverageCount = 100;
+	readonly highLatencyMultiple = 2
+	readonly highLatencyMinThreshold = 500
+	readonly highLatencyMaxThreshold = 1500
 
-	readonly highLatencyMultiple = 2;
-	readonly highLatencyMinThreshold = 500;
-	readonly highLatencyMaxThreshold = 1500;
+	lastMeasurement: IRemoteConnectionLatencyMeasurement | undefined = undefined
+	get latency() {
+		return this.lastMeasurement
+	}
 
-	lastMeasurement: IRemoteConnectionLatencyMeasurement | undefined = undefined;
-	get latency() { return this.lastMeasurement; }
-
-	async measure(remoteAgentService: IRemoteAgentService): Promise<IRemoteConnectionLatencyMeasurement | undefined> {
-		let currentLatency = Infinity;
+	async measure(
+		remoteAgentService: IRemoteAgentService,
+	): Promise<IRemoteConnectionLatencyMeasurement | undefined> {
+		let currentLatency = Infinity
 
 		// Measure up to samples count
 		for (let i = 0; i < this.maxSampleCount; i++) {
-			const rtt = await remoteAgentService.getRoundTripTime();
+			const rtt = await remoteAgentService.getRoundTripTime()
 			if (rtt === undefined) {
-				return undefined;
+				return undefined
 			}
 
-			currentLatency = Math.min(currentLatency, rtt / 2 /* we want just one way, not round trip time */);
-			await timeout(this.sampleDelay);
+			currentLatency = Math.min(
+				currentLatency,
+				rtt / 2 /* we want just one way, not round trip time */,
+			)
+			await timeout(this.sampleDelay)
 		}
 
 		// Keep track of average latency
-		this.average.push(currentLatency);
+		this.average.push(currentLatency)
 		if (this.average.length > this.maxAverageCount) {
-			this.average.shift();
+			this.average.shift()
 		}
 
 		// Keep track of initial latency
-		let initialLatency: number | undefined = undefined;
+		let initialLatency: number | undefined = undefined
 		if (this.initial.length < this.maxInitialCount) {
-			this.initial.push(currentLatency);
+			this.initial.push(currentLatency)
 		} else {
-			initialLatency = this.initial.reduce((sum, value) => sum + value, 0) / this.initial.length;
+			initialLatency = this.initial.reduce((sum, value) => sum + value, 0) / this.initial.length
 		}
 
 		// Remember as last measurement
@@ -128,7 +145,6 @@ export const remoteConnectionLatencyMeasurer = new class {
 			current: currentLatency,
 			average: this.average.reduce((sum, value) => sum + value, 0) / this.average.length,
 			high: (() => {
-
 				// based on the initial, average and current latency, try to decide
 				// if the connection has high latency
 				// Some rules:
@@ -138,21 +154,24 @@ export const remoteConnectionLatencyMeasurer = new class {
 				// - but not if the latency is actually above highLatencyMaxThreshold
 
 				if (typeof initialLatency === 'undefined') {
-					return false;
+					return false
 				}
 
 				if (currentLatency > this.highLatencyMaxThreshold) {
-					return true;
+					return true
 				}
 
-				if (currentLatency > this.highLatencyMinThreshold && currentLatency > initialLatency * this.highLatencyMultiple) {
-					return true;
+				if (
+					currentLatency > this.highLatencyMinThreshold &&
+					currentLatency > initialLatency * this.highLatencyMultiple
+				) {
+					return true
 				}
 
-				return false;
-			})()
-		};
+				return false
+			})(),
+		}
 
-		return this.lastMeasurement;
+		return this.lastMeasurement
 	}
-};
+})()

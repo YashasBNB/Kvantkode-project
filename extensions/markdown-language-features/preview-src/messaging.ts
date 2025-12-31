@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SettingsManager } from './settings';
-import type { FromWebviewMessage } from '../types/previewMessaging';
+import { SettingsManager } from './settings'
+import type { FromWebviewMessage } from '../types/previewMessaging'
 
 export interface MessagePoster {
 	/**
@@ -12,22 +12,24 @@ export interface MessagePoster {
 	 */
 	postMessage<T extends FromWebviewMessage.Type>(
 		type: T['type'],
-		body: Omit<T, 'source' | 'type'>
-	): void;
+		body: Omit<T, 'source' | 'type'>,
+	): void
 }
 
-export const createPosterForVsCode = (vscode: any, settingsManager: SettingsManager): MessagePoster => {
+export const createPosterForVsCode = (
+	vscode: any,
+	settingsManager: SettingsManager,
+): MessagePoster => {
 	return {
 		postMessage<T extends FromWebviewMessage.Type>(
 			type: T['type'],
-			body: Omit<T, 'source' | 'type'>
+			body: Omit<T, 'source' | 'type'>,
 		): void {
 			vscode.postMessage({
 				type,
 				source: settingsManager.settings!.source,
-				...body
-			});
-		}
-	};
-};
-
+				...body,
+			})
+		},
+	}
+}

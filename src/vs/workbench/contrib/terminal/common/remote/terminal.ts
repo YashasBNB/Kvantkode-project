@@ -3,42 +3,52 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { UriComponents } from '../../../../../base/common/uri.js';
-import { IShellLaunchConfigDto, ITerminalProcessOptions } from '../../../../../platform/terminal/common/terminal.js';
-import { ICompleteTerminalConfiguration } from '../terminal.js';
-import { ISerializableEnvironmentDescriptionMap as ISerializableEnvironmentDescriptionMap, ISerializableEnvironmentVariableCollection } from '../../../../../platform/terminal/common/environmentVariable.js';
+import { UriComponents } from '../../../../../base/common/uri.js'
+import {
+	IShellLaunchConfigDto,
+	ITerminalProcessOptions,
+} from '../../../../../platform/terminal/common/terminal.js'
+import { ICompleteTerminalConfiguration } from '../terminal.js'
+import {
+	ISerializableEnvironmentDescriptionMap as ISerializableEnvironmentDescriptionMap,
+	ISerializableEnvironmentVariableCollection,
+} from '../../../../../platform/terminal/common/environmentVariable.js'
 
-export const REMOTE_TERMINAL_CHANNEL_NAME = 'remoteterminal';
+export const REMOTE_TERMINAL_CHANNEL_NAME = 'remoteterminal'
 
-export type ITerminalEnvironmentVariableCollections = [string, ISerializableEnvironmentVariableCollection, ISerializableEnvironmentDescriptionMap][];
+export type ITerminalEnvironmentVariableCollections = [
+	string,
+	ISerializableEnvironmentVariableCollection,
+	ISerializableEnvironmentDescriptionMap,
+][]
 
 export interface IWorkspaceFolderData {
-	uri: UriComponents;
-	name: string;
-	index: number;
+	uri: UriComponents
+	name: string
+	index: number
 }
 
 export interface ICreateTerminalProcessArguments {
-	configuration: ICompleteTerminalConfiguration;
-	resolvedVariables: { [name: string]: string };
-	envVariableCollections: ITerminalEnvironmentVariableCollections;
-	shellLaunchConfig: IShellLaunchConfigDto;
-	workspaceId: string;
-	workspaceName: string;
-	workspaceFolders: IWorkspaceFolderData[];
-	activeWorkspaceFolder: IWorkspaceFolderData | null;
-	activeFileResource: UriComponents | undefined;
-	shouldPersistTerminal: boolean;
-	options: ITerminalProcessOptions;
-	cols: number;
-	rows: number;
-	unicodeVersion: '6' | '11';
-	resolverEnv: { [key: string]: string | null } | undefined;
+	configuration: ICompleteTerminalConfiguration
+	resolvedVariables: { [name: string]: string }
+	envVariableCollections: ITerminalEnvironmentVariableCollections
+	shellLaunchConfig: IShellLaunchConfigDto
+	workspaceId: string
+	workspaceName: string
+	workspaceFolders: IWorkspaceFolderData[]
+	activeWorkspaceFolder: IWorkspaceFolderData | null
+	activeFileResource: UriComponents | undefined
+	shouldPersistTerminal: boolean
+	options: ITerminalProcessOptions
+	cols: number
+	rows: number
+	unicodeVersion: '6' | '11'
+	resolverEnv: { [key: string]: string | null } | undefined
 }
 
 export interface ICreateTerminalProcessResult {
-	persistentTerminalId: number;
-	resolvedShellLaunchConfig: IShellLaunchConfigDto;
+	persistentTerminalId: number
+	resolvedShellLaunchConfig: IShellLaunchConfigDto
 }
 
 export const enum RemoteTerminalChannelEvent {
