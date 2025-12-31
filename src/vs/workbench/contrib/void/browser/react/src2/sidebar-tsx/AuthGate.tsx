@@ -5,19 +5,15 @@ type Props = {
 }
 
 const TOKEN_KEY = 'void_jwt'
-const DEFAULT_BACKEND = 'https://kvantkode-backends.onrender.com'
+const DEFAULT_BACKEND = 'http://localhost:3000'
 
 export const getBackendBase = (): string => {
-	// Always use production backend
-	return 'https://kvantkode-backends.onrender.com'
-	
-	// Old logic (commented out):
-	// try {
-	// 	const v = window.localStorage.getItem('void_backend_url')
-	// 	return v && v.trim() ? v : DEFAULT_BACKEND
-	// } catch {
-	// 	return DEFAULT_BACKEND
-	// }
+	try {
+		const v = window.localStorage.getItem('void_backend_url')
+		return v && v.trim() ? v : DEFAULT_BACKEND
+	} catch {
+		return DEFAULT_BACKEND
+	}
 }
 
 export const getToken = (): string | null => {
