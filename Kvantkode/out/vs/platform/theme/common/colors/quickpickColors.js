@@ -1,0 +1,31 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import * as nls from '../../../../nls.js';
+// Import the effects we need
+import { Color, RGBA } from '../../../../base/common/color.js';
+import { registerColor, oneOf } from '../colorUtils.js';
+// Import the colors we need
+import { editorWidgetBackground, editorWidgetForeground } from './editorColors.js';
+import { listActiveSelectionBackground, listActiveSelectionForeground, listActiveSelectionIconForeground, } from './listColors.js';
+export const quickInputBackground = registerColor('quickInput.background', editorWidgetBackground, nls.localize('pickerBackground', 'Quick picker background color. The quick picker widget is the container for pickers like the command palette.'));
+export const quickInputForeground = registerColor('quickInput.foreground', editorWidgetForeground, nls.localize('pickerForeground', 'Quick picker foreground color. The quick picker widget is the container for pickers like the command palette.'));
+export const quickInputTitleBackground = registerColor('quickInputTitle.background', {
+    dark: new Color(new RGBA(255, 255, 255, 0.105)),
+    light: new Color(new RGBA(0, 0, 0, 0.06)),
+    hcDark: '#000000',
+    hcLight: Color.white,
+}, nls.localize('pickerTitleBackground', 'Quick picker title background color. The quick picker widget is the container for pickers like the command palette.'));
+export const pickerGroupForeground = registerColor('pickerGroup.foreground', { dark: '#3794FF', light: '#0066BF', hcDark: Color.white, hcLight: '#0F4A85' }, nls.localize('pickerGroupForeground', 'Quick picker color for grouping labels.'));
+export const pickerGroupBorder = registerColor('pickerGroup.border', { dark: '#3F3F46', light: '#CCCEDB', hcDark: Color.white, hcLight: '#0F4A85' }, nls.localize('pickerGroupBorder', 'Quick picker color for grouping borders.'));
+export const _deprecatedQuickInputListFocusBackground = registerColor('quickInput.list.focusBackground', null, '', undefined, nls.localize('quickInput.list.focusBackground deprecation', 'Please use quickInputList.focusBackground instead'));
+export const quickInputListFocusForeground = registerColor('quickInputList.focusForeground', listActiveSelectionForeground, nls.localize('quickInput.listFocusForeground', 'Quick picker foreground color for the focused item.'));
+export const quickInputListFocusIconForeground = registerColor('quickInputList.focusIconForeground', listActiveSelectionIconForeground, nls.localize('quickInput.listFocusIconForeground', 'Quick picker icon foreground color for the focused item.'));
+export const quickInputListFocusBackground = registerColor('quickInputList.focusBackground', {
+    dark: oneOf(_deprecatedQuickInputListFocusBackground, listActiveSelectionBackground),
+    light: oneOf(_deprecatedQuickInputListFocusBackground, listActiveSelectionBackground),
+    hcDark: null,
+    hcLight: null,
+}, nls.localize('quickInput.listFocusBackground', 'Quick picker background color for the focused item.'));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicXVpY2twaWNrQ29sb3JzLmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vVXNlcnMveWFzaGFzbmFpZHUvS3ZhbnRjb2RlL0t2YW50a29kZS9zcmMvIiwic291cmNlcyI6WyJ2cy9wbGF0Zm9ybS90aGVtZS9jb21tb24vY29sb3JzL3F1aWNrcGlja0NvbG9ycy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRztBQUVoRyxPQUFPLEtBQUssR0FBRyxNQUFNLG9CQUFvQixDQUFBO0FBRXpDLDZCQUE2QjtBQUM3QixPQUFPLEVBQUUsS0FBSyxFQUFFLElBQUksRUFBRSxNQUFNLGtDQUFrQyxDQUFBO0FBQzlELE9BQU8sRUFBRSxhQUFhLEVBQUUsS0FBSyxFQUFFLE1BQU0sa0JBQWtCLENBQUE7QUFFdkQsNEJBQTRCO0FBQzVCLE9BQU8sRUFBRSxzQkFBc0IsRUFBRSxzQkFBc0IsRUFBRSxNQUFNLG1CQUFtQixDQUFBO0FBQ2xGLE9BQU8sRUFDTiw2QkFBNkIsRUFDN0IsNkJBQTZCLEVBQzdCLGlDQUFpQyxHQUNqQyxNQUFNLGlCQUFpQixDQUFBO0FBRXhCLE1BQU0sQ0FBQyxNQUFNLG9CQUFvQixHQUFHLGFBQWEsQ0FDaEQsdUJBQXVCLEVBQ3ZCLHNCQUFzQixFQUN0QixHQUFHLENBQUMsUUFBUSxDQUNYLGtCQUFrQixFQUNsQiwrR0FBK0csQ0FDL0csQ0FDRCxDQUFBO0FBRUQsTUFBTSxDQUFDLE1BQU0sb0JBQW9CLEdBQUcsYUFBYSxDQUNoRCx1QkFBdUIsRUFDdkIsc0JBQXNCLEVBQ3RCLEdBQUcsQ0FBQyxRQUFRLENBQ1gsa0JBQWtCLEVBQ2xCLCtHQUErRyxDQUMvRyxDQUNELENBQUE7QUFFRCxNQUFNLENBQUMsTUFBTSx5QkFBeUIsR0FBRyxhQUFhLENBQ3JELDRCQUE0QixFQUM1QjtJQUNDLElBQUksRUFBRSxJQUFJLEtBQUssQ0FBQyxJQUFJLElBQUksQ0FBQyxHQUFHLEVBQUUsR0FBRyxFQUFFLEdBQUcsRUFBRSxLQUFLLENBQUMsQ0FBQztJQUMvQyxLQUFLLEVBQUUsSUFBSSxLQUFLLENBQUMsSUFBSSxJQUFJLENBQUMsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLEVBQUUsSUFBSSxDQUFDLENBQUM7SUFDekMsTUFBTSxFQUFFLFNBQVM7SUFDakIsT0FBTyxFQUFFLEtBQUssQ0FBQyxLQUFLO0NBQ3BCLEVBQ0QsR0FBRyxDQUFDLFFBQVEsQ0FDWCx1QkFBdUIsRUFDdkIscUhBQXFILENBQ3JILENBQ0QsQ0FBQTtBQUVELE1BQU0sQ0FBQyxNQUFNLHFCQUFxQixHQUFHLGFBQWEsQ0FDakQsd0JBQXdCLEVBQ3hCLEVBQUUsSUFBSSxFQUFFLFNBQVMsRUFBRSxLQUFLLEVBQUUsU0FBUyxFQUFFLE1BQU0sRUFBRSxLQUFLLENBQUMsS0FBSyxFQUFFLE9BQU8sRUFBRSxTQUFTLEVBQUUsRUFDOUUsR0FBRyxDQUFDLFFBQVEsQ0FBQyx1QkFBdUIsRUFBRSx5Q0FBeUMsQ0FBQyxDQUNoRixDQUFBO0FBRUQsTUFBTSxDQUFDLE1BQU0saUJBQWlCLEdBQUcsYUFBYSxDQUM3QyxvQkFBb0IsRUFDcEIsRUFBRSxJQUFJLEVBQUUsU0FBUyxFQUFFLEtBQUssRUFBRSxTQUFTLEVBQUUsTUFBTSxFQUFFLEtBQUssQ0FBQyxLQUFLLEVBQUUsT0FBTyxFQUFFLFNBQVMsRUFBRSxFQUM5RSxHQUFHLENBQUMsUUFBUSxDQUFDLG1CQUFtQixFQUFFLDBDQUEwQyxDQUFDLENBQzdFLENBQUE7QUFFRCxNQUFNLENBQUMsTUFBTSx3Q0FBd0MsR0FBRyxhQUFhLENBQ3BFLGlDQUFpQyxFQUNqQyxJQUFJLEVBQ0osRUFBRSxFQUNGLFNBQVMsRUFDVCxHQUFHLENBQUMsUUFBUSxDQUNYLDZDQUE2QyxFQUM3QyxtREFBbUQsQ0FDbkQsQ0FDRCxDQUFBO0FBRUQsTUFBTSxDQUFDLE1BQU0sNkJBQTZCLEdBQUcsYUFBYSxDQUN6RCxnQ0FBZ0MsRUFDaEMsNkJBQTZCLEVBQzdCLEdBQUcsQ0FBQyxRQUFRLENBQ1gsZ0NBQWdDLEVBQ2hDLHFEQUFxRCxDQUNyRCxDQUNELENBQUE7QUFFRCxNQUFNLENBQUMsTUFBTSxpQ0FBaUMsR0FBRyxhQUFhLENBQzdELG9DQUFvQyxFQUNwQyxpQ0FBaUMsRUFDakMsR0FBRyxDQUFDLFFBQVEsQ0FDWCxvQ0FBb0MsRUFDcEMsMERBQTBELENBQzFELENBQ0QsQ0FBQTtBQUVELE1BQU0sQ0FBQyxNQUFNLDZCQUE2QixHQUFHLGFBQWEsQ0FDekQsZ0NBQWdDLEVBQ2hDO0lBQ0MsSUFBSSxFQUFFLEtBQUssQ0FBQyx3Q0FBd0MsRUFBRSw2QkFBNkIsQ0FBQztJQUNwRixLQUFLLEVBQUUsS0FBSyxDQUFDLHdDQUF3QyxFQUFFLDZCQUE2QixDQUFDO0lBQ3JGLE1BQU0sRUFBRSxJQUFJO0lBQ1osT0FBTyxFQUFFLElBQUk7Q0FDYixFQUNELEdBQUcsQ0FBQyxRQUFRLENBQ1gsZ0NBQWdDLEVBQ2hDLHFEQUFxRCxDQUNyRCxDQUNELENBQUEifQ==

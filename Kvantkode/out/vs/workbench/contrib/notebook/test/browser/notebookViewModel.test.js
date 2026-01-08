@@ -1,0 +1,273 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import assert from 'assert';
+import { DisposableStore } from '../../../../../base/common/lifecycle.js';
+import { URI } from '../../../../../base/common/uri.js';
+import { IBulkEditService } from '../../../../../editor/browser/services/bulkEditService.js';
+import { IModelService } from '../../../../../editor/common/services/model.js';
+import { ILanguageService } from '../../../../../editor/common/languages/language.js';
+import { ITextModelService } from '../../../../../editor/common/services/resolverService.js';
+import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
+import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
+import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
+import { TestThemeService } from '../../../../../platform/theme/test/common/testThemeService.js';
+import { IUndoRedoService } from '../../../../../platform/undoRedo/common/undoRedo.js';
+import { insertCellAtIndex, runDeleteAction } from '../../browser/controller/cellOperations.js';
+import { NotebookEventDispatcher } from '../../browser/viewModel/eventDispatcher.js';
+import { NotebookViewModel } from '../../browser/viewModel/notebookViewModelImpl.js';
+import { ViewContext } from '../../browser/viewModel/viewContext.js';
+import { NotebookTextModel } from '../../common/model/notebookTextModel.js';
+import { CellKind, diff } from '../../common/notebookCommon.js';
+import { NotebookOptions } from '../../browser/notebookOptions.js';
+import { NotebookEditorTestModel, setupInstantiationService, withTestNotebook, } from './testNotebookEditor.js';
+import { INotebookExecutionStateService } from '../../common/notebookExecutionStateService.js';
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
+import { mainWindow } from '../../../../../base/browser/window.js';
+import { ICodeEditorService } from '../../../../../editor/browser/services/codeEditorService.js';
+import { ILanguageDetectionService } from '../../../../services/languageDetection/common/languageDetectionWorkerService.js';
+suite('NotebookViewModel', () => {
+    ensureNoDisposablesAreLeakedInTestSuite();
+    let disposables;
+    let instantiationService;
+    let textModelService;
+    let bulkEditService;
+    let undoRedoService;
+    let modelService;
+    let languageService;
+    let languageDetectionService;
+    let notebookExecutionStateService;
+    suiteSetup(() => {
+        disposables = new DisposableStore();
+        instantiationService = setupInstantiationService(disposables);
+        textModelService = instantiationService.get(ITextModelService);
+        bulkEditService = instantiationService.get(IBulkEditService);
+        undoRedoService = instantiationService.get(IUndoRedoService);
+        modelService = instantiationService.get(IModelService);
+        languageService = instantiationService.get(ILanguageService);
+        languageDetectionService = instantiationService.get(ILanguageDetectionService);
+        notebookExecutionStateService = instantiationService.get(INotebookExecutionStateService);
+        instantiationService.stub(IConfigurationService, new TestConfigurationService());
+        instantiationService.stub(IThemeService, new TestThemeService());
+    });
+    suiteTeardown(() => disposables.dispose());
+    test('ctor', function () {
+        const notebook = new NotebookTextModel('notebook', URI.parse('test'), [], {}, {
+            transientCellMetadata: {},
+            transientDocumentMetadata: {},
+            transientOutputs: false,
+            cellContentMetadata: {},
+        }, undoRedoService, modelService, languageService, languageDetectionService, notebookExecutionStateService);
+        const model = new NotebookEditorTestModel(notebook);
+        const options = new NotebookOptions(mainWindow, false, undefined, instantiationService.get(IConfigurationService), instantiationService.get(INotebookExecutionStateService), instantiationService.get(ICodeEditorService));
+        const eventDispatcher = new NotebookEventDispatcher();
+        const viewContext = new ViewContext(options, eventDispatcher, () => ({}));
+        const viewModel = new NotebookViewModel('notebook', model.notebook, viewContext, null, { isReadOnly: false }, instantiationService, bulkEditService, undoRedoService, textModelService, notebookExecutionStateService);
+        assert.strictEqual(viewModel.viewType, 'notebook');
+        notebook.dispose();
+        model.dispose();
+        options.dispose();
+        eventDispatcher.dispose();
+        viewModel.dispose();
+    });
+    test('insert/delete', async function () {
+        await withTestNotebook([
+            ['var a = 1;', 'javascript', CellKind.Code, [], {}],
+            ['var b = 2;', 'javascript', CellKind.Code, [], {}],
+        ], (editor, viewModel) => {
+            const cell = insertCellAtIndex(viewModel, 1, 'var c = 3', 'javascript', CellKind.Code, {}, [], true, true);
+            assert.strictEqual(viewModel.length, 3);
+            assert.strictEqual(viewModel.notebookDocument.cells.length, 3);
+            assert.strictEqual(viewModel.getCellIndex(cell), 1);
+            runDeleteAction(editor, viewModel.cellAt(1));
+            assert.strictEqual(viewModel.length, 2);
+            assert.strictEqual(viewModel.notebookDocument.cells.length, 2);
+            assert.strictEqual(viewModel.getCellIndex(cell), -1);
+            cell.dispose();
+            cell.model.dispose();
+        });
+    });
+    test('index', async function () {
+        await withTestNotebook([
+            ['var a = 1;', 'javascript', CellKind.Code, [], {}],
+            ['var b = 2;', 'javascript', CellKind.Code, [], {}],
+        ], (editor, viewModel) => {
+            const firstViewCell = viewModel.cellAt(0);
+            const lastViewCell = viewModel.cellAt(viewModel.length - 1);
+            const insertIndex = viewModel.getCellIndex(firstViewCell) + 1;
+            const cell = insertCellAtIndex(viewModel, insertIndex, 'var c = 3;', 'javascript', CellKind.Code, {}, [], true, true);
+            const addedCellIndex = viewModel.getCellIndex(cell);
+            runDeleteAction(editor, viewModel.cellAt(addedCellIndex));
+            const secondInsertIndex = viewModel.getCellIndex(lastViewCell) + 1;
+            const cell2 = insertCellAtIndex(viewModel, secondInsertIndex, 'var d = 4;', 'javascript', CellKind.Code, {}, [], true, true);
+            assert.strictEqual(viewModel.length, 3);
+            assert.strictEqual(viewModel.notebookDocument.cells.length, 3);
+            assert.strictEqual(viewModel.getCellIndex(cell2), 2);
+            cell.dispose();
+            cell.model.dispose();
+            cell2.dispose();
+            cell2.model.dispose();
+        });
+    });
+});
+function getVisibleCells(cells, hiddenRanges) {
+    if (!hiddenRanges.length) {
+        return cells;
+    }
+    let start = 0;
+    let hiddenRangeIndex = 0;
+    const result = [];
+    while (start < cells.length && hiddenRangeIndex < hiddenRanges.length) {
+        if (start < hiddenRanges[hiddenRangeIndex].start) {
+            result.push(...cells.slice(start, hiddenRanges[hiddenRangeIndex].start));
+        }
+        start = hiddenRanges[hiddenRangeIndex].end + 1;
+        hiddenRangeIndex++;
+    }
+    if (start < cells.length) {
+        result.push(...cells.slice(start));
+    }
+    return result;
+}
+suite('NotebookViewModel Decorations', () => {
+    ensureNoDisposablesAreLeakedInTestSuite();
+    test('tracking range', async function () {
+        await withTestNotebook([
+            ['var a = 1;', 'javascript', CellKind.Code, [], {}],
+            ['var b = 2;', 'javascript', CellKind.Code, [], {}],
+            ['var c = 3;', 'javascript', CellKind.Code, [], {}],
+            ['var d = 4;', 'javascript', CellKind.Code, [], {}],
+            ['var e = 5;', 'javascript', CellKind.Code, [], {}],
+        ], (editor, viewModel) => {
+            const trackedId = viewModel.setTrackedRange('test', { start: 1, end: 2 }, 3 /* TrackedRangeStickiness.GrowsOnlyWhenTypingAfter */);
+            assert.deepStrictEqual(viewModel.getTrackedRange(trackedId), {
+                start: 1,
+                end: 2,
+            });
+            const cell1 = insertCellAtIndex(viewModel, 0, 'var d = 6;', 'javascript', CellKind.Code, {}, [], true, true);
+            assert.deepStrictEqual(viewModel.getTrackedRange(trackedId), {
+                start: 2,
+                end: 3,
+            });
+            runDeleteAction(editor, viewModel.cellAt(0));
+            assert.deepStrictEqual(viewModel.getTrackedRange(trackedId), {
+                start: 1,
+                end: 2,
+            });
+            const cell2 = insertCellAtIndex(viewModel, 3, 'var d = 7;', 'javascript', CellKind.Code, {}, [], true, true);
+            assert.deepStrictEqual(viewModel.getTrackedRange(trackedId), {
+                start: 1,
+                end: 3,
+            });
+            runDeleteAction(editor, viewModel.cellAt(3));
+            assert.deepStrictEqual(viewModel.getTrackedRange(trackedId), {
+                start: 1,
+                end: 2,
+            });
+            runDeleteAction(editor, viewModel.cellAt(1));
+            assert.deepStrictEqual(viewModel.getTrackedRange(trackedId), {
+                start: 0,
+                end: 1,
+            });
+            cell1.dispose();
+            cell1.model.dispose();
+            cell2.dispose();
+            cell2.model.dispose();
+        });
+    });
+    test('tracking range 2', async function () {
+        await withTestNotebook([
+            ['var a = 1;', 'javascript', CellKind.Code, [], {}],
+            ['var b = 2;', 'javascript', CellKind.Code, [], {}],
+            ['var c = 3;', 'javascript', CellKind.Code, [], {}],
+            ['var d = 4;', 'javascript', CellKind.Code, [], {}],
+            ['var e = 5;', 'javascript', CellKind.Code, [], {}],
+            ['var e = 6;', 'javascript', CellKind.Code, [], {}],
+            ['var e = 7;', 'javascript', CellKind.Code, [], {}],
+        ], (editor, viewModel) => {
+            const trackedId = viewModel.setTrackedRange('test', { start: 1, end: 3 }, 3 /* TrackedRangeStickiness.GrowsOnlyWhenTypingAfter */);
+            assert.deepStrictEqual(viewModel.getTrackedRange(trackedId), {
+                start: 1,
+                end: 3,
+            });
+            insertCellAtIndex(viewModel, 5, 'var d = 9;', 'javascript', CellKind.Code, {}, [], true, true);
+            assert.deepStrictEqual(viewModel.getTrackedRange(trackedId), {
+                start: 1,
+                end: 3,
+            });
+            insertCellAtIndex(viewModel, 4, 'var d = 10;', 'javascript', CellKind.Code, {}, [], true, true);
+            assert.deepStrictEqual(viewModel.getTrackedRange(trackedId), {
+                start: 1,
+                end: 4,
+            });
+        });
+    });
+    test('diff hidden ranges', async function () {
+        assert.deepStrictEqual(getVisibleCells([1, 2, 3, 4, 5], []), [1, 2, 3, 4, 5]);
+        assert.deepStrictEqual(getVisibleCells([1, 2, 3, 4, 5], [{ start: 1, end: 2 }]), [1, 4, 5]);
+        assert.deepStrictEqual(getVisibleCells([1, 2, 3, 4, 5, 6, 7, 8, 9], [
+            { start: 1, end: 2 },
+            { start: 4, end: 5 },
+        ]), [1, 4, 7, 8, 9]);
+        const original = getVisibleCells([1, 2, 3, 4, 5, 6, 7, 8, 9], [
+            { start: 1, end: 2 },
+            { start: 4, end: 5 },
+        ]);
+        const modified = getVisibleCells([1, 2, 3, 4, 5, 6, 7, 8, 9], [{ start: 2, end: 4 }]);
+        assert.deepStrictEqual(diff(original, modified, (a) => {
+            return original.indexOf(a) >= 0;
+        }), [{ start: 1, deleteCount: 1, toInsert: [2, 6] }]);
+    });
+});
+suite('NotebookViewModel API', () => {
+    ensureNoDisposablesAreLeakedInTestSuite();
+    test('#115432, get nearest code cell', async function () {
+        await withTestNotebook([
+            ['# header a', 'markdown', CellKind.Markup, [], {}],
+            ['var b = 1;', 'javascript', CellKind.Code, [], {}],
+            ['# header b', 'markdown', CellKind.Markup, [], {}],
+            ['b = 2;', 'python', CellKind.Code, [], {}],
+            ['var c = 3', 'javascript', CellKind.Code, [], {}],
+            ['# header d', 'markdown', CellKind.Markup, [], {}],
+            ['var e = 4;', 'TypeScript', CellKind.Code, [], {}],
+            ['# header f', 'markdown', CellKind.Markup, [], {}],
+        ], (editor, viewModel) => {
+            assert.strictEqual(viewModel.nearestCodeCellIndex(0), 1);
+            // find the nearest code cell from above
+            assert.strictEqual(viewModel.nearestCodeCellIndex(2), 1);
+            assert.strictEqual(viewModel.nearestCodeCellIndex(4), 3);
+            assert.strictEqual(viewModel.nearestCodeCellIndex(5), 4);
+            assert.strictEqual(viewModel.nearestCodeCellIndex(6), 4);
+        });
+    });
+    test('#108464, get nearest code cell', async function () {
+        await withTestNotebook([
+            ['# header a', 'markdown', CellKind.Markup, [], {}],
+            ['var b = 1;', 'javascript', CellKind.Code, [], {}],
+            ['# header b', 'markdown', CellKind.Markup, [], {}],
+        ], (editor, viewModel) => {
+            assert.strictEqual(viewModel.nearestCodeCellIndex(2), 1);
+        });
+    });
+    test('getCells', async () => {
+        await withTestNotebook([
+            ['# header a', 'markdown', CellKind.Markup, [], {}],
+            ['var b = 1;', 'javascript', CellKind.Code, [], {}],
+            ['# header b', 'markdown', CellKind.Markup, [], {}],
+        ], (editor, viewModel) => {
+            assert.strictEqual(viewModel.getCellsInRange().length, 3);
+            assert.deepStrictEqual(viewModel.getCellsInRange({ start: 0, end: 1 }).map((cell) => cell.getText()), ['# header a']);
+            assert.deepStrictEqual(viewModel.getCellsInRange({ start: 0, end: 2 }).map((cell) => cell.getText()), ['# header a', 'var b = 1;']);
+            assert.deepStrictEqual(viewModel.getCellsInRange({ start: 0, end: 3 }).map((cell) => cell.getText()), ['# header a', 'var b = 1;', '# header b']);
+            assert.deepStrictEqual(viewModel.getCellsInRange({ start: 0, end: 4 }).map((cell) => cell.getText()), ['# header a', 'var b = 1;', '# header b']);
+            assert.deepStrictEqual(viewModel.getCellsInRange({ start: 1, end: 4 }).map((cell) => cell.getText()), ['var b = 1;', '# header b']);
+            assert.deepStrictEqual(viewModel.getCellsInRange({ start: 2, end: 4 }).map((cell) => cell.getText()), ['# header b']);
+            assert.deepStrictEqual(viewModel.getCellsInRange({ start: 3, end: 4 }).map((cell) => cell.getText()), []);
+            // no one should use an invalid range but `getCells` should be able to handle that.
+            assert.deepStrictEqual(viewModel.getCellsInRange({ start: -1, end: 1 }).map((cell) => cell.getText()), ['# header a']);
+            assert.deepStrictEqual(viewModel.getCellsInRange({ start: 3, end: 0 }).map((cell) => cell.getText()), ['# header a', 'var b = 1;', '# header b']);
+        });
+    });
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibm90ZWJvb2tWaWV3TW9kZWwudGVzdC5qcyIsInNvdXJjZVJvb3QiOiJmaWxlOi8vL1VzZXJzL3lhc2hhc25haWR1L0t2YW50Y29kZS9LdmFudGtvZGUvc3JjLyIsInNvdXJjZXMiOlsidnMvd29ya2JlbmNoL2NvbnRyaWIvbm90ZWJvb2svdGVzdC9icm93c2VyL25vdGVib29rVmlld01vZGVsLnRlc3QudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7OztnR0FHZ0c7QUFFaEcsT0FBTyxNQUFNLE1BQU0sUUFBUSxDQUFBO0FBQzNCLE9BQU8sRUFBRSxlQUFlLEVBQUUsTUFBTSx5Q0FBeUMsQ0FBQTtBQUN6RSxPQUFPLEVBQUUsR0FBRyxFQUFFLE1BQU0sbUNBQW1DLENBQUE7QUFDdkQsT0FBTyxFQUFFLGdCQUFnQixFQUFFLE1BQU0sMkRBQTJELENBQUE7QUFFNUYsT0FBTyxFQUFFLGFBQWEsRUFBRSxNQUFNLGdEQUFnRCxDQUFBO0FBQzlFLE9BQU8sRUFBRSxnQkFBZ0IsRUFBRSxNQUFNLG9EQUFvRCxDQUFBO0FBQ3JGLE9BQU8sRUFBRSxpQkFBaUIsRUFBRSxNQUFNLDBEQUEwRCxDQUFBO0FBQzVGLE9BQU8sRUFBRSxxQkFBcUIsRUFBRSxNQUFNLCtEQUErRCxDQUFBO0FBQ3JHLE9BQU8sRUFBRSx3QkFBd0IsRUFBRSxNQUFNLCtFQUErRSxDQUFBO0FBRXhILE9BQU8sRUFBRSxhQUFhLEVBQUUsTUFBTSxzREFBc0QsQ0FBQTtBQUNwRixPQUFPLEVBQUUsZ0JBQWdCLEVBQUUsTUFBTSwrREFBK0QsQ0FBQTtBQUNoRyxPQUFPLEVBQUUsZ0JBQWdCLEVBQUUsTUFBTSxxREFBcUQsQ0FBQTtBQUN0RixPQUFPLEVBQUUsaUJBQWlCLEVBQUUsZUFBZSxFQUFFLE1BQU0sNENBQTRDLENBQUE7QUFDL0YsT0FBTyxFQUFFLHVCQUF1QixFQUFFLE1BQU0sNENBQTRDLENBQUE7QUFDcEYsT0FBTyxFQUFFLGlCQUFpQixFQUFFLE1BQU0sa0RBQWtELENBQUE7QUFD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Q0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLENBQUMsRUFBRSxFQUFFLENBQUMsRUFBRSxDQUFDLENBQUMsRUFBRSxDQUFDLEVBQUUsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQyxDQUFBO1FBRXJGLE1BQU0sQ0FBQyxlQUFlLENBQ3JCLGVBQWUsQ0FBUyxDQUFDLENBQUMsRUFBRSxDQUFDLEVBQUUsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLENBQUMsRUFBRSxDQUFDLEVBQUUsS0FBSyxFQUFFLENBQUMsRUFBRSxHQUFHLEVBQUUsQ0FBQyxFQUFFLENBQUMsQ0FBQyxFQUNoRSxDQUFDLENBQUMsRUFBRSxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQ1QsQ0FBQTtRQUVELE1BQU0sQ0FBQyxlQUFlLENBQ3JCLGVBQWUsQ0FDZCxDQUFDLENBQUMsRUFBRSxDQUFDLEVBQUUsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLEVBQUUsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLEVBQUUsQ0FBQyxDQUFDLEVBQzNCO1lBQ0MsRUFBRSxLQUFLLEVBQUUsQ0FBQyxFQUFFLEdBQUcsRUFBRSxDQUFDLEVBQUU7WUFDcEIsRUFBRSxLQUFLLEVBQUUsQ0FBQyxFQUFFLEdBQUcsRUFBRSxDQUFDLEVBQUU7U0FDcEIsQ0FDRCxFQUNELENBQUMsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLEVBQUUsQ0FBQyxFQUFFLENBQUMsQ0FBQyxDQUNmLENBQUE7UUFFRCxNQUFNLFFBQVEsR0FBRyxlQUFlLENBQy9CLENBQUMsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLEVBQUUsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLEVBQUUsQ0FBQyxFQUFFLENBQUMsRUFBRSxDQUFDLENBQUMsRUFDM0I7WUFDQyxFQUFFLEtBQUssRUFBRSxDQUFDLEVBQUUsR0FBRyxFQUFFLENBQUMsRUFBRTtZQUNwQixFQUFFLEtBQUssRUFBRSxDQUFDLEVBQUUsR0FBRyxFQUFFLENBQUMsRUFBRTtTQUNwQixDQUNELENBQUE7UUFFRCxNQUFN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Q0FBQyxlQUFlLENBQUMsRUFBRSxLQUFLLEVBQUUsQ0FBQyxFQUFFLEdBQUcsRUFBRSxDQUFDLEVBQUUsQ0FBQyxDQUFDLEdBQUcsQ0FBQyxDQUFDLElBQUksRUFBRSxFQUFFLENBQUMsSUFBSSxDQUFDLE9BQU8sRUFBRSxDQUFDLEVBQzdFLENBQUMsWUFBWSxFQUFFLFlBQVksQ0FBQyxDQUM1QixDQUFBO1lBQ0QsTUFBTSxDQUFDLGVBQWUsQ0FDckIsU0FBUyxDQUFDLGVBQWUsQ0FBQyxFQUFFLEtBQUssRUFBRSxDQUFDLEVBQUUsR0FBRyxFQUFFLENBQUMsRUFBRSxDQUFDLENBQUMsR0FBRyxDQUFDLENBQUMsSUFBSSxFQUFFLEVBQUUsQ0FBQyxJQUFJLENBQUMsT0FBTyxFQUFFLENBQUMsRUFDN0UsQ0FBQyxZQUFZLEVBQUUsWUFBWSxFQUFFLFlBQVksQ0FBQyxDQUMxQyxDQUFBO1lBQ0QsTUFBTSxDQUFDLGVBQWUsQ0FDckIsU0FBUyxDQUFDLGVBQWUsQ0FBQyxFQUFFLEtBQUssRUFBRSxDQUFDLEVBQUUsR0FBRyxFQUFFLENBQUMsRUFBRSxDQUFDLENBQUMsR0FBRyxDQUFDLENBQUMsSUFBSSxFQUFFLEVBQUUsQ0FBQyxJQUFJLENBQUMsT0FBTyxFQUFFLENBQUMsRUFDN0UsQ0FBQyxZQUFZLEVBQUUsWUFBWSxFQUFFLFlBQVksQ0FBQyxDQUMxQyxDQUFBO1lBQ0QsTUFBTSxDQUFDLGVBQWUsQ0FDckIsU0FBUyxDQUFDLGVBQWUsQ0FBQyxFQUFFLEtBQUssRUFBRSxDQUFDLEVBQUUsR0FBRyxFQUFFLENBQUMsRUFBRSxDQUFDLENBQUMsR0FBRyxDQUFDLENBQUMsSUFBSSxFQUFFLEVBQUUsQ0FBQyxJQUFJLENBQUMsT0FBTyxFQUFFLENBQUMsRUFDN0UsQ0FBQyxZQUFZLEVBQUUsWUFBWSxDQUFDLENBQzVCLENBQUE7WUFDRCxNQUFNLENBQUMsZUFBZSxDQUNyQixTQUFTLENBQUMsZUFBZSxDQUFDLEVBQUUsS0FBSyxFQUFFLENBQUMsRUFBRSxHQUFHLEVBQUUsQ0FBQyxFQUFFLENBQUMsQ0FBQyxHQUFHLENBQUMsQ0FBQyxJQUFJLEVBQUUsRUFBRSxDQUFDLElBQUksQ0FBQyxPQUFPLEVBQUUsQ0FBQyxFQUM3RSxDQUFDLFlBQVksQ0FBQyxDQUNkLENBQUE7WUFDRCxNQUFNLENBQUMsZUFBZSxDQUNyQixTQUFTLENBQUMsZUFBZSxDQUFDLEVBQUUsS0FBSyxFQUFFLENBQUMsRUFBRSxHQUFHLEVBQUUsQ0FBQyxFQUFFLENBQUMsQ0FBQyxHQUFHLENBQUMsQ0FBQyxJQUFJLEVBQUUsRUFBRSxDQUFDLElBQUksQ0FBQyxPQUFPLEVBQUUsQ0FBQyxFQUM3RSxFQUFFLENBQ0YsQ0FBQTtZQUVELG1GQUFtRjtZQUNuRixNQUFNLENBQUMsZUFBZSxDQUNyQixTQUFTLENBQUMsZUFBZSxDQUFDLEVBQUUsS0FBSyxFQUFFLENBQUMsQ0FBQyxFQUFFLEdBQUcsRUFBRSxDQUFDLEVBQUUsQ0FBQyxDQUFDLEdBQUcsQ0FBQyxDQUFDLElBQUksRUFBRSxFQUFFLENBQUMsSUFBSSxDQUFDLE9BQU8sRUFBRSxDQUFDLEVBQzlFLENBQUMsWUFBWSxDQUFDLENBQ2QsQ0FBQTtZQUNELE1BQU0sQ0FBQyxlQUFlLENBQ3JCLFNBQVMsQ0FBQyxlQUFlLENBQUMsRUFBRSxLQUFLLEVBQUUsQ0FBQyxFQUFFLEdBQUcsRUFBRSxDQUFDLEVBQUUsQ0FBQyxDQUFDLEdBQUcsQ0FBQyxDQUFDLElBQUksRUFBRSxFQUFFLENBQUMsSUFBSSxDQUFDLE9BQU8sRUFBRSxDQUFDLEVBQzdFLENBQUMsWUFBWSxFQUFFLFlBQVksRUFBRSxZQUFZLENBQUMsQ0FDMUMsQ0FBQTtRQUNGLENBQUMsQ0FDRCxDQUFBO0lBQ0YsQ0FBQyxDQUFDLENBQUE7QUFDSCxDQUFDLENBQUMsQ0FBQSJ9

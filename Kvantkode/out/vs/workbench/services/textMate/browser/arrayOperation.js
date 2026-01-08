@@ -1,0 +1,78 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { compareBy, numberComparator } from '../../../../base/common/arrays.js';
+export class ArrayEdit {
+    constructor(
+    /**
+     * Disjoint edits that are applied in parallel
+     */
+    edits) {
+        this.edits = edits.slice().sort(compareBy((c) => c.offset, numberComparator));
+    }
+    applyToArray(array) {
+        for (let i = this.edits.length - 1; i >= 0; i--) {
+            const c = this.edits[i];
+            array.splice(c.offset, c.length, ...new Array(c.newLength));
+        }
+    }
+}
+export class SingleArrayEdit {
+    constructor(offset, length, newLength) {
+        this.offset = offset;
+        this.length = length;
+        this.newLength = newLength;
+    }
+    toString() {
+        return `[${this.offset}, +${this.length}) -> +${this.newLength}}`;
+    }
+}
+/**
+ * Can only be called with increasing values of `index`.
+ */
+export class MonotonousIndexTransformer {
+    static fromMany(transformations) {
+        // TODO improve performance by combining transformations first
+        const transformers = transformations.map((t) => new MonotonousIndexTransformer(t));
+        return new CombinedIndexTransformer(transformers);
+    }
+    constructor(transformation) {
+        this.transformation = transformation;
+        this.idx = 0;
+        this.offset = 0;
+    }
+    /**
+     * Precondition: index >= previous-value-of(index).
+     */
+    transform(index) {
+        let nextChange = this.transformation.edits[this.idx];
+        while (nextChange && nextChange.offset + nextChange.length <= index) {
+            this.offset += nextChange.newLength - nextChange.length;
+            this.idx++;
+            nextChange = this.transformation.edits[this.idx];
+        }
+        // assert nextChange === undefined || index < nextChange.offset + nextChange.length
+        if (nextChange && nextChange.offset <= index) {
+            // Offset is touched by the change
+            return undefined;
+        }
+        return index + this.offset;
+    }
+}
+export class CombinedIndexTransformer {
+    constructor(transformers) {
+        this.transformers = transformers;
+    }
+    transform(index) {
+        for (const transformer of this.transformers) {
+            const result = transformer.transform(index);
+            if (result === undefined) {
+                return undefined;
+            }
+            index = result;
+        }
+        return index;
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYXJyYXlPcGVyYXRpb24uanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9Vc2Vycy95YXNoYXNuYWlkdS9LdmFudGNvZGUvS3ZhbnRrb2RlL3NyYy8iLCJzb3VyY2VzIjpbInZzL3dvcmtiZW5jaC9zZXJ2aWNlcy90ZXh0TWF0ZS9icm93c2VyL2FycmF5T3BlcmF0aW9uLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7Z0dBR2dHO0FBRWhHLE9BQU8sRUFBRSxTQUFTLEVBQUUsZ0JBQWdCLEVBQUUsTUFBTSxtQ0FBbUMsQ0FBQTtBQUUvRSxNQUFNLE9BQU8sU0FBUztJQUdyQjtJQUNDOztPQUVHO0lBQ0gsS0FBaUM7UUFFakMsSUFBSSxDQUFDLEtBQUssR0FBRyxLQUFLLENBQUMsS0FBSyxFQUFFLENBQUMsSUFBSSxDQUFDLFNBQVMsQ0FBQyxDQUFDLENBQUMsRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFDLE1BQU0sRUFBRSxnQkFBZ0IsQ0FBQyxDQUFDLENBQUE7SUFDOUUsQ0FBQztJQUVELFlBQVksQ0FBQyxLQUFZO1FBQ3hCLEtBQUssSUFBSSxDQUFDLEdBQUcsSUFBSSxDQUFDLEtBQUssQ0FBQyxNQUFNLEdBQUcsQ0FBQyxFQUFFLENBQUMsSUFBSSxDQUFDLEVBQUUsQ0FBQyxFQUFFLEVBQUUsQ0FBQztZQUNqRCxNQUFNLENBQUMsR0FBRyxJQUFJLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFBO1lBQ3ZCLEtBQUssQ0FBQyxNQUFNLENBQUMsQ0FBQyxDQUFDLE1BQU0sRUFBRSxDQUFDLENBQUMsTUFBTSxFQUFFLEdBQUcsSUFBSSxLQUFLLENBQUMsQ0FBQyxDQUFDLFNBQVMsQ0FBQyxDQUFDLENBQUE7UUFDNUQsQ0FBQztJQUNGLENBQUM7Q0FDRDtBQUVELE1BQU0sT0FBTyxlQUFlO0lBQzNCLFlBQ2lCLE1BQWMsRUFDZCxNQUFjLEVBQ2QsU0FBaUI7UUFGakIsV0FBTSxHQUFOLE1BQU0sQ0FBUTtRQUNkLFdBQU0sR0FBTixNQUFNLENBQVE7UUFDZCxjQUFTLEdBQVQsU0FBUyxDQUFRO0lBQy9CLENBQUM7SUFFSixRQUFRO1FBQ1AsT0FBTyxJQUFJLElBQUksQ0FBQyxNQUFNLE1BQU0sSUFBSSxDQUFDLE1BQU0sU0FBUyxJQUFJLENBQUMsU0FBUyxHQUFHLENBQUE7SUFDbEUsQ0FBQztDQUNEO0FBTUQ7O0dBRUc7QUFDSCxNQUFNLE9BQU8sMEJBQTBCO0lBQy9CLE1BQU0sQ0FBQyxRQUFRLENBQUMsZUFBNEI7UUFDbEQsOERBQThEO1FBQzlELE1BQU0sWUFBWSxHQUFHLGVBQWUsQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLEVBQUUsRUFBRSxDQUFDLElBQUksMEJBQTBCLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQTtRQUNsRixPQUFPLElBQUksd0JBQXdCLENBQUMsWUFBWSxDQUFDLENBQUE7SUFDbEQsQ0FBQztJQUtELFlBQTZCLGNBQXlCO1FBQXpCLG1CQUFjLEdBQWQsY0FBYyxDQUFXO1FBSDlDLFFBQUcsR0FBRyxDQUFDLENBQUE7UUFDUCxXQUFNLEdBQUcsQ0FBQyxDQUFBO0lBRXVDLENBQUM7SUFFMUQ7O09BRUc7SUFDSCxTQUFTLENBQUMsS0FBYTtRQUN0QixJQUFJLFVBQVUsR0FBRyxJQUFJLENBQUMsY0FBYyxDQUFDLEtBQUssQ0FBQyxJQUFJLENBQUMsR0FBRyxDQUFnQyxDQUFBO1FBQ25GLE9BQU8sVUFBVSxJQUFJLFVBQVUsQ0FBQyxNQUFNLEdBQUcsVUFBVSxDQUFDLE1BQU0sSUFBSSxLQUFLLEVBQUUsQ0FBQztZQUNyRSxJQUFJLENBQUMsTUFBTSxJQUFJLFVBQVUsQ0FBQyxTQUFTLEdBQUcsVUFBVSxDQUFDLE1BQU0sQ0FBQTtZQUN2RCxJQUFJLENBQUMsR0FBRyxFQUFFLENBQUE7WUFDVixVQUFVLEdBQUcsSUFBSSxDQUFDLGNBQWMsQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFBO1FBQ2pELENBQUM7UUFDRCxtRkFBbUY7UUFFbkYsSUFBSSxVQUFVLElBQUksVUFBVSxDQUFDLE1BQU0sSUFBSSxLQUFLLEVBQUUsQ0FBQztZQUM5QyxrQ0FBa0M7WUFDbEMsT0FBTyxTQUFTLENBQUE7UUFDakIsQ0FBQztRQUVELE9BQU8sS0FBSyxHQUFHLElBQUksQ0FBQyxNQUFNLENBQUE7SUFDM0IsQ0FBQztDQUNEO0FBRUQsTUFBTSxPQUFPLHdCQUF3QjtJQUNwQyxZQUE2QixZQUFpQztRQUFqQyxpQkFBWSxHQUFaLFlBQVksQ0FBcUI7SUFBRyxDQUFDO0lBRWxFLFNBQVMsQ0FBQyxLQUFhO1FBQ3RCLEtBQUssTUFBTSxXQUFXLElBQUksSUFBSSxDQUFDLFlBQVksRUFBRSxDQUFDO1lBQzdDLE1BQU0sTUFBTSxHQUFHLFdBQVcsQ0FBQyxTQUFTLENBQUMsS0FBSyxDQUFDLENBQUE7WUFDM0MsSUFBSSxNQUFNLEtBQUssU0FBUyxFQUFFLENBQUM7Z0JBQzFCLE9BQU8sU0FBUyxDQUFBO1lBQ2pCLENBQUM7WUFDRCxLQUFLLEdBQUcsTUFBTSxDQUFBO1FBQ2YsQ0FBQztRQUNELE9BQU8sS0FBSyxDQUFBO0lBQ2IsQ0FBQztDQUNEIn0=

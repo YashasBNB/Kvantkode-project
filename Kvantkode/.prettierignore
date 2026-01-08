@@ -1,0 +1,15 @@
+node_modules/
+out/
+dist/
+build/
+.vscode/
+**/*.min.js
+**/*.min.css
+coverage/
+packages/*/dist/
+**/*.snap
+test/
+tests/
+# Ignore the large VS Code source tree by default
+src/**
+!src/vs/workbench/contrib/void/**

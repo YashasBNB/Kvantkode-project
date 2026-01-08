@@ -1,0 +1,83 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import * as nls from '../../../../nls.js';
+import { basename } from '../../../../base/common/resources.js';
+import { MarkerSeverity } from '../../../../platform/markers/common/markers.js';
+export default class Messages {
+    static { this.MARKERS_PANEL_TOGGLE_LABEL = nls.localize('problems.view.toggle.label', 'Toggle Problems (Errors, Warnings, Infos)'); }
+    static { this.MARKERS_PANEL_SHOW_LABEL = nls.localize2('problems.view.focus.label', 'Focus Problems (Errors, Warnings, Infos)'); }
+    static { this.PROBLEMS_PANEL_CONFIGURATION_TITLE = nls.localize('problems.panel.configuration.title', 'Problems View'); }
+    static { this.PROBLEMS_PANEL_CONFIGURATION_AUTO_REVEAL = nls.localize('problems.panel.configuration.autoreveal', 'Controls whether Problems view should automatically reveal files when opening them.'); }
+    static { this.PROBLEMS_PANEL_CONFIGURATION_VIEW_MODE = nls.localize('problems.panel.configuration.viewMode', 'Controls the default view mode of the Problems view.'); }
+    static { this.PROBLEMS_PANEL_CONFIGURATION_SHOW_CURRENT_STATUS = nls.localize('problems.panel.configuration.showCurrentInStatus', 'When enabled shows the current problem in the status bar.'); }
+    static { this.PROBLEMS_PANEL_CONFIGURATION_COMPARE_ORDER = nls.localize('problems.panel.configuration.compareOrder', 'Controls the order in which problems are navigated.'); }
+    static { this.PROBLEMS_PANEL_CONFIGURATION_COMPARE_ORDER_SEVERITY = nls.localize('problems.panel.configuration.compareOrder.severity', 'Navigate problems ordered by severity'); }
+    static { this.PROBLEMS_PANEL_CONFIGURATION_COMPARE_ORDER_POSITION = nls.localize('problems.panel.configuration.compareOrder.position', 'Navigate problems ordered by position'); }
+    static { this.MARKERS_PANEL_TITLE_PROBLEMS = nls.localize2('markers.panel.title.problems', 'Problems'); }
+    static { this.MARKERS_PANEL_NO_PROBLEMS_BUILT = nls.localize('markers.panel.no.problems.build', 'No problems have been detected in the workspace.'); }
+    static { this.MARKERS_PANEL_NO_PROBLEMS_ACTIVE_FILE_BUILT = nls.localize('markers.panel.no.problems.activeFile.build', 'No problems have been detected in the current file.'); }
+    static { this.MARKERS_PANEL_NO_PROBLEMS_FILTERS = nls.localize('markers.panel.no.problems.filters', 'No results found with provided filter criteria.'); }
+    static { this.MARKERS_PANEL_ACTION_TOOLTIP_MORE_FILTERS = nls.localize('markers.panel.action.moreFilters', 'More Filters...'); }
+    static { this.MARKERS_PANEL_FILTER_LABEL_SHOW_ERRORS = nls.localize('markers.panel.filter.showErrors', 'Show Errors'); }
+    static { this.MARKERS_PANEL_FILTER_LABEL_SHOW_WARNINGS = nls.localize('markers.panel.filter.showWarnings', 'Show Warnings'); }
+    static { this.MARKERS_PANEL_FILTER_LABEL_SHOW_INFOS = nls.localize('markers.panel.filter.showInfos', 'Show Infos'); }
+    static { this.MARKERS_PANEL_FILTER_LABEL_EXCLUDED_FILES = nls.localize('markers.panel.filter.useFilesExclude', 'Hide Excluded Files'); }
+    static { this.MARKERS_PANEL_FILTER_LABEL_ACTIVE_FILE = nls.localize('markers.panel.filter.activeFile', 'Show Active File Only'); }
+    static { this.MARKERS_PANEL_ACTION_TOOLTIP_FILTER = nls.localize('markers.panel.action.filter', 'Filter Problems'); }
+    static { this.MARKERS_PANEL_ACTION_TOOLTIP_QUICKFIX = nls.localize('markers.panel.action.quickfix', 'Show fixes'); }
+    static { this.MARKERS_PANEL_FILTER_ARIA_LABEL = nls.localize('markers.panel.filter.ariaLabel', 'Filter Problems'); }
+    static { this.MARKERS_PANEL_FILTER_PLACEHOLDER = nls.localize('markers.panel.filter.placeholder', 'Filter (e.g. text, **/*.ts, !**/node_modules/**)'); }
+    static { this.MARKERS_PANEL_FILTER_ERRORS = nls.localize('markers.panel.filter.errors', 'errors'); }
+    static { this.MARKERS_PANEL_FILTER_WARNINGS = nls.localize('markers.panel.filter.warnings', 'warnings'); }
+    static { this.MARKERS_PANEL_FILTER_INFOS = nls.localize('markers.panel.filter.infos', 'infos'); }
+    static { this.MARKERS_PANEL_SINGLE_ERROR_LABEL = nls.localize('markers.panel.single.error.label', '1 Error'); }
+    static { this.MARKERS_PANEL_MULTIPLE_ERRORS_LABEL = (noOfErrors) => {
+        return nls.localize('markers.panel.multiple.errors.label', '{0} Errors', '' + noOfErrors);
+    }; }
+    static { this.MARKERS_PANEL_SINGLE_WARNING_LABEL = nls.localize('markers.panel.single.warning.label', '1 Warning'); }
+    static { this.MARKERS_PANEL_MULTIPLE_WARNINGS_LABEL = (noOfWarnings) => {
+        return nls.localize('markers.panel.multiple.warnings.label', '{0} Warnings', '' + noOfWarnings);
+    }; }
+    static { this.MARKERS_PANEL_SINGLE_INFO_LABEL = nls.localize('markers.panel.single.info.label', '1 Info'); }
+    static { this.MARKERS_PANEL_MULTIPLE_INFOS_LABEL = (noOfInfos) => {
+        return nls.localize('markers.panel.multiple.infos.label', '{0} Infos', '' + noOfInfos);
+    }; }
+    static { this.MARKERS_PANEL_SINGLE_UNKNOWN_LABEL = nls.localize('markers.panel.single.unknown.label', '1 Unknown'); }
+    static { this.MARKERS_PANEL_MULTIPLE_UNKNOWNS_LABEL = (noOfUnknowns) => {
+        return nls.localize('markers.panel.multiple.unknowns.label', '{0} Unknowns', '' + noOfUnknowns);
+    }; }
+    static { this.MARKERS_PANEL_AT_LINE_COL_NUMBER = (ln, col) => {
+        return nls.localize('markers.panel.at.ln.col.number', '[Ln {0}, Col {1}]', '' + ln, '' + col);
+    }; }
+    static { this.MARKERS_TREE_ARIA_LABEL_RESOURCE = (noOfProblems, fileName, folder) => {
+        return nls.localize('problems.tree.aria.label.resource', '{0} problems in file {1} of folder {2}', noOfProblems, fileName, folder);
+    }; }
+    static { this.MARKERS_TREE_ARIA_LABEL_MARKER = (marker) => {
+        const relatedInformationMessage = marker.relatedInformation.length
+            ? nls.localize('problems.tree.aria.label.marker.relatedInformation', ' This problem has references to {0} locations.', marker.relatedInformation.length)
+            : '';
+        switch (marker.marker.severity) {
+            case MarkerSeverity.Error:
+                return marker.marker.source
+                    ? nls.localize('problems.tree.aria.label.error.marker', 'Error: {0} at line {1} and character {2}.{3} generated by {4}', marker.marker.message, marker.marker.startLineNumber, marker.marker.startColumn, relatedInformationMessage, marker.marker.source)
+                    : nls.localize('problems.tree.aria.label.error.marker.nosource', 'Error: {0} at line {1} and character {2}.{3}', marker.marker.message, marker.marker.startLineNumber, marker.marker.startColumn, relatedInformationMessage);
+            case MarkerSeverity.Warning:
+                return marker.marker.source
+                    ? nls.localize('problems.tree.aria.label.warning.marker', 'Warning: {0} at line {1} and character {2}.{3} generated by {4}', marker.marker.message, marker.marker.startLineNumber, marker.marker.startColumn, relatedInformationMessage, marker.marker.source)
+                    : nls.localize('problems.tree.aria.label.warning.marker.nosource', 'Warning: {0} at line {1} and character {2}.{3}', marker.marker.message, marker.marker.startLineNumber, marker.marker.startColumn, relatedInformationMessage, relatedInformationMessage);
+            case MarkerSeverity.Info:
+                return marker.marker.source
+                    ? nls.localize('problems.tree.aria.label.info.marker', 'Info: {0} at line {1} and character {2}.{3} generated by {4}', marker.marker.message, marker.marker.startLineNumber, marker.marker.startColumn, relatedInformationMessage, marker.marker.source)
+                    : nls.localize('problems.tree.aria.label.info.marker.nosource', 'Info: {0} at line {1} and character {2}.{3}', marker.marker.message, marker.marker.startLineNumber, marker.marker.startColumn, relatedInformationMessage);
+            default:
+                return marker.marker.source
+                    ? nls.localize('problems.tree.aria.label.marker', 'Problem: {0} at line {1} and character {2}.{3} generated by {4}', marker.marker.source, marker.marker.message, marker.marker.startLineNumber, marker.marker.startColumn, relatedInformationMessage, marker.marker.source)
+                    : nls.localize('problems.tree.aria.label.marker.nosource', 'Problem: {0} at line {1} and character {2}.{3}', marker.marker.message, marker.marker.startLineNumber, marker.marker.startColumn, relatedInformationMessage);
+        }
+    }; }
+    static { this.MARKERS_TREE_ARIA_LABEL_RELATED_INFORMATION = (relatedInformation) => nls.localize('problems.tree.aria.label.relatedinfo.message', '{0} at line {1} and character {2} in {3}', relatedInformation.message, relatedInformation.startLineNumber, relatedInformation.startColumn, basename(relatedInformation.resource)); }
+    static { this.SHOW_ERRORS_WARNINGS_ACTION_LABEL = nls.localize('errors.warnings.show.label', 'Show Errors and Warnings'); }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibWVzc2FnZXMuanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9Vc2Vycy95YXNoYXNuYWlkdS9LdmFudGNvZGUvS3ZhbnRrb2RlL3NyYy8iLCJzb3VyY2VzIjpbInZzL3dvcmtiZW5jaC9jb250cmliL21hcmtlcnMvYnJvd3Nlci9tZXNzYWdlcy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRztBQUVoRyxPQUFPLEtBQUssR0FBRyxNQUFNLG9CQUFvQixDQUFBO0FBQ3pDLE9BQU8sRUFBRSxRQUFRLEVBQUUsTUFBTSxzQ0FBc0MsQ0FBQTtBQUMvRCxPQUFPLEVBQUUsY0FBYyxFQUF1QixNQUFNLGdEQUFnRCxDQUFBO0FBSXBHLE1BQU0sQ0FBQyxPQUFPLE9BQU8sUUFBUTthQUNkLCtCQUEwQixHQUFXLEdBQUcsQ0FBQyxRQUFRLENBQzlELDRCQUE0QixFQUM1QiwyQ0FBMkMsQ0FDM0MsQ0FBQTthQUNhLDZCQUF3QixHQUFHLEdBQUcsQ0FBQyxTQUFTLENBQ3JELDJCQUEyQixFQUMzQiwwQ0FBMEMsQ0FDMUMsQ0FBQTthQUVhLHVDQUFrQyxHQUFXLEdBQUcsQ0FBQyxRQUFRLENBQ3RFLG9DQUFvQyxFQUNwQyxlQUFlLENBQ2YsQ0FBQTthQUNhLDZDQUF3QyxHQUFXLEdBQUcsQ0FBQyxRQUFRLENBQzVFLHlDQUF5QyxFQUN6QyxxRkFBcUYsQ0FDckYsQ0FBQTthQUNhLDJDQUFzQyxHQUFXLEdBQUcsQ0FBQyxRQUFRLENBQzFFLHVDQUF1QyxFQUN2QyxzREFBc0QsQ0FDdEQsQ0FBQTthQUNhLHFEQUFnRCxHQUFXLEdBQUcsQ0FBQyxRQUFRLENBQ3BGLGtEQUFrRCxFQUNsRCwyREFBMkQsQ0FDM0QsQ0FBQTthQUNhLCtDQUEwQyxHQUFXLEdBQUcsQ0FBQyxRQUFRLENBQzlFLDJDQUEyQyxFQUMzQyxxREFBcUQsQ0FDckQsQ0FBQTthQUNhLHdEQUFtRCxHQUFXLEdBQUcsQ0FBQyxRQUFRLENBQ3ZGLG9EQUFvRCxFQUNwRCx1Q0FBdUMsQ0FDdkMsQ0FBQTthQUNhLHdEQUFtRCxHQUFXLEdBQUcsQ0FBQyxRQUFRLENBQ3ZGLG9EQUFvRCxFQUNwRCx1Q0FBdUMsQ0FDdkMsQ0FBQTthQUVhLGlDQUE0QixHQUFxQixHQUFHLENBQUMsU0FBUyxDQUMzRSw4QkFBOEIsRUFDOUIsVUFBVSxDQUNWLENBQUE7YUFFYSxvQ0FBK0IsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUNuRSxpQ0FBaUMsRUFDakMsa0RBQWtELENBQ2xELENBQUE7YUFDYSxnREFBMkMsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUMvRSw0Q0FBNEMsRUFDNUMscURBQXFELENBQ3JELENBQUE7YUFDYSxzQ0FBaUMsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUNyRSxtQ0FBbUMsRUFDbkMsaURBQWlELENBQ2pELENBQUE7YUFFYSw4Q0FBeUMsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUM3RSxrQ0FBa0MsRUFDbEMsaUJBQWlCLENBQ2pCLENBQUE7YUFDYSwyQ0FBc0MsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUMxRSxpQ0FBaUMsRUFDakMsYUFBYSxDQUNiLENBQUE7YUFDYSw2Q0FBd0MsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUM1RSxtQ0FBbUMsRUFDbkMsZUFBZSxDQUNmLENBQUE7YUFDYSwwQ0FBcUMsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUN6RSxnQ0FBZ0MsRUFDaEMsWUFBWSxDQUNaLENBQUE7YUFDYSw4Q0FBeUMsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUM3RSxzQ0FBc0MsRUFDdEMscUJBQXFCLENBQ3JCLENBQUE7YUFDYSwyQ0FBc0MsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUMxRSxpQ0FBaUMsRUFDakMsdUJBQXVCLENBQ3ZCLENBQUE7YUFDYSx3Q0FBbUMsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUN2RSw2QkFBNkIsRUFDN0IsaUJBQWlCLENBQ2pCLENBQUE7YUFDYSwwQ0FBcUMsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUN6RSwrQkFBK0IsRUFDL0IsWUFBWSxDQUNaLENBQUE7YUFDYSxvQ0FBK0IsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUNuRSxnQ0FBZ0MsRUFDaEMsaUJBQWlCLENBQ2pCLENBQUE7YUFDYSxxQ0FBZ0MsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUNwRSxrQ0FBa0MsRUFDbEMsa0RBQWtELENBQ2xELENBQUE7YUFDYSxnQ0FBMkIsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUMvRCw2QkFBNkIsRUFDN0IsUUFBUSxDQUNSLENBQUE7YUFDYSxrQ0FBNkIsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUNqRSwrQkFBK0IsRUFDL0IsVUFBVSxDQUNWLENBQUE7YUFDYSwrQkFBMEIsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUM5RCw0QkFBNEIsRUFDNUIsT0FBTyxDQUNQLENBQUE7YUFFYSxxQ0FBZ0MsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUNwRSxrQ0FBa0MsRUFDbEMsU0FBUyxDQUNULENBQUE7YUFDc0Isd0NBQW1DLEdBQUcsQ0FBQyxVQUFrQixFQUFVLEVBQUU7UUFDM0YsT0FBTyxHQUFHLENBQUMsUUFBUSxDQUFDLHFDQUFxQyxFQUFFLFlBQVksRUFBRSxFQUFFLEdBQUcsVUFBVSxDQUFDLENBQUE7SUFDMUYsQ0FBQyxDQUFBO2FBQ2EsdUNBQWtDLEdBQVcsR0FBRyxDQUFDLFFBQVEsQ0FDdEUsb0NBQW9DLEVBQ3BDLFdBQVcsQ0FDWCxDQUFBO2FBQ3NCLDBDQUFxQyxHQUFHLENBQUMsWUFBb0IsRUFBVSxFQUFFO1FBQy9GLE9BQU8sR0FBRyxDQUFDLFFBQVEsQ0FBQyx1Q0FBdUMsRUFBRSxjQUFjLEVBQUUsRUFBRSxHQUFHLFlBQVksQ0FBQyxDQUFBO0lBQ2hHLENBQUMsQ0FBQTthQUNhLG9DQUErQixHQUFXLEdBQUcsQ0FBQyxRQUFRLENBQ25FLGlDQUFpQyxFQUNqQyxRQUFRLENBQ1IsQ0FBQTthQUNzQix1Q0FBa0MsR0FBRyxDQUFDLFNBQWlCLEVBQVUsRUFBRTtRQUN6RixPQUFPLEdBQUcsQ0FBQyxRQUFRLENBQUMsb0NBQW9DLEVBQUUsV0FBVyxFQUFFLEVBQUUsR0FBRyxTQUFTLENBQUMsQ0FBQTtJQUN2RixDQUFDLENBQUE7YUFDYSx1Q0FBa0MsR0FBVyxHQUFHLENBQUMsUUFBUSxDQUN0RSxvQ0FBb0MsRUFDcEMsV0FBVyxDQUNYLENBQUE7YUFDc0IsMENBQXFDLEdBQUcsQ0FBQyxZQUFvQixFQUFVLEVBQUU7UUFDL0YsT0FBTyxHQUFHLENBQUMsUUFBUSxDQUFDLHVDQUF1QyxFQUFFLGNBQWMsRUFBRSxFQUFFLEdBQUcsWUFBWSxDQUFDLENBQUE7SUFDaEcsQ0FBQyxDQUFBO2FBRXNCLHFDQUFnQyxHQUFHLENBQUMsRUFBVSxFQUFFLEdBQVcsRUFBVSxFQUFFO1FBQzdGLE9BQU8sR0FBRyxDQUFDLFFBQVEsQ0FBQyxnQ0FBZ0MsRUFBRSxtQkFBbUIsRUFBRSxFQUFFLEdBQUcsRUFBRSxFQUFFLEVBQUUsR0FBRyxHQUFHLENBQUMsQ0FBQTtJQUM5RixDQUFDLENBQUE7YUFFc0IscUNBQWdDLEdBQUcsQ0FDekQsWUFBb0IsRUFDcEIsUUFBZ0IsRUFDaEIsTUFBYyxFQUNMLEVBQUU7UUFDWCxPQUFPLEdBQUcsQ0FBQyxRQUFRLENBQ2xCLG1DQUFtQyxFQUNuQyx3Q0FBd0MsRUFDeEMsWUFBWSxFQUNaLFFBQVEsRUFDUixNQUFNLENBQ04sQ0FBQTtJQUNGLENBQUMsQ0FBQTthQUNzQixtQ0FBOEIsR0FBRyxDQUFDLE1BQWMsRUFBVSxFQUFFO1FBQ2xGLE1BQU0seUJBQXlCLEdBQUcsTUFBTSxDQUFDLGtCQUFrQixDQUFDLE1BQU07WUFDakUsQ0FBQyxDQUFDLEdBQUcsQ0FBQyxRQUFRLENBQ1osb0RBQW9ELEVBQ3BELGdEQUFnRCxFQUNoRCxNQUFNLENBQUMsa0JBQWtCLENBQUMsTUFBTSxDQUNoQztZQUNGLENBQUMsQ0FBQyxFQUFFLENBQUE7UUFDTCxRQUFRLE1BQU0sQ0FBQyxNQUFNLENBQUMsUUFBUSxFQUFFLENBQUM7WUFDaEMsS0FBSyxjQUFjLENBQUMsS0FBSztnQkFDeEIsT0FBTyxNQUFNLENBQUMsTUFBTSxDQUFDLE1BQU07b0JBQzFCLENBQUMsQ0FBQyxHQUFHLENBQUMsUUFBUSxDQUNaLHVDQUF1QyxFQUN2QywrREFBK0QsRUFDL0QsTUFBTSxDQUFDLE1BQU0sQ0FBQyxPQUFPLEVBQ3JCLE1BQU0sQ0FBQyxNQUFNLENBQUMsZUFBZSxFQUM3QixNQUFNLENBQUMsTUFBTSxDQUFDLFdBQVcsRUFDekIseUJBQXlCLEVBQ3pCLE1BQU0sQ0FBQyxNQUFNLENBQUMsTUFBTSxDQUNwQjtvQkFDRixDQUFDLENBQUMsR0FBRyxDQUFDLFFBQVEsQ0FDWixnREFBZ0QsRUFDaEQsOENBQThDLEVBQzlDLE1BQU0sQ0FBQyxNQUFNLENBQUMsT0FBTyxFQUNyQixNQUFNLENBQUMsTUFBTSxDQUFDLGVBQWUsRUFDN0IsTUFBTSxDQUFDLE1BQU0sQ0FBQyxXQUFXLEVBQ3pCLHlCQUF5QixDQUN6QixDQUFBO1lBQ0osS0FBSyxjQUFjLENBQUMsT0FBTztnQkFDMUIsT0FBTyxNQUFNLENBQUMsTUFBTSxDQUFDLE1BQU07b0JBQzFCLENBQUMsQ0FBQyxHQUFHLENBQUMsUUFBUSxDQUNaLHlDQUF5QyxFQUN6QyxpRUFBaUUsRUFDakUsTUFBTSxDQUFDLE1BQU0sQ0FBQyxPQUFPLEVBQ3JCLE1BQU0sQ0FBQyxNQUFNLENBQUMsZUFBZSxFQUM3QixNQUFNLENBQUMsTUFBTSxDQUFDLFdBQVcsRUFDekIseUJBQXlCLEVBQ3pCLE1BQU0sQ0FBQyxNQUFNLENBQUMsTUFBTSxDQUNwQjtvQkFDRixDQUFDLENBQUMsR0FBRyxDQUFDLFFBQVEsQ0FDWixrREFBa0QsRUFDbEQsZ0RBQWdELEVBQ2hELE1BQU0sQ0FBQyxNQUFNLENBQUMsT0FBTyxFQUNyQixNQUFNLENBQUMsTUFBTSxDQUFDLGVBQWUsRUFDN0IsTUFBTSxDQUFDLE1BQU0sQ0FBQyxXQUFXLEVBQ3pCLHlCQUF5QixFQUN6Qix5QkFBeUIsQ0FDekIsQ0FBQTtZQUVKLEtBQUssY0FBYyxDQUFDLElBQUk7Z0JBQ3ZCLE9BQU8sTUFBTSxDQUFDLE1BQU0sQ0FBQyxNQUFNO29CQUMxQixDQUFDLENBQUMsR0FBRyxDQUFDLFFBQVEsQ0FDWixzQ0FBc0MsRUFDdEMsOERBQThELEVBQzlELE1BQU0sQ0FBQyxNQUFNLENBQUMsT0FBTyxFQUNyQixNQUFNLENBQUMsTUFBTSxDQUFDLGVBQWUsRUFDN0IsTUFBTSxDQUFDLE1BQU0sQ0FBQyxXQUFXLEVBQ3pCLHlCQUF5QixFQUN6QixNQUFNLENBQUMsTUFBTSxDQUFDLE1BQU0sQ0FDcEI7b0JBQ0YsQ0FBQyxDQUFDLEdBQUcsQ0FBQyxRQUFRLENBQ1osK0NBQStDLEVBQy9DLDZDQUE2QyxFQUM3QyxNQUFNLENBQUMsTUFBTSxDQUFDLE9BQU8sRUFDckIsTUFBTSxDQUFDLE1BQU0sQ0FBQyxlQUFlLEVBQzdCLE1BQU0sQ0FBQyxNQUFNLENBQUMsV0FBVyxFQUN6Qix5QkFBeUIsQ0FDekIsQ0FBQTtZQUNKO2dCQUNDLE9BQU8sTUFBTSxDQUFDLE1BQU0sQ0FBQyxNQUFNO29CQUMxQixDQUFDLENBQUMsR0FBRyxDQUFDLFFBQVEsQ0FDWixpQ0FBaUMsRUFDakMsaUVBQWlFLEVBQ2pFLE1BQU0sQ0FBQyxNQUFNLENBQUMsTUFBTSxFQUNwQixNQUFNLENBQUMsTUFBTSxDQUFDLE9BQU8sRUFDckIsTUFBTSxDQUFDLE1BQU0sQ0FBQyxlQUFlLEVBQzdCLE1BQU0sQ0FBQyxNQUFNLENBQUMsV0FBVyxFQUN6Qix5QkFBeUIsRUFDekIsTUFBTSxDQUFDLE1BQU0sQ0FBQyxNQUFNLENBQ3BCO29CQUNGLENBQUMsQ0FBQyxHQUFHLENBQUMsUUFBUSxDQUNaLDBDQUEwQyxFQUMxQyxnREFBZ0QsRUFDaEQsTUFBTSxDQUFDLE1BQU0sQ0FBQyxPQUFPLEVBQ3JCLE1BQU0sQ0FBQyxNQUFNLENBQUMsZUFBZSxFQUM3QixNQUFNLENBQUMsTUFBTSxDQUFDLFdBQVcsRUFDekIseUJBQXlCLENBQ3pCLENBQUE7UUFDTCxDQUFDO0lBQ0YsQ0FBQyxDQUFBO2FBQ3NCLGdEQUEyQyxHQUFHLENBQ3BFLGtCQUF1QyxFQUM5QixFQUFFLENBQ1gsR0FBRyxDQUFDLFFBQVEsQ0FDWCw4Q0FBOEMsRUFDOUMsMENBQTBDLEVBQzFDLGtCQUFrQixDQUFDLE9BQU8sRUFDMUIsa0JBQWtCLENBQUMsZUFBZSxFQUNsQyxrQkFBa0IsQ0FBQyxXQUFXLEVBQzlCLFFBQVEsQ0FBQyxrQkFBa0IsQ0FBQyxRQUFRLENBQUMsQ0FDckMsQ0FBQTthQUNZLHNDQUFpQyxHQUFXLEdBQUcsQ0FBQyxRQUFRLENBQ3JFLDRCQUE0QixFQUM1QiwwQkFBMEIsQ0FDMUIsQ0FBQSJ9

@@ -1,0 +1,330 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import assert from 'assert';
+import { CompressibleObjectTree, ObjectTree, } from '../../../../browser/ui/tree/objectTree.js';
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../common/utils.js';
+function getRowsTextContent(container) {
+    const rows = [...container.querySelectorAll('.monaco-list-row')];
+    rows.sort((a, b) => parseInt(a.getAttribute('data-index')) - parseInt(b.getAttribute('data-index')));
+    return rows.map((row) => row.querySelector('.monaco-tl-contents').textContent);
+}
+suite('ObjectTree', function () {
+    suite('TreeNavigator', function () {
+        let tree;
+        let filter = (_) => true;
+        teardown(() => {
+            tree.dispose();
+            filter = (_) => true;
+        });
+        ensureNoDisposablesAreLeakedInTestSuite();
+        setup(() => {
+            const container = document.createElement('div');
+            container.style.width = '200px';
+            container.style.height = '200px';
+            const delegate = new (class {
+                getHeight() {
+                    return 20;
+                }
+                getTemplateId() {
+                    return 'default';
+                }
+            })();
+            const renderer = new (class {
+                constructor() {
+                    this.templateId = 'default';
+                }
+                renderTemplate(container) {
+                    return container;
+                }
+                renderElement(element, index, templateData) {
+                    templateData.textContent = `${element.element}`;
+                }
+                disposeTemplate() { }
+            })();
+            tree = new ObjectTree('test', container, delegate, [renderer], {
+                filter: { filter: (el) => filter(el) },
+            });
+            tree.layout(200);
+        });
+        test('should be able to navigate', () => {
+            tree.setChildren(null, [
+                {
+                    element: 0,
+                    children: [{ element: 10 }, { element: 11 }, { element: 12 }],
+                },
+                { element: 1 },
+                { element: 2 },
+            ]);
+            const navigator = tree.navigate();
+            assert.strictEqual(navigator.current(), null);
+            assert.strictEqual(navigator.next(), 0);
+            assert.strictEqual(navigator.current(), 0);
+            assert.strictEqual(navigator.next(), 10);
+            assert.strictEqual(navigator.current(), 10);
+            assert.strictEqual(navigator.next(), 11);
+            assert.strictEqual(navigator.current(), 11);
+            assert.strictEqual(navigator.next(), 12);
+            assert.strictEqual(navigator.current(), 12);
+            assert.strictEqual(navigator.next(), 1);
+            assert.strictEqual(navigator.current(), 1);
+            assert.strictEqual(navigator.next(), 2);
+            assert.strictEqual(navigator.current(), 2);
+            assert.strictEqual(navigator.previous(), 1);
+            assert.strictEqual(navigator.current(), 1);
+            assert.strictEqual(navigator.previous(), 12);
+            assert.strictEqual(navigator.previous(), 11);
+            assert.strictEqual(navigator.previous(), 10);
+            assert.strictEqual(navigator.previous(), 0);
+            assert.strictEqual(navigator.previous(), null);
+            assert.strictEqual(navigator.next(), 0);
+            assert.strictEqual(navigator.next(), 10);
+            assert.strictEqual(navigator.first(), 0);
+            assert.strictEqual(navigator.last(), 2);
+        });
+        test('should skip collapsed nodes', () => {
+            tree.setChildren(null, [
+                {
+                    element: 0,
+                    collapsed: true,
+                    children: [{ element: 10 }, { element: 11 }, { element: 12 }],
+                },
+                { element: 1 },
+                { element: 2 },
+            ]);
+            const navigator = tree.navigate();
+            assert.strictEqual(navigator.current(), null);
+            assert.strictEqual(navigator.next(), 0);
+            assert.strictEqual(navigator.next(), 1);
+            assert.strictEqual(navigator.next(), 2);
+            assert.strictEqual(navigator.next(), null);
+            assert.strictEqual(navigator.previous(), 2);
+            assert.strictEqual(navigator.previous(), 1);
+            assert.strictEqual(navigator.previous(), 0);
+            assert.strictEqual(navigator.previous(), null);
+            assert.strictEqual(navigator.next(), 0);
+            assert.strictEqual(navigator.first(), 0);
+            assert.strictEqual(navigator.last(), 2);
+        });
+        test('should skip filtered elements', () => {
+            filter = (el) => el % 2 === 0;
+            tree.setChildren(null, [
+                {
+                    element: 0,
+                    children: [{ element: 10 }, { element: 11 }, { element: 12 }],
+                },
+                { element: 1 },
+                { element: 2 },
+            ]);
+            const navigator = tree.navigate();
+            assert.strictEqual(navigator.current(), null);
+            assert.strictEqual(navigator.next(), 0);
+            assert.strictEqual(navigator.next(), 10);
+            assert.strictEqual(navigator.next(), 12);
+            assert.strictEqual(navigator.next(), 2);
+            assert.strictEqual(navigator.next(), null);
+            assert.strictEqual(navigator.previous(), 2);
+            assert.strictEqual(navigator.previous(), 12);
+            assert.strictEqual(navigator.previous(), 10);
+            assert.strictEqual(navigator.previous(), 0);
+            assert.strictEqual(navigator.previous(), null);
+            assert.strictEqual(navigator.next(), 0);
+            assert.strictEqual(navigator.next(), 10);
+            assert.strictEqual(navigator.first(), 0);
+            assert.strictEqual(navigator.last(), 2);
+        });
+        test('should be able to start from node', () => {
+            tree.setChildren(null, [
+                {
+                    element: 0,
+                    children: [{ element: 10 }, { element: 11 }, { element: 12 }],
+                },
+                { element: 1 },
+                { element: 2 },
+            ]);
+            const navigator = tree.navigate(1);
+            assert.strictEqual(navigator.current(), 1);
+            assert.strictEqual(navigator.next(), 2);
+            assert.strictEqual(navigator.current(), 2);
+            assert.strictEqual(navigator.previous(), 1);
+            assert.strictEqual(navigator.current(), 1);
+            assert.strictEqual(navigator.previous(), 12);
+            assert.strictEqual(navigator.previous(), 11);
+            assert.strictEqual(navigator.previous(), 10);
+            assert.strictEqual(navigator.previous(), 0);
+            assert.strictEqual(navigator.previous(), null);
+            assert.strictEqual(navigator.next(), 0);
+            assert.strictEqual(navigator.next(), 10);
+            assert.strictEqual(navigator.first(), 0);
+            assert.strictEqual(navigator.last(), 2);
+        });
+    });
+    class Delegate {
+        getHeight() {
+            return 20;
+        }
+        getTemplateId() {
+            return 'default';
+        }
+    }
+    class Renderer {
+        constructor() {
+            this.templateId = 'default';
+        }
+        renderTemplate(container) {
+            return container;
+        }
+        renderElement(element, index, templateData) {
+            templateData.textContent = `${element.element}`;
+        }
+        disposeTemplate() { }
+    }
+    class IdentityProvider {
+        getId(element) {
+            return `${element % 100}`;
+        }
+    }
+    test('traits are preserved according to string identity', function () {
+        const container = document.createElement('div');
+        container.style.width = '200px';
+        container.style.height = '200px';
+        const delegate = new Delegate();
+        const renderer = new Renderer();
+        const identityProvider = new IdentityProvider();
+        const tree = new ObjectTree('test', container, delegate, [renderer], {
+            identityProvider,
+        });
+        tree.layout(200);
+        tree.setChildren(null, [{ element: 0 }, { element: 1 }, { element: 2 }, { element: 3 }]);
+        tree.setFocus([1]);
+        assert.deepStrictEqual(tree.getFocus(), [1]);
+        tree.setChildren(null, [{ element: 100 }, { element: 101 }, { element: 102 }, { element: 103 }]);
+        assert.deepStrictEqual(tree.getFocus(), [101]);
+    });
+});
+suite('CompressibleObjectTree', function () {
+    class Delegate {
+        getHeight() {
+            return 20;
+        }
+        getTemplateId() {
+            return 'default';
+        }
+    }
+    class Renderer {
+        constructor() {
+            this.templateId = 'default';
+        }
+        renderTemplate(container) {
+            return container;
+        }
+        renderElement(node, _, templateData) {
+            templateData.textContent = `${node.element}`;
+        }
+        renderCompressedElements(node, _, templateData) {
+            templateData.textContent = `${node.element.elements.join('/')}`;
+        }
+        disposeTemplate() { }
+    }
+    const ds = ensureNoDisposablesAreLeakedInTestSuite();
+    test('empty', function () {
+        const container = document.createElement('div');
+        container.style.width = '200px';
+        container.style.height = '200px';
+        const tree = ds.add(new CompressibleObjectTree('test', container, new Delegate(), [new Renderer()]));
+        tree.layout(200);
+        assert.strictEqual(getRowsTextContent(container).length, 0);
+    });
+    test('simple', function () {
+        const container = document.createElement('div');
+        container.style.width = '200px';
+        container.style.height = '200px';
+        const tree = ds.add(new CompressibleObjectTree('test', container, new Delegate(), [new Renderer()]));
+        tree.layout(200);
+        tree.setChildren(null, [
+            {
+                element: 0,
+                children: [{ element: 10 }, { element: 11 }, { element: 12 }],
+            },
+            { element: 1 },
+            { element: 2 },
+        ]);
+        assert.deepStrictEqual(getRowsTextContent(container), ['0', '10', '11', '12', '1', '2']);
+    });
+    test('compressed', () => {
+        const container = document.createElement('div');
+        container.style.width = '200px';
+        container.style.height = '200px';
+        const tree = ds.add(new CompressibleObjectTree('test', container, new Delegate(), [new Renderer()]));
+        tree.layout(200);
+        tree.setChildren(null, [
+            {
+                element: 1,
+                children: [
+                    {
+                        element: 11,
+                        children: [
+                            {
+                                element: 111,
+                                children: [{ element: 1111 }, { element: 1112 }, { element: 1113 }],
+                            },
+                        ],
+                    },
+                ],
+            },
+        ]);
+        assert.deepStrictEqual(getRowsTextContent(container), ['1/11/111', '1111', '1112', '1113']);
+        tree.setChildren(11, [{ element: 111 }, { element: 112 }, { element: 113 }]);
+        assert.deepStrictEqual(getRowsTextContent(container), ['1/11', '111', '112', '113']);
+        tree.setChildren(113, [{ element: 1131 }]);
+        assert.deepStrictEqual(getRowsTextContent(container), ['1/11', '111', '112', '113/1131']);
+        tree.setChildren(1131, [{ element: 1132 }]);
+        assert.deepStrictEqual(getRowsTextContent(container), ['1/11', '111', '112', '113/1131/1132']);
+        tree.setChildren(1131, [{ element: 1132 }, { element: 1133 }]);
+        assert.deepStrictEqual(getRowsTextContent(container), [
+            '1/11',
+            '111',
+            '112',
+            '113/1131',
+            '1132',
+            '1133',
+        ]);
+    });
+    test('enableCompression', () => {
+        const container = document.createElement('div');
+        container.style.width = '200px';
+        container.style.height = '200px';
+        const tree = ds.add(new CompressibleObjectTree('test', container, new Delegate(), [new Renderer()]));
+        tree.layout(200);
+        tree.setChildren(null, [
+            {
+                element: 1,
+                children: [
+                    {
+                        element: 11,
+                        children: [
+                            {
+                                element: 111,
+                                children: [{ element: 1111 }, { element: 1112 }, { element: 1113 }],
+                            },
+                        ],
+                    },
+                ],
+            },
+        ]);
+        assert.deepStrictEqual(getRowsTextContent(container), ['1/11/111', '1111', '1112', '1113']);
+        tree.updateOptions({ compressionEnabled: false });
+        assert.deepStrictEqual(getRowsTextContent(container), [
+            '1',
+            '11',
+            '111',
+            '1111',
+            '1112',
+            '1113',
+        ]);
+        tree.updateOptions({ compressionEnabled: true });
+        assert.deepStrictEqual(getRowsTextContent(container), ['1/11/111', '1111', '1112', '1113']);
+    });
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoib2JqZWN0VHJlZS50ZXN0LmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vVXNlcnMveWFzaGFzbmFpZHUvS3ZhbnRjb2RlL0t2YW50a29kZS9zcmMvIiwic291cmNlcyI6WyJ2cy9iYXNlL3Rlc3QvYnJvd3Nlci91aS90cmVlL29iamVjdFRyZWUudGVzdC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRztBQUVoRyxPQUFPLE1BQU0sTUFBTSxRQUFRLENBQUE7QUFHM0IsT0FBTyxFQUNOLHNCQUFzQixFQUV0QixVQUFVLEdBQ1YsTUFBTSwyQ0FBMkMsQ0FBQTtBQUVsRCxPQUFPLEVBQUUsdUNBQXVDLEVBQUUsTUFBTSwwQkFBMEIsQ0FBQTtBQUVsRixTQUFTLGtCQUFrQixDQUFDLFNBQXNCO0lBQ2pELE1BQU0sSUFBSSxHQUFHLENBQUMsR0FBRyxTQUFTLENBQUMsZ0JBQWdCLENBQUMsa0JBQWtCLENBQUMsQ0FBQyxDQUFBO0lBQ2hFLElBQUksQ0FBQyxJQUFJLENBQ1IsQ0FBQyxDQUFDLEVBQUUsQ0FBQyxFQUFFLEVBQUUsQ0FBQyxRQUFRLENBQUMsQ0FBQyxDQUFDLFlBQVksQ0FBQyxZQUFZLENBQUUsQ0FBQyxHQUFHLFFBQVEsQ0FBQyxDQUFDLENBQUMsWUFBWSxDQUFDLFlBQVksQ0FBRSxDQUFDLENBQzNGLENBQUE7SUFDRCxPQUFPLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQyxHQUFHLEVBQUUsRUFBRSxDQUFDLEdBQUcsQ0FBQyxhQUFhLENBQUMscUJBQXFCLENBQUUsQ0FBQyxXQUFZLENBQUMsQ0FBQTtBQUNqRixDQUFDO0FBRUQsS0FBSyxDQUFDLFlBQVksRUFBRTtJQUNuQixLQUFLLENBQUMsZUFBZSxFQUFFO1FBQ3RCLElBQUksSUFBd0IsQ0FBQTtRQUM1QixJQUFJLE1BQU0sR0FBRyxDQUFDLENBQVMsRUFBRSxFQUFFLENBQUMsSUFBSSxDQUFBO1FBRWhDLFFBQVEsQ0FBQyxHQUFHLEVBQUU7WUFDYixJQUFJLENBQUMsT0FB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Q0FBQyxDQUFBO1lBQ3hDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLE9BQU8sRUFBRSxFQUFFLEVBQUUsQ0FBQyxDQUFBO1lBQzNDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLElBQUksRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQ3ZDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLE9BQU8sRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQzFDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLElBQUksRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQ3ZDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLE9BQU8sRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQzFDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLFFBQVEsRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQzNDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLE9BQU8sRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQzFDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLFFBQVEsRUFBRSxFQUFFLEVBQUUsQ0FBQyxDQUFBO1lBQzVDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLFFBQVEsRUFBRSxFQUFFLEVBQUUsQ0FBQyxDQUFBO1lBQzVDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLFFBQVEsRUFBRSxFQUFFLEVBQUUsQ0FBQyxDQUFBO1lBQzVDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLFFBQVEsRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQzNDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLFFBQVEsRUFBRSxFQUFFLElBQUksQ0FBQyxDQUFBO1lBQzlDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLElBQUksRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQ3ZDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxD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U0FBUyxDQUFDLE9BQU8sRUFBRSxFQUFFLElBQUksQ0FBQyxDQUFBO1lBQzdDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLElBQUksRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQ3ZDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLElBQUksRUFBRSxFQUFFLEVBQUUsQ0FBQyxDQUFBO1lBQ3hDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLElBQUksRUFBRSxFQUFFLEVBQUUsQ0FBQyxDQUFBO1lBQ3hDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLElBQUksRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQ3ZDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLElBQUksRUFBRSxFQUFFLElBQUksQ0FBQyxDQUFBO1lBQzFDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLFFBQVEsRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQzNDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLFFBQVEsRUFBRSxFQUFFLEVBQUUsQ0FBQyxDQUFBO1lBQzVDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLFFBQVEsRUFBRSxFQUFFLEVBQUUsQ0FBQyxDQUFBO1lBQzVDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLFFBQVEsRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQzNDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLFFBQVEsRUFBRSxFQUFFLElBQUksQ0FBQyxDQUFBO1lBQzlDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLElBQUksRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lBQ3ZDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLElBQUksRUFBRSxFQUFFLEVBQUUsQ0FBQyxDQUFBO1lBQ3hDLE1BQU0sQ0FBQyxXQUFXLENBQUMsU0FBUyxDQUFDLEtBQUssRUFBRSxFQUFFLENBQUMsQ0FBQyxDQUFBO1lB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RUFBRSxNQUFNLENBQUMsQ0FBQyxDQUFBO1FBRTNGLElBQUksQ0FBQyxXQUFXLENBQUMsRUFBRSxFQUFFLENBQUMsRUFBRSxPQUFPLEVBQUUsR0FBRyxFQUFFLEVBQUUsRUFBRSxPQUFPLEVBQUUsR0FBRyxFQUFFLEVBQUUsRUFBRSxPQUFPLEVBQUUsR0FBRyxFQUFFLENBQUMsQ0FBQyxDQUFBO1FBRTVFLE1BQU0sQ0FBQyxlQUFlLENBQUMsa0JBQWtCLENBQUMsU0FBUyxDQUFDLEVBQUUsQ0FBQyxNQUFNLEVBQUUsS0FBSyxFQUFFLEtBQUssRUFBRSxLQUFLLENBQUMsQ0FBQyxDQUFBO1FBRXBGLElBQUksQ0FBQyxXQUFXLENBQUMsR0FBRyxFQUFFLENBQUMsRUFBRSxPQUFPLEVBQUUsSUFBSSxFQUFFLENBQUMsQ0FBQyxDQUFBO1FBRTFDLE1BQU0sQ0FBQyxlQUFlLENBQUMsa0JBQWtCLENBQUMsU0FBUyxDQUFDLEVBQUUsQ0FBQyxNQUFNLEVBQUUsS0FBSyxFQUFFLEtBQUssRUFBRSxVQUFVLENBQUMsQ0FBQyxDQUFBO1FBRXpGLElBQUksQ0FBQyxXQUFXLENBQUMsSUFBSSxFQUFFLENBQUMsRUFBRSxPQUFPLEVBQUUsSUFBSSxFQUFFLENBQUMsQ0FBQyxDQUFBO1FBRTNDLE1BQU0sQ0FBQyxlQUFlLENBQUMsa0JBQWtCLENBQUMsU0FBUyxDQUFDLEVBQUUsQ0FBQyxNQUFNLEVBQUUsS0FBSyxFQUFFLEtBQUssRUFBRSxlQUFlLENBQUMsQ0FBQyxDQUFBO1FBRTlGLElBQUksQ0FBQyxXQUFXLENBQUMsSUFBSSxFQUFFLENBQUMsRUFBRSxPQUFPLEVBQUUsSUFBSSxFQUFFLEVBQUUsRUFBRSxPQUFPLEVBQUUsSUFBSSxFQUFFLENBQUMsQ0FBQyxDQUFBO1FBRTlELE1BQU0sQ0FBQyxlQUFlLENBQUMsa0JBQWtCLENBQUMsU0FBUyxDQUFDLEVBQUU7WUFDckQsTUFBTTtZQUNOLEtBQUs7WUFDTCxLQUFLO1lBQ0wsVUFBVTtZQUNWLE1BQU07WUFDTixNQUFNO1NBQ04sQ0FBQyxDQUFBO0lBQ0gsQ0FBQyxDQUFDLENBQUE7SUFFRixJQUFJLENBQUMsbUJBQW1CLEVBQUUsR0FBRyxFQUFFO1FBQzlCLE1BQU0sU0FBUyxHQUFHLFFBQVEsQ0FBQyxhQUFhLENBQUMsS0FBSyxDQUFDLENBQUE7UUFDL0MsU0FBUyxDQUFDLEtBQUssQ0FBQyxLQUFLLEdBQUcsT0FBTyxDQUFBO1FBQy9CLFNBQVMsQ0FBQyxLQUFLLENBQUMsTUFBTSxHQUFHLE9BQU8sQ0FBQTtRQUVoQyxNQUFNLElBQUksR0FBRyxFQUFFLENBQUMsR0FBRyxDQUNsQixJQUFJLHNCQUFzQixDQUFTLE1BQU0sRUFBRSxTQUFTLEVBQUUsSUFBSSxRQUFRLEVBQUUsRUFBRSxDQUFDLElBQUksUUFBUSxFQUFFLENBQUMsQ0FBQyxDQUN2RixDQUFBO1FBQ0QsSUFBSSxDQUFDLE1BQU0sQ0FBQyxHQUFHLENBQUMsQ0FBQTtRQUVoQixJQUFJLENBQUMsV0FBVyxDQUFDLElBQUksRUFBRTtZQUN0QjtnQkFDQyxPQUFPLEVBQUUsQ0FBQztnQkFDVixRQUFRLEVBQUU7b0JBQ1Q7d0JBQ0MsT0FBTyxFQUFFLEVBQUU7d0JBQ1gsUUFBUSxFQUFFOzRCQUNUO2dDQUNDLE9BQU8sRUFBRSxHQUFHO2dDQUNaLFFBQVEsRUFBRSxDQUFDLEVBQUUsT0FBTyxFQUFFLElBQUksRUFBRSxFQUFFLEVBQUUsT0FBTyxFQUFFLElBQUksRUFBRSxFQUFFLEVBQUUsT0FBTyxFQUFFLElBQUksRUFBRSxDQUFDOzZCQUNuRTt5QkFDRDtxQkFDRDtpQkFDRDthQUNEO1NBQ0QsQ0FBQyxDQUFBO1FBRUYsTUFBTSxDQUFDLGVBQWUsQ0FBQyxrQkFBa0IsQ0FBQyxTQUFTLENBQUMsRUFBRSxDQUFDLFVBQVUsRUFBRSxNQUFNLEVBQUUsTUFBTSxFQUFFLE1BQU0sQ0FBQyxDQUFDLENBQUE7UUFFM0YsSUFBSSxDQUFDLGFBQWEsQ0FBQyxFQUFFLGtCQUFrQixFQUFFLEtBQUssRUFBRSxDQUFDLENBQUE7UUFDakQsTUFBTSxDQUFDLGVBQWUsQ0FBQyxrQkFBa0IsQ0FBQyxTQUFTLENBQUMsRUFBRTtZQUNyRCxHQUFHO1lBQ0gsSUFBSTtZQUNKLEtBQUs7WUFDTCxNQUFNO1lBQ04sTUFBTTtZQUNOLE1BQU07U0FDTixDQUFDLENBQUE7UUFFRixJQUFJLENBQUMsYUFBYSxDQUFDLEVBQUUsa0JBQWtCLEVBQUUsSUFBSSxFQUFFLENBQUMsQ0FBQTtRQUNoRCxNQUFNLENBQUMsZUFBZSxDQUFDLGtCQUFrQixDQUFDLFNBQVMsQ0FBQyxFQUFFLENBQUMsVUFBVSxFQUFFLE1BQU0sRUFBRSxNQUFNLEVBQUUsTUFBTSxDQUFDLENBQUMsQ0FBQTtJQUM1RixDQUFDLENBQUMsQ0FBQTtBQUNILENBQUMsQ0FBQyxDQUFBIn0=

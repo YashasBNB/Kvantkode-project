@@ -1,0 +1,176 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { performCellDropEdits } from '../../browser/view/cellParts/cellDnd.js';
+import { CellKind } from '../../common/notebookCommon.js';
+import { withTestNotebook } from './testNotebookEditor.js';
+import assert from 'assert';
+import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
+async function testCellDnd(beginning, dragAction, end) {
+    await withTestNotebook(beginning.startOrder.map((text) => [text, 'plaintext', CellKind.Code, []]), (editor, viewModel) => {
+        editor.setSelections(beginning.selections);
+        editor.setFocus({ start: beginning.focus, end: beginning.focus + 1 });
+        performCellDropEdits(editor, viewModel.cellAt(dragAction.dragIdx), dragAction.direction, viewModel.cellAt(dragAction.dragOverIdx));
+        for (const i in end.endOrder) {
+            assert.equal(viewModel.viewCells[i].getText(), end.endOrder[i]);
+        }
+        assert.equal(editor.getSelections().length, 1);
+        assert.deepStrictEqual(editor.getSelections()[0], end.selection);
+        assert.deepStrictEqual(editor.getFocus(), { start: end.focus, end: end.focus + 1 });
+    });
+}
+suite('cellDND', () => {
+    ensureNoDisposablesAreLeakedInTestSuite();
+    test('drag 1 cell', async () => {
+        await testCellDnd({
+            startOrder: ['0', '1', '2', '3'],
+            selections: [{ start: 0, end: 1 }],
+            focus: 0,
+        }, {
+            dragIdx: 0,
+            dragOverIdx: 1,
+            direction: 'below',
+        }, {
+            endOrder: ['1', '0', '2', '3'],
+            selection: { start: 1, end: 2 },
+            focus: 1,
+        });
+    });
+    test('drag multiple contiguous cells down', async () => {
+        await testCellDnd({
+            startOrder: ['0', '1', '2', '3'],
+            selections: [{ start: 1, end: 3 }],
+            focus: 1,
+        }, {
+            dragIdx: 1,
+            dragOverIdx: 3,
+            direction: 'below',
+        }, {
+            endOrder: ['0', '3', '1', '2'],
+            selection: { start: 2, end: 4 },
+            focus: 2,
+        });
+    });
+    test('drag multiple contiguous cells up', async () => {
+        await testCellDnd({
+            startOrder: ['0', '1', '2', '3'],
+            selections: [{ start: 2, end: 4 }],
+            focus: 2,
+        }, {
+            dragIdx: 3,
+            dragOverIdx: 0,
+            direction: 'above',
+        }, {
+            endOrder: ['2', '3', '0', '1'],
+            selection: { start: 0, end: 2 },
+            focus: 0,
+        });
+    });
+    test('drag ranges down', async () => {
+        await testCellDnd({
+            startOrder: ['0', '1', '2', '3'],
+            selections: [
+                { start: 0, end: 1 },
+                { start: 2, end: 3 },
+            ],
+            focus: 0,
+        }, {
+            dragIdx: 0,
+            dragOverIdx: 3,
+            direction: 'below',
+        }, {
+            endOrder: ['1', '3', '0', '2'],
+            selection: { start: 2, end: 4 },
+            focus: 2,
+        });
+    });
+    test('drag ranges up', async () => {
+        await testCellDnd({
+            startOrder: ['0', '1', '2', '3'],
+            selections: [
+                { start: 1, end: 2 },
+                { start: 3, end: 4 },
+            ],
+            focus: 1,
+        }, {
+            dragIdx: 1,
+            dragOverIdx: 0,
+            direction: 'above',
+        }, {
+            endOrder: ['1', '3', '0', '2'],
+            selection: { start: 0, end: 2 },
+            focus: 0,
+        });
+    });
+    test('drag ranges between ranges', async () => {
+        await testCellDnd({
+            startOrder: ['0', '1', '2', '3'],
+            selections: [
+                { start: 0, end: 1 },
+                { start: 3, end: 4 },
+            ],
+            focus: 0,
+        }, {
+            dragIdx: 0,
+            dragOverIdx: 1,
+            direction: 'below',
+        }, {
+            endOrder: ['1', '0', '3', '2'],
+            selection: { start: 1, end: 3 },
+            focus: 1,
+        });
+    });
+    test('drag ranges just above a range', async () => {
+        await testCellDnd({
+            startOrder: ['0', '1', '2', '3'],
+            selections: [
+                { start: 1, end: 2 },
+                { start: 3, end: 4 },
+            ],
+            focus: 1,
+        }, {
+            dragIdx: 1,
+            dragOverIdx: 1,
+            direction: 'above',
+        }, {
+            endOrder: ['0', '1', '3', '2'],
+            selection: { start: 1, end: 3 },
+            focus: 1,
+        });
+    });
+    test('drag ranges inside a range', async () => {
+        await testCellDnd({
+            startOrder: ['0', '1', '2', '3'],
+            selections: [
+                { start: 0, end: 2 },
+                { start: 3, end: 4 },
+            ],
+            focus: 0,
+        }, {
+            dragIdx: 0,
+            dragOverIdx: 0,
+            direction: 'below',
+        }, {
+            endOrder: ['0', '1', '3', '2'],
+            selection: { start: 0, end: 3 },
+            focus: 0,
+        });
+    });
+    test('dragged cell is not focused or selected', async () => {
+        await testCellDnd({
+            startOrder: ['0', '1', '2', '3'],
+            selections: [{ start: 1, end: 2 }],
+            focus: 1,
+        }, {
+            dragIdx: 2,
+            dragOverIdx: 3,
+            direction: 'below',
+        }, {
+            endOrder: ['0', '1', '3', '2'],
+            selection: { start: 3, end: 4 },
+            focus: 3,
+        });
+    });
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY2VsbERuZC50ZXN0LmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vVXNlcnMveWFzaGFzbmFpZHUvS3ZhbnRjb2RlL0t2YW50a29kZS9zcmMvIiwic291cmNlcyI6WyJ2cy93b3JrYmVuY2gvY29udHJpYi9ub3RlYm9vay90ZXN0L2Jyb3dzZXIvY2VsbERuZC50ZXN0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7Z0dBR2dHO0FBRWhHLE9BQU8sRUFBRSxvQkFBb0IsRUFBRSxNQUFNLHlDQUF5QyxDQUFBO0FBQzlFLE9BQU8sRUFBRSxRQUFRLEVBQUUsTUFBTSxnQ0FBZ0MsQ0FBQTtBQUN6RCxPQUFPLEVBQUUsZ0JBQWdCLEVBQUUsTUFBTSx5QkFBeUIsQ0FBQTtBQUMxRCxPQUFPLE1BQU0sTUFBTSxRQUFRLENBQUE7QUFFM0IsT0FBTyxFQUFFLHVDQUF1QyxFQUFFLE1BQU0sMENBQTBDLENBQUE7QUFvQmxHLEtBQUssVUFBVSxXQUFXLENBQUMsU0FBMEIsRUFBRSxVQUF1QixFQUFFLEdBQWM7SUFDN0YsTUFBTSxnQkFBZ0IsQ0FDckIsU0FBUyxDQUFDLFVBQVUsQ0FBQyxHQUFHLENBQUMsQ0FBQyxJQUFJLEVBQUUsRUFBRSxDQUFDLENBQUMsSUFBSSxFQUFFLFdBQVcsRUFBRSxRQUFRLENBQUMsSUFBSSxFQUFFLEVBQUUsQ0FBQyxDQUFDLEVBQzFFLENBQUMsTUFBTSxFQUFFLFNBQVMsRUFBRSxFQUFFO1FBQ3JCLE1BQU0sQ0FBQyxhQUFhLENBQUMsU0FBUyxDQUFDLFVBQVUsQ0FBQyxDQUFBO1FBQzFDLE1BQU0sQ0FBQyxRQUFRLENBQUMsRUFBRSxLQUFLLEVBQUUsU0FBUyxDQUFDLEtBQUssRUFBRSxHQUFHLEVBQUUsU0FBUyxDQUFDLEtBQUssR0FBRyxDQUFDLEVBQUUsQ0FBQyxDQUFBO1FBQ3JFLG9CQUFvQixDQUNuQixNQUFNLEVBQ04sU0FBUyxDQUFDLE1BQU0sQ0FBQyxVQUFVLENBQUMsT0FBTyxDQUFFLEVBQ3JDLFVBQVUsQ0FBQyxT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

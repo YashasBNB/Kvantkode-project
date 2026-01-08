@@ -1,0 +1,96 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import '../colorPicker.css';
+import * as dom from '../../../../../base/browser/dom.js';
+import { GlobalPointerMoveMonitor } from '../../../../../base/browser/globalPointerMoveMonitor.js';
+import { Color, RGBA } from '../../../../../base/common/color.js';
+import { Emitter } from '../../../../../base/common/event.js';
+import { Disposable } from '../../../../../base/common/lifecycle.js';
+const $ = dom.$;
+export class Strip extends Disposable {
+    constructor(container, model, type) {
+        super();
+        this.model = model;
+        this._onDidChange = new Emitter();
+        this.onDidChange = this._onDidChange.event;
+        this._onColorFlushed = new Emitter();
+        this.onColorFlushed = this._onColorFlushed.event;
+        if (type === "standalone" /* ColorPickerWidgetType.Standalone */) {
+            this.domNode = dom.append(container, $('.standalone-strip'));
+            this.overlay = dom.append(this.domNode, $('.standalone-overlay'));
+        }
+        else {
+            this.domNode = dom.append(container, $('.strip'));
+            this.overlay = dom.append(this.domNode, $('.overlay'));
+        }
+        this.slider = dom.append(this.domNode, $('.slider'));
+        this.slider.style.top = `0px`;
+        this._register(dom.addDisposableListener(this.domNode, dom.EventType.POINTER_DOWN, (e) => this.onPointerDown(e)));
+        this._register(model.onDidChangeColor(this.onDidChangeColor, this));
+        this.layout();
+    }
+    layout() {
+        this.height = this.domNode.offsetHeight - this.slider.offsetHeight;
+        const value = this.getValue(this.model.color);
+        this.updateSliderPosition(value);
+    }
+    onDidChangeColor(color) {
+        const value = this.getValue(color);
+        this.updateSliderPosition(value);
+    }
+    onPointerDown(e) {
+        if (!e.target || !(e.target instanceof Element)) {
+            return;
+        }
+        const monitor = this._register(new GlobalPointerMoveMonitor());
+        const origin = dom.getDomNodePagePosition(this.domNode);
+        this.domNode.classList.add('grabbing');
+        if (e.target !== this.slider) {
+            this.onDidChangeTop(e.offsetY);
+        }
+        monitor.startMonitoring(e.target, e.pointerId, e.buttons, (event) => this.onDidChangeTop(event.pageY - origin.top), () => null);
+        const pointerUpListener = dom.addDisposableListener(e.target.ownerDocument, dom.EventType.POINTER_UP, () => {
+            this._onColorFlushed.fire();
+            pointerUpListener.dispose();
+            monitor.stopMonitoring(true);
+            this.domNode.classList.remove('grabbing');
+        }, true);
+    }
+    onDidChangeTop(top) {
+        const value = Math.max(0, Math.min(1, 1 - top / this.height));
+        this.updateSliderPosition(value);
+        this._onDidChange.fire(value);
+    }
+    updateSliderPosition(value) {
+        this.slider.style.top = `${(1 - value) * this.height}px`;
+    }
+}
+export class OpacityStrip extends Strip {
+    constructor(container, model, type) {
+        super(container, model, type);
+        this.domNode.classList.add('opacity-strip');
+        this.onDidChangeColor(this.model.color);
+    }
+    onDidChangeColor(color) {
+        super.onDidChangeColor(color);
+        const { r, g, b } = color.rgba;
+        const opaque = new Color(new RGBA(r, g, b, 1));
+        const transparent = new Color(new RGBA(r, g, b, 0));
+        this.overlay.style.background = `linear-gradient(to bottom, ${opaque} 0%, ${transparent} 100%)`;
+    }
+    getValue(color) {
+        return color.hsva.a;
+    }
+}
+export class HueStrip extends Strip {
+    constructor(container, model, type) {
+        super(container, model, type);
+        this.domNode.classList.add('hue-strip');
+    }
+    getValue(color) {
+        return 1 - color.hsva.h / 360;
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29sb3JQaWNrZXJTdHJpcC5qcyIsInNvdXJjZVJvb3QiOiJmaWxlOi8vL1VzZXJzL3lhc2hhc25haWR1L0t2YW50Y29kZS9LdmFudGtvZGUvc3JjLyIsInNvdXJjZXMiOlsidnMvZWRpdG9yL2NvbnRyaWIvY29sb3JQaWNrZXIvYnJvd3Nlci9jb2xvclBpY2tlclBhcnRzL2NvbG9yUGlja2VyU3RyaXAudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7OztnR0FHZ0c7QUFDaEcsT0FBTyxvQkFBb0IsQ0FBQTtBQUMzQixPQUFPLEtBQUssR0FBRyxNQUFNLG9DQUFvQyxDQUFBO0FBQ3pELE9BQU8sRUFBRSx3QkFBd0IsRUFBRSxNQUFNLHlEQUF5RCxDQUFBO0FBQ2xHLE9BQU8sRUFBRSxLQUFLLEVBQUUsSUFBSSxFQUFFLE1BQU0scUNBQXFDLENBQUE7QUFDakUsT0FBTyxFQUFFLE9BQU8sRUFBUyxNQUFNLHFDQUFxQyxDQUFBO0FBQ3BFLE9BQU8sRUFBRSxVQUFVLEVBQUUsTUFBTSx5Q0FBeUMsQ0FBQTtBQUlwRSxNQUFNLENBQUMsR0FBRyxHQUFHLENBQUMsQ0FBQyxDQUFBO0FBRWYsTUFBTSxPQUFnQixLQUFNLFNBQVEsVUFBVTtJQVk3QyxZQUNDLFNBQXNCLEVBQ1osS0FBdUIsRUFDakMsSUFBMkI7UUFFM0IsS0FBSyxFQUFFLENBQUE7UUFIRyxVQUFLLEdBQUwsS0FBSyxDQUFrQjtRQVJqQixpQkFBWSxHQUFHLElBQUksT0FBTyxFQUFVLENBQUE7UUFDNUMsZ0JBQVcsR0FBa0IsSUFBSSxDQUFDLFlBQVksQ0FBQyxLQUFLLENBQUE7UUFFNUMsb0JBQWUsR0FBRyxJQUFJLE9BQU8sRUFBUSxDQUFBO1FBQzdDLG1CQUFjLEdBQWdCLElBQUksQ0FBQyxlQUFlLENBQUMsS0FBSyxDQUFBO1FBUWhFLElBQUksSUFBSSx3REFBcUMsRUFBRSxDQUFDO1lBQy9DLElBQUksQ0FBQyxPQUFPLEdBQUcsR0FBRyxDQUFDLE1BQU0sQ0FBQyxTQUFTLEVBQUUsQ0FB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

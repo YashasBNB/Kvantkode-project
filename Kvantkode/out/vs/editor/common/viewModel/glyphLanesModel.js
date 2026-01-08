@@ -1,0 +1,59 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+import { GlyphMarginLane } from '../model.js';
+const MAX_LANE = GlyphMarginLane.Right;
+export class GlyphMarginLanesModel {
+    constructor(maxLine) {
+        this.persist = 0;
+        this._requiredLanes = 1; // always render at least one lane
+        this.lanes = new Uint8Array(Math.ceil(((maxLine + 1) * MAX_LANE) / 8));
+    }
+    reset(maxLine) {
+        const bytes = Math.ceil(((maxLine + 1) * MAX_LANE) / 8);
+        if (this.lanes.length < bytes) {
+            this.lanes = new Uint8Array(bytes);
+        }
+        else {
+            this.lanes.fill(0);
+        }
+        this._requiredLanes = 1;
+    }
+    get requiredLanes() {
+        return this._requiredLanes;
+    }
+    push(lane, range, persist) {
+        if (persist) {
+            this.persist |= 1 << (lane - 1);
+        }
+        for (let i = range.startLineNumber; i <= range.endLineNumber; i++) {
+            const bit = MAX_LANE * i + (lane - 1);
+            this.lanes[bit >>> 3] |= 1 << bit % 8;
+            this._requiredLanes = Math.max(this._requiredLanes, this.countAtLine(i));
+        }
+    }
+    getLanesAtLine(lineNumber) {
+        const lanes = [];
+        let bit = MAX_LANE * lineNumber;
+        for (let i = 0; i < MAX_LANE; i++) {
+            if (this.persist & (1 << i) || this.lanes[bit >>> 3] & (1 << bit % 8)) {
+                lanes.push(i + 1);
+            }
+            bit++;
+        }
+        return lanes.length ? lanes : [GlyphMarginLane.Center];
+    }
+    countAtLine(lineNumber) {
+        let bit = MAX_LANE * lineNumber;
+        let count = 0;
+        for (let i = 0; i < MAX_LANE; i++) {
+            if (this.persist & (1 << i) || this.lanes[bit >>> 3] & (1 << bit % 8)) {
+                count++;
+            }
+            bit++;
+        }
+        return count;
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ2x5cGhMYW5lc01vZGVsLmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vVXNlcnMveWFzaGFzbmFpZHUvS3ZhbnRjb2RlL0t2YW50a29kZS9zcmMvIiwic291cmNlcyI6WyJ2cy9lZGl0b3IvY29tbW9uL3ZpZXdNb2RlbC9nbHlwaExhbmVzTW9kZWwudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7OztnR0FHZ0c7QUFHaEcsT0FBTyxFQUFFLGVBQWUsRUFBMEIsTUFBTSxhQUFhLENBQUE7QUFFckUsTUFBTSxRQUFRLEdBQUcsZUFBZSxDQUFDLEtBQUssQ0FBQTtBQUV0QyxNQUFNLE9BQU8scUJBQXFCO0lBS2pDLFlBQVksT0FBZTtRQUhuQixZQUFPLEdBQUcsQ0FBQyxDQUFBO1FBQ1gsbUJBQWMsR0FBRyxDQUFDLENBQUEsQ0FBQyxrQ0FBa0M7UUFHNUQsSUFBSSxDQUFDLEtBQUssR0FBRyxJQUFJLFVBQVUsQ0FBQyxJQUFJLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxPQUFPLEdBQUcsQ0FBQyxDQUFDLEdBQUcsUUFBUSxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQTtJQUN2RSxDQUFDO0lBRU0sS0FBSyxDQUFDLE9BQWU7UUFDM0IsTUFBTSxLQUFLLEdBQUcsSUFBSSxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsT0FBTyxHQUFHLENBQUMsQ0FBQyxHQUFHLFFBQVEsQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFBO1FBQ3ZELElBQUksSUFBSSxDQUFDLEtBQUssQ0FBQyxNQUFNLEdBQUcsS0FBSyxFQUFFLENBQUM7WUFDL0IsSUFBSSxDQUFDLEtBQUssR0FBRyxJQUFJLFVBQVUsQ0FBQyxLQUFLLENBQUMsQ0FBQTtRQUNuQyxDQUFDO2FBQU0sQ0FBQztZQUNQLElBQUksQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxDQUFBO1FBQ25CLENBQUM7UUFDRCxJQUFJLENBQUMsY0FBYyxHQUFHLENBQUMsQ0FBQTtJQUN4QixDQUFDO0lB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

@@ -1,0 +1,133 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+import { memoize } from '../../../../../base/common/decorators.js';
+import { lcut } from '../../../../../base/common/strings.js';
+import { OneLineRange, } from '../../../../services/search/common/search.js';
+import { MATCH_PREFIX } from './searchTreeCommon.js';
+import { Range } from '../../../../../editor/common/core/range.js';
+export function textSearchResultToMatches(rawMatch, fileMatch, isAiContributed) {
+    const previewLines = rawMatch.previewText.split('\n');
+    return rawMatch.rangeLocations.map((rangeLocation) => {
+        const previewRange = rangeLocation.preview;
+        return new MatchImpl(fileMatch, previewLines, previewRange, rangeLocation.source, isAiContributed);
+    });
+}
+export class MatchImpl {
+    static { this.MAX_PREVIEW_CHARS = 250; }
+    constructor(_parent, _fullPreviewLines, _fullPreviewRange, _documentRange, _isReadonly = false) {
+        this._parent = _parent;
+        this._fullPreviewLines = _fullPreviewLines;
+        this._isReadonly = _isReadonly;
+        this._oneLinePreviewText = _fullPreviewLines[_fullPreviewRange.startLineNumber];
+        const adjustedEndCol = _fullPreviewRange.startLineNumber === _fullPreviewRange.endLineNumber
+            ? _fullPreviewRange.endColumn
+            : this._oneLinePreviewText.length;
+        this._rangeInPreviewText = new OneLineRange(1, _fullPreviewRange.startColumn + 1, adjustedEndCol + 1);
+        this._range = new Range(_documentRange.startLineNumber + 1, _documentRange.startColumn + 1, _documentRange.endLineNumber + 1, _documentRange.endColumn + 1);
+        this._fullPreviewRange = _fullPreviewRange;
+        this._id =
+            MATCH_PREFIX + this._parent.resource.toString() + '>' + this._range + this.getMatchString();
+    }
+    id() {
+        return this._id;
+    }
+    parent() {
+        return this._parent;
+    }
+    text() {
+        return this._oneLinePreviewText;
+    }
+    range() {
+        return this._range;
+    }
+    preview() {
+        const fullBefore = this._oneLinePreviewText.substring(0, this._rangeInPreviewText.startColumn - 1), before = lcut(fullBefore, 26, '…');
+        let inside = this.getMatchString(), after = this._oneLinePreviewText.substring(this._rangeInPreviewText.endColumn - 1);
+        let charsRemaining = MatchImpl.MAX_PREVIEW_CHARS - before.length;
+        inside = inside.substr(0, charsRemaining);
+        charsRemaining -= inside.length;
+        after = after.substr(0, charsRemaining);
+        return {
+            before,
+            fullBefore,
+            inside,
+            after,
+        };
+    }
+    get replaceString() {
+        const searchModel = this.parent().parent().searchModel;
+        if (!searchModel.replacePattern) {
+            throw new Error('searchModel.replacePattern must be set before accessing replaceString');
+        }
+        const fullMatchText = this.fullMatchText();
+        let replaceString = searchModel.replacePattern.getReplaceString(fullMatchText, searchModel.preserveCase);
+        if (replaceString !== null) {
+            return replaceString;
+        }
+        // Search/find normalize line endings - check whether \r prevents regex from matching
+        const fullMatchTextWithoutCR = fullMatchText.replace(/\r\n/g, '\n');
+        if (fullMatchTextWithoutCR !== fullMatchText) {
+            replaceString = searchModel.replacePattern.getReplaceString(fullMatchTextWithoutCR, searchModel.preserveCase);
+            if (replaceString !== null) {
+                return replaceString;
+            }
+        }
+        // If match string is not matching then regex pattern has a lookahead expression
+        const contextMatchTextWithSurroundingContent = this.fullMatchText(true);
+        replaceString = searchModel.replacePattern.getReplaceString(contextMatchTextWithSurroundingContent, searchModel.preserveCase);
+        if (replaceString !== null) {
+            return replaceString;
+        }
+        // Search/find normalize line endings, this time in full context
+        const contextMatchTextWithoutCR = contextMatchTextWithSurroundingContent.replace(/\r\n/g, '\n');
+        if (contextMatchTextWithoutCR !== contextMatchTextWithSurroundingContent) {
+            replaceString = searchModel.replacePattern.getReplaceString(contextMatchTextWithoutCR, searchModel.preserveCase);
+            if (replaceString !== null) {
+                return replaceString;
+            }
+        }
+        // Match string is still not matching. Could be unsupported matches (multi-line).
+        return searchModel.replacePattern.pattern;
+    }
+    fullMatchText(includeSurrounding = false) {
+        let thisMatchPreviewLines;
+        if (includeSurrounding) {
+            thisMatchPreviewLines = this._fullPreviewLines;
+        }
+        else {
+            thisMatchPreviewLines = this._fullPreviewLines.slice(this._fullPreviewRange.startLineNumber, this._fullPreviewRange.endLineNumber + 1);
+            thisMatchPreviewLines[thisMatchPreviewLines.length - 1] = thisMatchPreviewLines[thisMatchPreviewLines.length - 1].slice(0, this._fullPreviewRange.endColumn);
+            thisMatchPreviewLines[0] = thisMatchPreviewLines[0].slice(this._fullPreviewRange.startColumn);
+        }
+        return thisMatchPreviewLines.join('\n');
+    }
+    rangeInPreview() {
+        // convert to editor's base 1 positions.
+        return {
+            ...this._fullPreviewRange,
+            startColumn: this._fullPreviewRange.startColumn + 1,
+            endColumn: this._fullPreviewRange.endColumn + 1,
+        };
+    }
+    fullPreviewLines() {
+        return this._fullPreviewLines.slice(this._fullPreviewRange.startLineNumber, this._fullPreviewRange.endLineNumber + 1);
+    }
+    getMatchString() {
+        return this._oneLinePreviewText.substring(this._rangeInPreviewText.startColumn - 1, this._rangeInPreviewText.endColumn - 1);
+    }
+    get isReadonly() {
+        return this._isReadonly;
+    }
+}
+__decorate([
+    memoize
+], MatchImpl.prototype, "preview", null);
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibWF0Y2guanMiLCJzb3VyY2VSb290IjoiZmlsZTovLy9Vc2Vycy95YXNoYXNuYWlkdS9LdmFudGNvZGUvS3ZhbnRrb2RlL3NyYy8iLCJzb3VyY2VzIjpbInZzL3dvcmtiZW5jaC9jb250cmliL3NlYXJjaC9icm93c2VyL3NlYXJjaFRyZWVNb2RlbC9tYXRjaC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7O2dHQUdnRzs7Ozs7OztBQUVoRyxPQUFPLEVBQUUsT0FBTyxFQUFFLE1BQU0sMENBQTBDLENBQUE7QUFDbEUsT0FBTyxFQUFFLElBQUksRUFBRSxNQUFNLHVDQUF1QyxDQUFBO0FBQzVELE9BQU8sRUFHTixZQUFZLEdBQ1osTUFBTSw4Q0FBOEMsQ0FBQTtBQUNyRCxPQUFPLEVBQTBDLFlBQVksRUFBRSxNQUFNLHVCQUF1QixDQUFBO0FBQzVGLE9BQU8sRUFBRSxLQUFLLEVBQUUsTUFBTSw0Q0FBNEMsQ0FBQTtBQUVsRSxNQUFNLFVBQVUseUJBQXlCLENBQ3hDLFFBQTBCLEVBQzFCLFNBQStCLEVBQy9CLGVBQXdCO0lBRXhCLE1BQU0sWUFBWSxHQUFHLFFBQVEsQ0FBQyxXQUFXLENBQUMsS0FBSyxDQUFDLElBQUksQ0FBQyxDQUFBO0lBQ3JELE9BQU8sUUFBUSxDQUFDLGNBQWMsQ0FBQyxHQUFHLENBQUMsQ0FBQyxhQUFhLEVBQUUsRUFBRTtRQUNwRCxNQUFNLFlBQVksR0FBaUIsYUFBYSxDQUFDLE9BQU8sQ0FBQTtRQUN4RCxPQUFPLElBQUksU0FBUyxDQUNuQixTQUFTLEVBQ1QsWUFBWSxFQUNaLFlBQVksRUFDWixhQUFhLENBQUMsTUFBTSxFQUNwQixlQUFlLENBQ2YsQ0FBQTtJQUNGLENBQUMsQ0FBQyxDQUFBO0FBQ0gsQ0FBQztBQUVELE1BQU0sT0FBTyxTQUFTO2FBQ0csc0JBQWlCLEdBQUcsR0FBRyxDQUFBO0lBUS9DLFlBQ1csT0FBNkIsRUFDL0IsaUJBQTJCLEVBQ25DLGlCQUErQixFQUMvQixjQUE0QixFQUNYLGNBQXVCLEtBQUs7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
