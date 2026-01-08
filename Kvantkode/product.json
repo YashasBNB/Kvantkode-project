@@ -7,8 +7,8 @@
 	"dataFolderName": ".void-editor",
 	"win32MutexName": "voideditor",
 	"licenseName": "MIT",
-	"licenseUrl": "https://github.com/voideditor/void/blob/main/LICENSE.txt",
-	"serverLicenseUrl": "https://github.com/voideditor/void/blob/main/LICENSE.txt",
+	"licenseUrl": "https://github.com/YashasBNB/Kvantkode-project/blob/main/LICENSE.txt",
+	"serverLicenseUrl": "https://github.com/YashasBNB/Kvantkode-project/blob/main/LICENSE.txt",
 	"serverGreeting": [],
 	"serverLicense": [],
 	"serverLicensePrompt": "",
@@ -29,7 +29,7 @@
 	"darwinBundleIdentifier": "com.voideditor.code",
 	"linuxIconName": "void-editor",
 	"licenseFileName": "LICENSE.txt",
-	"reportIssueUrl": "https://github.com/voideditor/void/issues/new",
+	"reportIssueUrl": "https://github.com/YashasBNB/Kvantkode-project/issues/new",
 	"nodejsRepository": "https://nodejs.org",
 	"urlProtocol": "void",
 	"extensionsGallery": {
@@ -40,7 +40,7 @@
 	"linkProtectionTrustedDomains": [
 		"https://kvantkode.com",
 		"https://kvantkode.dev",
-		"https://github.com/voideditor/void",
+		"https://github.com/YashasBNB/Kvantkode-project",
 		"https://ollama.com"
 	]
 }

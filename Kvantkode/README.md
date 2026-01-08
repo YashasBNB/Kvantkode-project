@@ -23,13 +23,13 @@ This repo contains the full sourcecode for Void. If you're new, welcome!
 
 ## Contributing
 
-1. To get started working on Void, check out our Project Board! You can also see [HOW_TO_CONTRIBUTE](https://github.com/voideditor/void/blob/main/HOW_TO_CONTRIBUTE.md).
+1. To get started working on Void, check out our Project Board! You can also see [HOW_TO_CONTRIBUTE](https://github.com/YashasBNB/Kvantkode-project/blob/main/HOW_TO_CONTRIBUTE.md).
 
 2. Feel free to attend a casual weekly meeting in our Discord channel!
 
 ## Reference
 
-Void is a fork of the [vscode](https://github.com/microsoft/vscode) repository. For a guide to the codebase, see [VOID_CODEBASE_GUIDE](https://github.com/voideditor/void/blob/main/VOID_CODEBASE_GUIDE.md).
+Void is a fork of the [vscode](https://github.com/microsoft/vscode) repository. For a guide to the codebase, see [VOID_CODEBASE_GUIDE](https://github.com/YashasBNB/Kvantkode-project/blob/main/VOID_CODEBASE_GUIDE.md).
 
 ## Note
 
