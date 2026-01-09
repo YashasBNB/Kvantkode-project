@@ -9,31 +9,31 @@
 	/>
 </div>
 
-Void is the open-source Cursor alternative.
+KvantKode is the open-source AI-powered code editor.
 
-Use AI agents on your codebase, checkpoint and visualize changes, and bring any model or host locally. Void sends messages directly to providers without retaining your data.
+Use AI agents on your codebase, checkpoint and visualize changes, and bring any model or host locally. KvantKode sends messages directly to providers without retaining your data.
 
-This repo contains the full sourcecode for Void. If you're new, welcome!
+This repo contains the full sourcecode for KvantKode. If you're new, welcome!
 
 - 🧭 [Website](https://kvantkode.com/)
 
 - 👋 [Discord](https://discord.gg/RSNjgaugJs)
 
-- 🚙 [Project Board](https://github.com/orgs/voideditor/projects/2)
+- 🚙 [Project Board](https://github.com/YashasBNB/Kvantkode-project/projects)
 
 ## Contributing
 
-1. To get started working on Void, check out our Project Board! You can also see [HOW_TO_CONTRIBUTE](https://github.com/YashasBNB/Kvantkode-project/blob/main/HOW_TO_CONTRIBUTE.md).
+1. To get started working on KvantKode, check out our Project Board! You can also see [HOW_TO_CONTRIBUTE](https://github.com/YashasBNB/Kvantkode-project/blob/main/HOW_TO_CONTRIBUTE.md).
 
 2. Feel free to attend a casual weekly meeting in our Discord channel!
 
 ## Reference
 
-Void is a fork of the [vscode](https://github.com/microsoft/vscode) repository. For a guide to the codebase, see [VOID_CODEBASE_GUIDE](https://github.com/YashasBNB/Kvantkode-project/blob/main/VOID_CODEBASE_GUIDE.md).
+KvantKode is a fork of the [vscode](https://github.com/microsoft/vscode) repository. For a guide to the codebase, see [VOID_CODEBASE_GUIDE](https://github.com/YashasBNB/Kvantkode-project/blob/main/VOID_CODEBASE_GUIDE.md).
 
 ## Note
 
-Work is temporarily paused on the Void IDE (this repo) while we experiment with a few novel AI coding ideas for Void. Stay alerted with new releases in our Discord channel.
+Work is temporarily paused on the KvantKode IDE (this repo) while we experiment with a few novel AI coding ideas for KvantKode. Stay alerted with new releases in our Discord channel.
 
 ## Support
 

@@ -1,26 +1,26 @@
-# Contributing to Void
+# Contributing to KvantKode
 
 ### Welcome! 👋
 
-This is the official guide on how to contribute to Void. We want to make it as easy as possible to contribute, so if you have any questions or comments, reach out via email or discord!
+This is the official guide on how to contribute to KvantKode. We want to make it as easy as possible to contribute, so if you have any questions or comments, reach out via email or discord!
 
 There are a few ways to contribute:
 
-- 💫 Complete items on the [Roadmap](https://github.com/orgs/voideditor/projects/2).
+- 💫 Complete items on the [Roadmap](https://github.com/YashasBNB/Kvantkode-project/projects).
 - 💡 Make suggestions in our [Discord](https://discord.gg/RSNjgaugJs).
-- 🪴 Start new Issues - see [Issues](https://github.com/voideditor/void/issues).
+- 🪴 Start new Issues - see [Issues](https://github.com/YashasBNB/Kvantkode-project/issues).
 
 ### Codebase Guide
 
-We [highly recommend reading this](https://github.com/YashasBNB/Kvantkode-project/blob/main/VOID_CODEBASE_GUIDE.md) guide that we put together on Void's sourcecode if you'd like to add new features.
+We [highly recommend reading this](https://github.com/YashasBNB/Kvantkode-project/blob/main/VOID_CODEBASE_GUIDE.md) guide that we put together on KvantKode's sourcecode if you'd like to add new features.
 
 The repo is not as intimidating as it first seems if you read the guide!
 
-Most of Void's code lives in the folder `src/vs/workbench/contrib/void/`.
+Most of KvantKode's code lives in the folder `src/vs/workbench/contrib/void/`.
 
-## Editing Void's Code
+## Editing KvantKode's Code
 
-If you're making changes to Void's code as a contributor, you'll want to run a local version of Void to make sure your changes worked. Developer mode lets you do this. Here's how to use it.
+If you're making changes to KvantKode's code as a contributor, you'll want to run a local version of KvantKode to make sure your changes worked. Developer mode lets you do this. Here's how to use it.
 
 ### a. Mac - Prerequisites
 
