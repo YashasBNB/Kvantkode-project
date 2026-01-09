@@ -568,15 +568,16 @@ class EditCodeService extends Disposable implements IEditCodeService {
 	}
 
 	private _addDiffStylesToURI = (uri: URI, diff: Diff) => {
-		const { type, diffid } = diff
+		const { diffid } = diff
+		const diffArea = this.diffAreaOfId[diff.diffareaid]
 
 		const disposeInThisEditorFns: (() => void)[] = []
 
 		const { model } = this._voidModelService.getModel(uri)
 
 		// green decoration and minimap decoration
-		if (type !== 'deletion') {
-			const fn = this._addLineDecoration(model, diff.startLine, diff.endLine, 'void-greenBG', {
+		if (diffArea.type === 'CtrlKZone' || diffArea.type === 'DiffZone') {
+			const fn = this._addLineDecoration(model, diff.startLine, (diff as any).endLine, 'void-greenBG', {
 				minimap: { color: { id: 'minimapGutter.addedBackground' }, position: 2 },
 				overviewRuler: { color: { id: 'editorOverviewRuler.addedForeground' }, position: 7 },
 			})
@@ -586,19 +587,19 @@ class EditCodeService extends Disposable implements IEditCodeService {
 		}
 
 		// red in a view zone
-		if (type !== 'insertion') {
+		if (diffArea.type === 'CtrlKZone' || diffArea.type === 'DiffZone') {
 			const consistentZoneId = this._consistentItemService.addConsistentItemToURI({
 				uri,
 				fn: (editor) => {
 					let startLine: number
 					let offsetLines: number
-					if (diff.type === 'insertion' || diff.type === 'edit') {
+					if ((diff as any).type === 'insertion' || (diff as any).type === 'edit') {
 						startLine = diff.startLine // green start
 						offsetLines = 0
-					} else if (diff.type === 'deletion') {
+					} else if ((diff as any).type === 'deletion') {
 						// if diff.startLine is out of bounds
 						if (diff.startLine === 1) {
-							const numRedLines = diff.originalEndLine - diff.originalStartLine + 1
+							const numRedLines = (diff as any).originalEndLine - (diff as any).originalStartLine + 1
 							startLine = diff.startLine
 							offsetLines = -numRedLines
 						} else {
