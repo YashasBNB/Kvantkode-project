@@ -44,6 +44,6 @@
 		"https://ollama.com"
 	],
 	"updateUrl": "https://api.github.com/repos/YashasBNB/Kvantkode-project/releases",
-	"commit": "9c806f38ae38fac2c24c41f87a677eac098fe240",
+	"commit": "eb7c1a9cb984d9c09cd6d0af15071edfe8586aa8",
 	"quality": "stable"
 }
