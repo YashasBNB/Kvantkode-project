@@ -2336,4 +2336,4 @@ var purify = createDOMPurify()
 export { purify as default }
 //# sourceMappingURL=purify.es.mjs.map
 
-//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode/src/vs/base/browser/dompurify/dompurify.js
+//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode-project/Kvantkode/src/vs/base/browser/dompurify/dompurify.js

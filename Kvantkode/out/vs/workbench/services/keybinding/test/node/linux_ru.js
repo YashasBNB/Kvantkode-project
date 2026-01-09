@@ -1045,4 +1045,4 @@ define({
 	},
 })
 
-//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode/src/vs/workbench/services/keybinding/test/node/linux_ru.js
+//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode-project/Kvantkode/src/vs/workbench/services/keybinding/test/node/linux_ru.js

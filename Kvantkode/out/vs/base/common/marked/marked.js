@@ -2561,4 +2561,4 @@ export {
 }
 //# sourceMappingURL=marked.esm.js.map
 
-//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode/src/vs/base/common/marked/marked.js
+//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode-project/Kvantkode/src/vs/base/common/marked/marked.js
