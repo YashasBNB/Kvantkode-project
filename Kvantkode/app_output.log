@@ -1,0 +1,17 @@
+npm warn Unknown project config "disturl". This will stop working in the next major version of npm.
+npm warn Unknown project config "target". This will stop working in the next major version of npm.
+npm warn Unknown project config "ms_build_id". This will stop working in the next major version of npm.
+npm warn Unknown project config "runtime". This will stop working in the next major version of npm.
+npm warn Unknown project config "build_from_source". This will stop working in the next major version of npm.
+npm warn Unknown project config "timeout". This will stop working in the next major version of npm.
+
+> code-oss-dev@1.99.3 electron
+> node build/lib/electron
+
+[23:03:19] Synchronizing built-in extensions...
+[23:03:19] You can manage built-in extensions with the [36m--builtin[39m flag
+Launching Electron bundle: ./.build/electron/KvantKode.app/Contents/MacOS/Electron
+Setting dock icon: /Users/yashasnaidu/Kvantcode/kvantkode_dock_256.png
+Image created, empty: false size: { width: 256, height: 256 }
+Dock icon set successfully (method 1)
+[34578:0109/230319.738054:WARNING:viz_main_impl.cc(85)] VizNullHypothesis is disabled (not a warning)

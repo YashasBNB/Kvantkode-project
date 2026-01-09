@@ -77,20 +77,8 @@ import './_markerCheckService.js'
 import './_dummyContrib.js'
 // import './contextUserChangesService.js'
 
-// settings pane
-import './voidSettingsPane.js'
-
 // register css
 import './media/void.css'
-
-// update (frontend part, also see platform/)
-import './voidUpdateActions.js'
-
-import './convertToLLMMessageWorkbenchContrib.js'
-
-// tools
-import './toolsService.js'
-import './terminalToolService.js'
 
 // register Thread History
 import './chatThreadService.js'
