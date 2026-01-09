@@ -83,7 +83,7 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 
 		if (this._updateService.state.type === StateType.Ready) {
 			// Update is ready
-			return { message: 'Restart Void to update!', action: 'restart' } as const
+			return { message: 'Restart KvantKode to update!', action: 'restart' } as const
 		}
 
 		if (this._updateService.state.type === StateType.Disabled) {
@@ -114,10 +114,10 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 				if (response.ok) {
 					if (!isUpToDate) {
 						message =
-							'A new version of Void is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
+							'A new version of KvantKode is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
 						action = 'reinstall'
 					} else {
-						message = 'Void is up-to-date!'
+						message = 'KvantKode is up-to-date!'
 					}
 				} else {
 					message = `An error occurred when fetching the latest GitHub release tag. Please try again in ~5 minutes, or reinstall.`
@@ -128,7 +128,7 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 			else {
 				if (response.ok && !isUpToDate) {
 					message =
-						'A new version of Void is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
+						'A new version of KvantKode is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
 					action = 'reinstall'
 				} else {
 					message = null
