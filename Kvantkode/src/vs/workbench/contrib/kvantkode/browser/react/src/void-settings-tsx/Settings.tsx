@@ -361,7 +361,7 @@ const SimpleModelSettingsDialog = ({
 		onClose()
 	}
 
-	const sourcecodeOverridesLink = `https://github.com/YashasBNB/Kvantkode-project/blob/main/src/vs/workbench/contrib/void/common/modelCapabilities.ts#L146-L172`
+	const sourcecodeOverridesLink = `https://github.com/YashasBNB/Kvantkode-project/blob/main/src/vs/workbench/contrib/kvantkode/common/modelCapabilities.ts#L146-L172`
 
 	return (
 		<div // Backdrop

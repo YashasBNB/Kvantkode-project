@@ -26,7 +26,7 @@ import { IConvertToLLMMessageService } from './convertToLLMMessageService.js'
 const allLinebreakSymbols = ['\r\n', '\n']
 const _ln = isWindows ? allLinebreakSymbols[0] : allLinebreakSymbols[1]
 
-// The extension this was called from is here - https://github.com/YashasBNB/Kvantkode-project/blob/main/src/vs/workbench/contrib/void/browser/autocompleteService.ts
+// The extension this was called from is here - https://github.com/YashasBNB/Kvantkode-project/blob/main/src/vs/workbench/contrib/kvantkode/browser/autocompleteService.ts
 
 /*
 A summary of autotab:

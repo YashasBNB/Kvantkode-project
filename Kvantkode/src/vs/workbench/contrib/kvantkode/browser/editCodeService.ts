@@ -27,7 +27,6 @@ import {
 	IUndoRedoService,
 	UndoRedoElementType,
 } from '../../../../platform/undoRedo/common/undoRedo.js'
-import { RenderOptions } from '../../../../editor/browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js'
 // import { IModelService } from '../../../../editor/common/services/model.js';
 
 import * as dom from '../../../../base/browser/dom.js'

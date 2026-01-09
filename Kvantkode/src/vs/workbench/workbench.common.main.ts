@@ -12,8 +12,8 @@ import './browser/workbench.contribution.js'
 
 //#endregion
 
-//#region --- Void
-import './contrib/void/browser/void.contribution.js' // Void added this
+//#region --- Kvantkode
+import './contrib/kvantkode/browser/kvantkode.contribution.js' // Kvantkode added this
 //#endregion
 
 //#region --- workbench actions

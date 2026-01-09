@@ -13,7 +13,7 @@ import {
 	ProviderName,
 	providerNames,
 	SettingsOfProvider,
-} from '../../../../../../../workbench/contrib/void/common/voidSettingsTypes.js'
+} from '../../../../../../../workbench/contrib/kvantkode/common/voidSettingsTypes.js'
 import { useSettingsState, useRefreshModelState, useAccessor } from '../util/services.js'
 import { _VoidSelectBox, VoidCustomDropdownBox } from '../util/inputs.js'
 import { SelectBox } from '../../../../../../../base/browser/ui/selectBox/selectBox.js'
@@ -25,7 +25,7 @@ import {
 import {
 	modelFilterOfFeatureName,
 	ModelOption,
-} from '../../../../../../../workbench/contrib/void/common/voidSettingsService.js'
+} from '../../../../../../../workbench/contrib/kvantkode/common/voidSettingsService.js'
 import { WarningBox } from './WarningBox.js'
 import ErrorBoundary from '../sidebar-tsx/ErrorBoundary.js'
 

@@ -216,14 +216,14 @@ import ErrorTelemetry from '../../platform/telemetry/electron-main/errorTelemetr
 
 // in theory this is not allowed
 // ignore the eslint errors below
-import { IMetricsService } from '../../workbench/contrib/void/common/metricsService.js'
-import { IVoidUpdateService } from '../../workbench/contrib/void/common/voidUpdateService.js'
-import { MetricsMainService } from '../../workbench/contrib/void/electron-main/metricsMainService.js'
-import { VoidMainUpdateService } from '../../workbench/contrib/void/electron-main/voidUpdateMainService.js'
-import { LLMMessageChannel } from '../../workbench/contrib/void/electron-main/sendLLMMessageChannel.js'
-import { VoidSCMService } from '../../workbench/contrib/void/electron-main/voidSCMMainService.js'
-import { IVoidSCMService } from '../../workbench/contrib/void/common/voidSCMTypes.js'
-import { MCPChannel } from '../../workbench/contrib/void/electron-main/mcpChannel.js'
+import { IMetricsService } from '../../workbench/contrib/kvantkode/common/metricsService.js'
+import { IVoidUpdateService } from '../../workbench/contrib/kvantkode/common/voidUpdateService.js'
+import { MetricsMainService } from '../../workbench/contrib/kvantkode/electron-main/metricsMainService.js'
+import { VoidMainUpdateService } from '../../workbench/contrib/kvantkode/electron-main/voidUpdateMainService.js'
+import { LLMMessageChannel } from '../../workbench/contrib/kvantkode/electron-main/sendLLMMessageChannel.js'
+import { VoidSCMService } from '../../workbench/contrib/kvantkode/electron-main/voidSCMMainService.js'
+import { IVoidSCMService } from '../../workbench/contrib/kvantkode/common/voidSCMTypes.js'
+import { MCPChannel } from '../../workbench/contrib/kvantkode/electron-main/mcpChannel.js'
 /**
  * The main VS Code application. There will only ever be one instance,
  * even if the user starts many instances (e.g. from the command line).

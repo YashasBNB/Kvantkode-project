@@ -38,7 +38,7 @@ import { IViewsService } from '../../../services/views/common/viewsService.js'
 import {
 	VOID_CTRL_K_ACTION_ID,
 	VOID_CTRL_L_ACTION_ID,
-} from '../../../contrib/void/browser/actionIDs.js'
+} from '../../../contrib/kvantkode/browser/actionIDs.js'
 import { VIEWLET_ID as REMOTE_EXPLORER_VIEWLET_ID } from '../../../contrib/remote/browser/remoteExplorer.js'
 /* eslint-enable */
 

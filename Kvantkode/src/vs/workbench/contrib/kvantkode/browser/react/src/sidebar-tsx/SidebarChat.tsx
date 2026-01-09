@@ -53,7 +53,7 @@ import {
 	displayInfoOfProviderName,
 	FeatureName,
 	isFeatureNameDisabled,
-} from '../../../../../../../workbench/contrib/void/common/voidSettingsTypes.js'
+} from '../../../../../../../workbench/contrib/kvantkode/common/voidSettingsTypes.js'
 import { ICommandService } from '../../../../../../../platform/commands/common/commands.js'
 import { WarningBox } from '../void-settings-tsx/WarningBox.js'
 import {
