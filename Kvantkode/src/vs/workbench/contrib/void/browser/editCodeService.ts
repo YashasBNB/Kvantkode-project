@@ -1566,7 +1566,7 @@ class EditCodeService extends Disposable implements IEditCodeService {
 			} else if (from === 'ClickApply') {
 				return extractCodeFromRegular({ text: fullText, recentlyAddedTextLen })
 			}
-			throw new Error('Void 1')
+			throw new Error('KvantKode 1')
 		}
 
 		// refresh now in case onText takes a while to get 1st message
