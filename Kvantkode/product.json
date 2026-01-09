@@ -45,6 +45,5 @@
 	],
 	"updateUrl": "https://api.github.com/repos/YashasBNB/Kvantkode-project/releases",
 	"commit": "996d980c8837c1ccba326006b435ec297b0f8348",
-	"quality": "stable",
-	"testHook": true
+	"quality": "stable"
 }
