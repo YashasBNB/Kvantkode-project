@@ -125,7 +125,7 @@ import {
 } from '../common/chatModel.js'
 import { IChatFollowup, IChatService } from '../common/chatService.js'
 import { IChatVariablesService } from '../common/chatVariables.js'
-import { IContextGatheringService } from '../../void/browser/contextGatheringService.js'
+import { IContextGatheringService } from '../../kvantkode/browser/contextGatheringService.js'
 import { IChatResponseViewModel } from '../common/chatViewModel.js'
 import {
 	ChatInputHistoryMaxEntries,

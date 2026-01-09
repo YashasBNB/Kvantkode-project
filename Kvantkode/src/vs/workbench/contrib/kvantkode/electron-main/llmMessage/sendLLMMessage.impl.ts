@@ -7,7 +7,7 @@
 /* eslint-disable */
 import Anthropic from '@anthropic-ai/sdk'
 import { Ollama } from 'ollama'
-import OpenAI, { ClientOptions, AzureOpenAI } from 'openai/index.mjs'
+import OpenAI, { ClientOptions, AzureOpenAI } from 'openai'
 import { MistralCore } from '@mistralai/mistralai/core.js'
 import { fimComplete } from '@mistralai/mistralai/funcs/fimComplete.js'
 import {

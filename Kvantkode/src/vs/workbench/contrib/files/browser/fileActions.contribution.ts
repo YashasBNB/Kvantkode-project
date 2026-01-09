@@ -134,7 +134,7 @@ import { ThemeIcon } from '../../../../base/common/themables.js'
 import { IExplorerService } from './files.js'
 import { Codicon } from '../../../../base/common/codicons.js'
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js'
-import { VOID_OPEN_SETTINGS_ACTION_ID } from '../../void/browser/voidSettingsPane.js'
+import { VOID_OPEN_SETTINGS_ACTION_ID } from '../../kvantkode/browser/kvantkodeSettingsPane.js'
 
 // Contribute Global Actions
 

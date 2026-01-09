@@ -1,0 +1,64 @@
+/*--------------------------------------------------------------------------------------
+ *  Copyright 2025 Glass Devtools, Inc. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
+ *--------------------------------------------------------------------------------------*/
+import { promisify } from 'util';
+import { exec as _exec } from 'child_process';
+const exec = promisify(_exec);
+//8000 and 10 were chosen after some experimentation on small-to-moderately sized changes
+const MAX_DIFF_LENGTH = 8000;
+const MAX_DIFF_FILES = 10;
+const git = async (command, path) => {
+    const { stdout, stderr } = await exec(`${command}`, { cwd: path });
+    if (stderr) {
+        throw new Error(stderr);
+    }
+    return stdout.trim();
+};
+const getNumStat = async (path, useStagedChanges) => {
+    const staged = useStagedChanges ? '--staged' : '';
+    const output = await git(`git diff --numstat ${staged}`, path);
+    return output.split('\n').map((line) => {
+        const [added, removed, file] = line.split('\t');
+        return {
+            file,
+            added: parseInt(added, 10) || 0,
+            removed: parseInt(removed, 10) || 0,
+        };
+    });
+};
+const getSampledDiff = async (file, path, useStagedChanges) => {
+    const staged = useStagedChanges ? '--staged' : '';
+    const diff = await git(`git diff --unified=0 --no-color ${staged} -- "${file}"`, path);
+    return diff.slice(0, MAX_DIFF_LENGTH);
+};
+const hasStagedChanges = async (path) => {
+    const output = await git('git diff --staged --name-only', path);
+    return output.length > 0;
+};
+export class VoidSCMService {
+    async gitStat(path) {
+        const useStagedChanges = await hasStagedChanges(path);
+        const staged = useStagedChanges ? '--staged' : '';
+        return git(`git diff --stat ${staged}`, path);
+    }
+    async gitSampledDiffs(path) {
+        const useStagedChanges = await hasStagedChanges(path);
+        const numStatList = await getNumStat(path, useStagedChanges);
+        const topFiles = numStatList
+            .sort((a, b) => b.added + b.removed - (a.added + a.removed))
+            .slice(0, MAX_DIFF_FILES);
+        const diffs = await Promise.all(topFiles.map(async ({ file }) => ({
+            file,
+            diff: await getSampledDiff(file, path, useStagedChanges),
+        })));
+        return diffs.map(({ file, diff }) => `==== ${file} ====\n${diff}`).join('\n\n');
+    }
+    gitBranch(path) {
+        return git('git branch --show-current', path);
+    }
+    gitLog(path) {
+        return git('git log --pretty=format:"%h|%s|%ad" --date=short --no-merges -n 5', path);
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidm9pZFNDTU1haW5TZXJ2aWNlLmpzIiwic291cmNlUm9vdCI6ImZpbGU6Ly8vVXNlcnMveWFzaGFzbmFpZHUvS3ZhbnRjb2RlL0t2YW50a29kZS1wcm9qZWN0L0t2YW50a29kZS9zcmMvIiwic291cmNlcyI6WyJ2cy93b3JrYmVuY2gvY29udHJpYi9rdmFudGtvZGUvZWxlY3Ryb24tbWFpbi92b2lkU0NNTWFpblNlcnZpY2UudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7OzswRkFHMEY7QUFFMUYsT0FBTyxFQUFFLFNBQVMsRUFBRSxNQUFNLE1BQU0sQ0FBQTtBQUNoQyxPQUFPLEVBQUUsSUFBSSxJQUFJLEtBQUssRUFBRSxNQUFNLGVBQWUsQ0FBQTtBQVM3QyxNQUFNLElBQUksR0FBRyxTQUFTLENBQUMsS0FBSyxDQUFDLENBQUE7QUFFN0IseUZBQXlGO0FBQ3pGLE1BQU0sZUFBZSxHQUFHLElBQUksQ0FBQTtBQUM1QixNQUFNLGNBQWMsR0FBRyxFQUFFLENBQUE7QUFFekIsTUFBTSxHQUFHLEdBQUcsS0FBSyxFQUFFLE9BQWUsRUFBRSxJQUFZLEVBQW1CLEVBQUU7SUFDcEUsTUFBTSxFQUFFLE1BQU0sRUFBRSxNQUFNLEVBQUUsR0FBRyxNQUFNLElBQUksQ0FBQyxHQUFHLE9BQU8sRUFBRSxFQUFFLEVBQUUsR0FBRyxFQUFFLElBQUksRUFBRSxDQUFDLENBQUE7SUFDbEUsSUFBSSxNQUFNLEVBQUUsQ0FBQztRQUNaLE1BQU0sSUFBSSxLQUFLLENBQUMsTUFBTSxDQUFDLENBQUE7SUFDeEIsQ0FBQztJQUNELE9BQU8sTUFBTSxDQUFDLElBQUksRUFBRSxDQUFBO0FBQ3JCLENBQUMsQ0FBQTtBQUVELE1BQU0sVUFBVSxHQUFHLEtBQUssRUFBRSxJQUFZLEVBQUUsZ0JBQXlCLEVBQXNCLEVBQUU7SUFDeEYsTUFBTSxNQUFNLEdBQUcsZ0JBQWdCLENBQUMsQ0FBQyxDQUFDLFVBQVUsQ0FBQyxDQUFDLENBQUMsRUFBRSxDQUFBO0lBQ2pELE1BQU0sTUFB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

@@ -18,6 +18,63 @@ import './autocompleteService.js'
 
 // register Context services
 // import './contextGatheringService.js'
+
+// register chat thread service
+import './chatThreadService.js'
+
+// register LLM message service
+import './convertToLLMMessageWorkbenchContrib.js'
+
+// register terminal tool service
+import './terminalToolService.js'
+
+// register tools service
+import './toolsService.js'
+
+// register void settings pane
+import './kvantkodeSettingsPane.js'
+
+// register void update actions
+import './voidUpdateActions.js'
+
+// register void selection helper widget
+import './voidSelectionHelperWidget.js'
+
+// register void command bar service
+import './voidCommandBarService.js'
+
+// register void onboarding service
+import './voidOnboardingService.js'
+
+// register void SCM service
+import './voidSCMService.js'
+
+// register metrics poll service
+import './metricsPollService.js'
+
+// register misc workbench contributions
+import './miscWokrbenchContrib.js'
+
+// register extension transfer service
+import './extensionTransferService.js'
+
+// register tooltip service
+import './tooltipService.js'
+
+// register AI regex service
+import './aiRegexService.js'
+
+// register continue chat client
+import './continueChatClient.js'
+
+// register file service
+import './fileService.js'
+
+// register marker check service
+import './_markerCheckService.js'
+
+// register dummy contribution
+import './_dummyContrib.js'
 // import './contextUserChangesService.js'
 
 // settings pane
