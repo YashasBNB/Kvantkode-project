@@ -95,7 +95,7 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 	private async _manualCheckGHTagIfDisabled(explicit: boolean): Promise<VoidCheckUpdateRespose> {
 		try {
 			const response = await fetch(
-				'https://api.github.com/repos/voideditor/binaries/releases/latest',
+				'https://api.github.com/repos/YashasBNB/Kvantkode-project/releases/latest',
 			)
 
 			const data = await response.json()

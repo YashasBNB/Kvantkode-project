@@ -40,7 +40,7 @@ export class ServerInstallError extends Error {
 }
 
 const DEFAULT_DOWNLOAD_URL_TEMPLATE =
-	'https://github.com/voideditor/binaries/releases/download/${version}/void-reh-${os}-${arch}-${version}.tar.gz'
+	'https://github.com/YashasBNB/Kvantkode-project/releases/download/${version}/void-reh-${os}-${arch}-${version}.tar.gz'
 
 export async function installCodeServer(
 	conn: SSHConnection,
