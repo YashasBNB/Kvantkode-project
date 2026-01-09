@@ -348,12 +348,12 @@ class EditCodeService extends Disposable implements IEditCodeService {
 	// 	const details = errorDetails(e.fullError)
 	// 	this._notificationService.notify({
 	// 		severity: Severity.Warning,
-	// 		message: `Void Error: ${e.message}`,
+	// 		message: `KvantKode Error: ${e.message}`,
 	// 		actions: {
 	// 			secondary: [{
 	// 				id: 'void.onerror.opensettings',
 	// 				enabled: true,
-	// 				label: `Open Void's settings`,
+	// 				label: `Open KvantKode's settings`,
 	// 				tooltip: '',
 	// 				class: undefined,
 	// 				run: () => { this._commandService.executeCommand(VOID_OPEN_SETTINGS_ACTION_ID) }
@@ -590,84 +590,6 @@ class EditCodeService extends Disposable implements IEditCodeService {
 			const consistentZoneId = this._consistentItemService.addConsistentItemToURI({
 				uri,
 				fn: (editor) => {
-					const domNode = document.createElement('div')
-					domNode.className = 'void-redBG'
-
-					const renderOptions = RenderOptions.fromEditor(editor)
-
-					const processedText = diff.originalCode.replace(/\t/g, ' '.repeat(renderOptions.tabSize))
-
-					const lines = processedText.split('\n')
-
-					const linesContainer = document.createElement('div')
-					linesContainer.style.fontFamily = renderOptions.fontInfo.fontFamily
-					linesContainer.style.fontSize = `${renderOptions.fontInfo.fontSize}px`
-					linesContainer.style.lineHeight = `${renderOptions.fontInfo.lineHeight}px`
-					// linesContainer.style.tabSize = `${tabWidth}px` // \t
-					linesContainer.style.whiteSpace = 'pre'
-					linesContainer.style.position = 'relative'
-					linesContainer.style.width = '100%'
-
-					lines.forEach((line) => {
-						// div for current line
-						const lineDiv = document.createElement('div')
-						lineDiv.className = 'view-line'
-						lineDiv.style.whiteSpace = 'pre'
-						lineDiv.style.position = 'relative'
-						lineDiv.style.height = `${renderOptions.fontInfo.lineHeight}px`
-
-						// span (this is just how vscode does it)
-						const span = document.createElement('span')
-						span.textContent = line || '\u00a0'
-						span.style.whiteSpace = 'pre'
-						span.style.display = 'inline-block'
-
-						lineDiv.appendChild(span)
-						linesContainer.appendChild(lineDiv)
-					})
-
-					domNode.appendChild(linesContainer)
-
-					// Calculate height based on number of lines and line height
-					const heightInLines = lines.length
-					const minWidthInPx = Math.max(
-						...lines.map((line) =>
-							Math.ceil(renderOptions.fontInfo.typicalFullwidthCharacterWidth * line.length),
-						),
-					)
-
-					const viewZone: IViewZone = {
-						afterLineNumber: diff.startLine - 1,
-						heightInLines,
-						minWidthInPx,
-						domNode,
-						marginDomNode: document.createElement('div'),
-						suppressMouseDown: false,
-						showInHiddenAreas: false,
-					}
-
-					let zoneId: string | null = null
-					editor.changeViewZones((accessor) => {
-						zoneId = accessor.addZone(viewZone)
-					})
-					return () =>
-						editor.changeViewZones((accessor) => {
-							if (zoneId) accessor.removeZone(zoneId)
-						})
-				},
-			})
-
-			disposeInThisEditorFns.push(() => {
-				this._consistentItemService.removeConsistentItemFromURI(consistentZoneId)
-			})
-		}
-
-		const diffZone = this.diffAreaOfId[diff.diffareaid]
-		if (diffZone.type === 'DiffZone' && !diffZone._streamState.isStreaming) {
-			// Accept | Reject widget
-			const consistentWidgetId = this._consistentItemService.addConsistentItemToURI({
-				uri,
-				fn: (editor) => {
 					let startLine: number
 					let offsetLines: number
 					if (diff.type === 'insertion' || diff.type === 'edit') {
@@ -684,7 +606,7 @@ class EditCodeService extends Disposable implements IEditCodeService {
 							offsetLines = 1
 						}
 					} else {
-						throw new Error('Void 1')
+						throw new Error('KvantKode 1')
 					}
 
 					const buttonsWidget = this._instantiationService.createInstance(
@@ -710,7 +632,7 @@ class EditCodeService extends Disposable implements IEditCodeService {
 				},
 			})
 			disposeInThisEditorFns.push(() => {
-				this._consistentItemService.removeConsistentItemFromURI(consistentWidgetId)
+				this._consistentItemService.removeConsistentItemFromURI(consistentZoneId)
 			})
 		}
 
@@ -847,7 +769,7 @@ class EditCodeService extends Disposable implements IEditCodeService {
 		const elt: IUndoRedoElement = {
 			type: UndoRedoElementType.Resource,
 			resource: uri,
-			label: 'Void Agent',
+			label: 'KvantKode Agent',
 			code: 'undoredo.editCode',
 			undo: async () => {
 				opts?.onWillUndo?.()
@@ -1092,7 +1014,7 @@ class EditCodeService extends Disposable implements IEditCodeService {
 			if (lastDiff.type === 'insertion' || lastDiff.type === 'edit')
 				endLineInLlmTextSoFar = lastDiff.endLine
 			else if (lastDiff.type === 'deletion') endLineInLlmTextSoFar = lastDiff.startLine
-			else throw new Error(`Void: diff.type not recognized on: ${lastDiff}`)
+			else throw new Error(`KvantKode: diff.type not recognized on: ${lastDiff}`)
 		}
 
 		// at the start, add a newline between the stream and originalCode to make reasoning easier
@@ -1516,7 +1438,7 @@ class EditCodeService extends Disposable implements IEditCodeService {
 			const { startLine: startLine_, endLine: endLine_ } = ctrlKZone
 			startRange = [startLine_, endLine_]
 		} else {
-			throw new Error(`Void: diff.type not recognized on: ${from}`)
+			throw new Error(`KvantKode: diff.type not recognized on: ${from}`)
 		}
 
 		const { model } = this._voidModelService.getModel(uri)
@@ -2186,7 +2108,7 @@ class EditCodeService extends Disposable implements IEditCodeService {
 						const blocks = extractSearchReplaceBlocks(fullText)
 						if (blocks.length === 0) {
 							this._notificationService.info(
-								`Void: We ran Fast Apply, but the LLM didn't output any changes.`,
+								`KvantKode: We ran Fast Apply, but LLM didn't output any changes.`,
 							)
 						}
 						this._writeURIText(uri, originalFileCode, 'wholeFileRange', {
@@ -2374,7 +2296,7 @@ class EditCodeService extends Disposable implements IEditCodeService {
 				...originalLines.slice(diff.originalEndLine - 1 + 1, Infinity), // everything after endLine
 			].join('\n')
 		} else {
-			throw new Error(`Void error: ${diff}.type not recognized`)
+			throw new Error(`KvantKode error: ${diff}.type not recognized`)
 		}
 
 		// console.log('DIFF', diff)
@@ -2483,7 +2405,7 @@ class EditCodeService extends Disposable implements IEditCodeService {
 				endColumn: Number.MAX_SAFE_INTEGER,
 			} // 1-indexed
 		} else {
-			throw new Error(`Void error: ${diff}.type not recognized`)
+			throw new Error(`KvantKode error: ${diff}.type not recognized`)
 		}
 
 		// update the file
