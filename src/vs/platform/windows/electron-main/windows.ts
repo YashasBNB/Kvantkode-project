@@ -200,6 +200,10 @@ export function defaultBrowserWindowOptions(
 		// Dev override for Windows out-of-sources
 		const userLogo = 'C:/Users/yashas/Kvantcode/PHOTO-2025-10-24-22-22-34.jpg'
 		options.icon = userLogo
+	} else if (isMacintosh && !environmentMainService.isBuilt) {
+		// Dev override for macOS out-of-sources
+		const userLogo = '/Users/yashasnaidu/Kvantcode/kvantkode_dock_256.png'
+		options.icon = userLogo
 	} else if (isLinux) {
 		options.icon = join(environmentMainService.appRoot, 'resources/linux/code.png') // always on Linux
 	} else if (isWindows && !environmentMainService.isBuilt) {

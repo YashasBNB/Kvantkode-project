@@ -10054,7 +10054,7 @@ declare module 'vscode' {
 		 * If a webview accesses localhost content, we recommend that you specify port mappings even if
 		 * the `webviewPort` and `extensionHostPort` ports are the same.
 		 *
-		 * *Note* that port mappings only work for `http` or `https` urls. Websocket urls (e.g. `wss://kvantkode-backends.onrender.com`)
+		 * *Note* that port mappings only work for `http` or `https` urls. Websocket urls (e.g. `ws://localhost:3000`)
 		 * cannot be mapped to another port.
 		 */
 		readonly portMapping?: readonly WebviewPortMapping[]

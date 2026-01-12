@@ -15,7 +15,7 @@ Use AI agents on your codebase, checkpoint and visualize changes, and bring any 
 
 This repo contains the full sourcecode for Void. If you're new, welcome!
 
-- 🧭 [Website](https://voideditor.com)
+- 🧭 [Website](https://kvantkode.com/)
 
 - 👋 [Discord](https://discord.gg/RSNjgaugJs)
 
@@ -37,4 +37,4 @@ Work is temporarily paused on the Void IDE (this repo) while we experiment with 
 
 ## Support
 
-You can always reach us in our Discord server or contact us via email: hello@voideditor.com.
+You can always reach us in our Discord server or contact us via email: hello@kvantkode.com.

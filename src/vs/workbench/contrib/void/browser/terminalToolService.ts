@@ -21,7 +21,7 @@ import {
 	ITerminalService,
 	ITerminalInstance,
 	ICreateTerminalOptions,
-} from '../../../../workbench/contrib/terminal/browser/terminal.js'
+} from '../../terminal/browser/terminal.js'
 import {
 	MAX_TERMINAL_BG_COMMAND_TIME,
 	MAX_TERMINAL_CHARS,

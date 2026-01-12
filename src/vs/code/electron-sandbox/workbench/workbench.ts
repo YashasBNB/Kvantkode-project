@@ -10,7 +10,7 @@
 	performance.mark('code/didStartRenderer')
 
 	type INativeWindowConfiguration =
-		import('../../../platform/window/common/window.ts').INativeWindowConfiguration
+		import('../../../platform/window/common/window.js').INativeWindowConfiguration
 	type IBootstrapWindow =
 		import('../../../platform/window/electron-sandbox/window.js').IBootstrapWindow
 	type IMainWindowSandboxGlobals =

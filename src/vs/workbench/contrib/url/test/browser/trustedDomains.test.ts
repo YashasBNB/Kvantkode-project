@@ -42,7 +42,7 @@ suite('Link protection domain matching', () => {
 		linkAllowedByRules('https://127.0.0.1', [])
 		linkAllowedByRules('https://127.0.0.1:3000', [])
 		linkAllowedByRules('https://localhost', [])
-		linkAllowedByRules('https://kvantkode-backends.onrender.com', [])
+		linkAllowedByRules('https://localhost:3000', [])
 	})
 
 	test('* star', () => {

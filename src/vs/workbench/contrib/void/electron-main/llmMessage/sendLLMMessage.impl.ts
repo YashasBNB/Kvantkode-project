@@ -7,7 +7,7 @@
 /* eslint-disable */
 import Anthropic from '@anthropic-ai/sdk'
 import { Ollama } from 'ollama'
-import OpenAI, { ClientOptions, AzureOpenAI } from 'openai'
+import OpenAI, { ClientOptions, AzureOpenAI } from 'openai/index.mjs'
 import { MistralCore } from '@mistralai/mistralai/core.js'
 import { fimComplete } from '@mistralai/mistralai/funcs/fimComplete.js'
 import {
@@ -151,7 +151,7 @@ const newOpenAICompatibleSDK = async ({
 			baseURL: 'https://openrouter.ai/api/v1',
 			apiKey: thisConfig.apiKey,
 			defaultHeaders: {
-				'HTTP-Referer': 'https://voideditor.com', // Optional, for including your app on openrouter.ai rankings.
+				'HTTP-Referer': 'https://kvantkode.com', // Optional, for including your app on openrouter.ai rankings.
 				'X-Title': 'KvantKode', // Optional. Shows in rankings on openrouter.ai.
 			},
 			...commonPayloadOpts,

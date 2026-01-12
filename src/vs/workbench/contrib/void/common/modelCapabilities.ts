@@ -30,7 +30,7 @@ export const defaultProviderSettings = {
 		apiKey: '',
 	},
 	openAICompatible: {
-		endpoint: 'https://kvantkode-backends.onrender.com/v1',
+		endpoint: 'http://localhost:3000/v1',
 		apiKey: 'noop',
 		headersJSON: '{}', // default to {}
 	},
@@ -67,13 +67,6 @@ export const defaultProviderSettings = {
 	awsBedrock: {
 		apiKey: '',
 		region: 'us-east-1', // add region setting
-		endpoint: '', // optionally allow overriding default
-	},
-	angelone: {
-		apiKey: '',
-		clientId: '',
-		token: '',
-		mpin: '',
 		endpoint: '', // optionally allow overriding default
 	},
 } as const

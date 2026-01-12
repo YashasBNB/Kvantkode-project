@@ -593,11 +593,11 @@ suite('URI', () => {
 	})
 
 	test('Ctrl click to follow hash query param url gets urlencoded #49628', function () {
-		let input = 'https://kvantkode-backends.onrender.com/#/foo?bar=baz'
+		let input = 'http://localhost:3000/#/foo?bar=baz'
 		let uri = URI.parse(input)
 		assert.strictEqual(uri.toString(true), input)
 
-		input = 'https://kvantkode-backends.onrender.com/foo?bar=baz'
+		input = 'http://localhost:3000/foo?bar=baz'
 		uri = URI.parse(input)
 		assert.strictEqual(uri.toString(true), input)
 	})

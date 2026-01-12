@@ -184,12 +184,43 @@ app.once('ready', function () {
 	// Set KvantKode dock icon on macOS during dev/runtime
 	if (process.platform === 'darwin') {
 		try {
-			const iconPath = '/Users/yashasnaidu/Kvantcode/PHOTO-2025-10-24-22-22-34.jpg'
+			const iconPath = '/Users/yashasnaidu/Kvantcode/kvantkode_dock_256.png'
+			console.log('Setting dock icon:', iconPath)
 			const img = nativeImage.createFromPath(iconPath)
+			console.log('Image created, empty:', img.isEmpty(), 'size:', img.getSize())
+			
+			// Try multiple methods to set the icon
 			if (!img.isEmpty() && app.dock) {
+				// Method 1: Direct set
 				app.dock.setIcon(img)
+				console.log('Dock icon set successfully (method 1)')
+				
+				// Method 2: Force update after delay
+				setTimeout(() => {
+					if (app.dock) {
+						app.dock.setIcon(img)
+						app.dock.bounce()
+						console.log('Dock icon updated (method 2)')
+					}
+				}, 1000)
+				
+				// Method 3: Clear and reset
+				setTimeout(() => {
+					if (app.dock) {
+						const emptyImg = nativeImage.createEmpty()
+						app.dock.setIcon(emptyImg) // Clear first
+						setTimeout(() => {
+							app.dock.setIcon(img) // Then set again
+							console.log('Dock icon reset (method 3)')
+						}, 100)
+					}
+				}, 3000)
+			} else {
+				console.log('Failed to set dock icon - image empty or dock unavailable')
 			}
-		} catch {}
+		} catch (error) {
+			console.error('Error setting dock icon:', error)
+		}
 	}
 	if (args['trace']) {
 		let traceOptions: Electron.TraceConfig | Electron.TraceCategoriesAndOptions
@@ -769,3 +800,21 @@ function getUserDefinedLocale(argvConfig: IArgvConfig): string | undefined {
 }
 
 //#endregion
+
+// Delayed dock icon setting as fallback
+if (process.platform === 'darwin') {
+	setTimeout(() => {
+		try {
+			const iconPath = '/Users/yashasnaidu/Kvantcode/kvantkode_dock_256.png'
+			console.log('Delayed dock icon setting:', iconPath)
+			const img = nativeImage.createFromPath(iconPath)
+			if (!img.isEmpty() && app.dock) {
+				app.dock.setIcon(img)
+				app.dock.bounce()
+				console.log('Delayed dock icon set successfully!')
+			}
+		} catch (error) {
+			console.error('Error in delayed dock icon setting:', error)
+		}
+	}, 5000) // 5 second delay
+}

@@ -232,7 +232,7 @@ export class McpAddConfigurationCommand {
 			title: localize('mcp.url.title', 'Enter Server URL'),
 			placeHolder: localize(
 				'mcp.url.placeholder',
-				'URL of the MCP server (e.g., https://kvantkode-backends.onrender.com)',
+				'URL of the MCP server (e.g., http://localhost:3000)',
 			),
 			ignoreFocusLost: true,
 		})

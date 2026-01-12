@@ -166,6 +166,7 @@ const BrokerPanel = ({ userId, onChanged }: {userId: string;onChanged: () => voi
     return msg;
   };
   const SUPPORTED_BROKERS = ['Alpaca', 'Binance', 'Zerodha', 'AngelOne', 'Upstox', 'Dhan'];
+  const AVAILABLE_BROKERS = ['AngelOne']; // Only AngelOne is available
   const REQ: Record<
     string,
     {apiKey: boolean;apiSecretKey: boolean;accessToken: boolean;clientId: boolean;}> =
@@ -652,11 +653,11 @@ const BrokerPanel = ({ userId, onChanged }: {userId: string;onChanged: () => voi
     setError(null);
     try {
       if (
-      !SUPPORTED_BROKERS.map((b) => b.toLowerCase()).includes(
+      !AVAILABLE_BROKERS.map((b) => b.toLowerCase()).includes(
         (editForm.broker || '').toLowerCase()
       ))
       {
-        throw new Error('unsupported_broker');
+        throw new Error('broker_not_available');
       }
       const rules = REQ[editForm.broker as keyof typeof REQ];
       if (rules) {
@@ -698,7 +699,10 @@ const BrokerPanel = ({ userId, onChanged }: {userId: string;onChanged: () => voi
       onChanged();
       await readBalance();
     } catch (e: any) {
-      setError(e?.message || String(e));
+      const raw = e?.message || String(e);
+      let friendly = raw;
+      if (raw === 'broker_not_available') friendly = 'This broker is coming soon. Only AngelOne is available now.';
+      setError(friendly);
     } finally {
       setLoading(false);
     }
@@ -709,9 +713,9 @@ const BrokerPanel = ({ userId, onChanged }: {userId: string;onChanged: () => voi
     setError(null);
     try {
       if (
-      !SUPPORTED_BROKERS.map((b) => b.toLowerCase()).includes((form.broker || '').toLowerCase()))
+      !AVAILABLE_BROKERS.map((b) => b.toLowerCase()).includes((form.broker || '').toLowerCase()))
       {
-        throw new Error('unsupported_broker');
+        throw new Error('broker_not_available');
       }
       const rules = REQ[form.broker as keyof typeof REQ];
       if (rules) {
@@ -749,7 +753,10 @@ const BrokerPanel = ({ userId, onChanged }: {userId: string;onChanged: () => voi
       await readMe();
       onChanged();
     } catch (e: any) {
-      setError(e?.message || String(e));
+      const raw = e?.message || String(e);
+      let friendly = raw;
+      if (raw === 'broker_not_available') friendly = 'This broker is coming soon. Only AngelOne is available now.';
+      setError(friendly);
     } finally {
       setLoading(false);
     }
@@ -824,11 +831,14 @@ const BrokerPanel = ({ userId, onChanged }: {userId: string;onChanged: () => voi
           }>
 
 					<option value="">Select Broker</option>
-					{SUPPORTED_BROKERS.map((b) =>
-          <option key={b} value={b}>
-							{b}
-						</option>
-          )}
+					{SUPPORTED_BROKERS.map((b) => {
+            const isAvailable = AVAILABLE_BROKERS.includes(b);
+            return (
+              <option key={b} value={b} disabled={!isAvailable}>
+								{b} {isAvailable ? '' : '(Coming Soon)'}
+							</option>);
+
+          })}
 				</select>
 				<input
           className="void-bg-void-bg-2 void-border void-border-void-border-2 void-rounded void-p-2"
@@ -953,11 +963,14 @@ const BrokerPanel = ({ userId, onChanged }: {userId: string;onChanged: () => voi
                 }>
 
 											<option value="">Select Broker</option>
-											{SUPPORTED_BROKERS.map((b) =>
-                <option key={b} value={b}>
-													{b}
-												</option>
-                )}
+											{SUPPORTED_BROKERS.map((b) => {
+                  const isAvailable = AVAILABLE_BROKERS.includes(b);
+                  return (
+                    <option key={b} value={b} disabled={!isAvailable}>
+														{b} {isAvailable ? '' : '(Coming Soon)'}
+													</option>);
+
+                })}
 										</select>
 										<input
                 className="void-bg-void-bg-2 void-border void-border-void-border-2 void-rounded void-p-2"
