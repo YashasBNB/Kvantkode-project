@@ -19,6 +19,17 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 		@IUpdateService private readonly _updateService: IUpdateService,
 	) {
 		super()
+		// Start automatic update checking every 30 minutes
+		this._startAutoUpdateCheck()
+	}
+
+	private _startAutoUpdateCheck() {
+		// Only check for updates in production mode
+		if (this._envMainService.isBuilt) {
+			setInterval(() => {
+				this.check(false) // Silent check
+			}, 30 * 60 * 1000) // 30 minutes
+		}
 	}
 
 	async check(explicit: boolean): Promise<VoidCheckUpdateRespose> {
@@ -83,7 +94,7 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 
 		if (this._updateService.state.type === StateType.Ready) {
 			// Update is ready
-			return { message: 'Restart Void to update!', action: 'restart' } as const
+			return { message: 'Restart KvantKode to update!', action: 'restart' } as const
 		}
 
 		if (this._updateService.state.type === StateType.Disabled) {
@@ -92,16 +103,42 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 		return null
 	}
 
+	async getDownloadUrl(): Promise<string> {
+		try {
+			const response = await fetch(
+				'https://api.github.com/repos/YashasBNB/Kvantkode-project/releases/latest'
+			)
+			const data = await response.json()
+			
+			// Find the appropriate asset for the current platform
+			const asset = data.assets?.find((asset: any) => {
+				if (process.platform === 'darwin') {
+					return asset.name.includes('.dmg') || asset.name.includes('mac')
+				} else if (process.platform === 'win32') {
+					return asset.name.includes('.exe') || asset.name.includes('win')
+				} else if (process.platform === 'linux') {
+					return asset.name.includes('.AppImage') || asset.name.includes('.deb') || asset.name.includes('.rpm')
+				}
+				return false
+			})
+
+			return asset?.browser_download_url || data.html_url
+		} catch (e) {
+			console.error('Failed to get download URL:', e)
+			return 'https://github.com/YashasBNB/Kvantkode-project/releases/latest'
+		}
+	}
+
 	private async _manualCheckGHTagIfDisabled(explicit: boolean): Promise<VoidCheckUpdateRespose> {
 		try {
 			const response = await fetch(
-				'https://api.github.com/repos/voideditor/binaries/releases/latest',
+				'https://api.github.com/repos/YashasBNB/Kvantkode-project/releases/latest',
 			)
 
 			const data = await response.json()
 			const version = data.tag_name
 
-			const myVersion = this._productService.version
+			const myVersion = this._productService.voidVersion || this._productService.version
 			const latestVersion = version
 
 			const isUpToDate = myVersion === latestVersion // only makes sense if response.ok
@@ -114,10 +151,10 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 				if (response.ok) {
 					if (!isUpToDate) {
 						message =
-							'A new version of Void is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
+							'A new version of KvantKode is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
 						action = 'reinstall'
 					} else {
-						message = 'Void is up-to-date!'
+						message = 'KvantKode is up-to-date!'
 					}
 				} else {
 					message = `An error occurred when fetching the latest GitHub release tag. Please try again in ~5 minutes, or reinstall.`
@@ -128,7 +165,7 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 			else {
 				if (response.ok && !isUpToDate) {
 					message =
-						'A new version of Void is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
+						'A new version of KvantKode is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
 					action = 'reinstall'
 				} else {
 					message = null

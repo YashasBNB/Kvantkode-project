@@ -15,6 +15,7 @@ import { VoidCheckUpdateRespose } from './voidUpdateServiceTypes.js'
 export interface IVoidUpdateService {
 	readonly _serviceBrand: undefined
 	check: (explicit: boolean) => Promise<VoidCheckUpdateRespose>
+	getDownloadUrl: () => Promise<string>
 }
 
 export const IVoidUpdateService = createDecorator<IVoidUpdateService>('VoidUpdateService')
@@ -36,6 +37,11 @@ export class VoidUpdateService implements IVoidUpdateService {
 	// anything transmitted over a channel must be async even if it looks like it doesn't have to be
 	check: IVoidUpdateService['check'] = async (explicit) => {
 		const res = await this.voidUpdateService.check(explicit)
+		return res
+	}
+
+	getDownloadUrl: IVoidUpdateService['getDownloadUrl'] = async () => {
+		const res = await this.voidUpdateService.getDownloadUrl()
 		return res
 	}
 }

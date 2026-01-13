@@ -29,6 +29,7 @@ const notifyUpdate = (
 	res: VoidCheckUpdateRespose & { message: string },
 	notifService: INotificationService,
 	updateService: IUpdateService,
+	voidUpdateService: IVoidUpdateService,
 ): INotificationHandle => {
 	const message =
 		res?.message ||
@@ -41,14 +42,19 @@ const notifyUpdate = (
 
 		if (res.action === 'reinstall') {
 			primary.push({
-				label: `Reinstall`,
+				label: `Download Latest`,
 				id: 'void.updater.reinstall',
 				enabled: true,
 				tooltip: '',
 				class: undefined,
-				run: () => {
+				run: async () => {
 					const { window } = dom.getActiveWindow()
-					window.open('https://kvantkode.com/download-beta')
+					try {
+						const downloadUrl = await voidUpdateService.getDownloadUrl()
+						window.open(downloadUrl)
+					} catch (e) {
+						window.open('https://github.com/YashasBNB/Kvantkode-project/releases/latest')
+					}
 				},
 			})
 		}
@@ -164,7 +170,7 @@ const performVoidCheck = async (
 		return notifController
 	} else {
 		if (res.message) {
-			const notifController = notifyUpdate(res, notifService, updateService)
+			const notifController = notifyUpdate(res, notifService, updateService, voidUpdateService)
 			metricsService.capture(`Void Update ${metricsTag}: Yes`, { res })
 			return notifController
 		} else {

@@ -2107,4 +2107,4 @@ var AMDLoader
 	}
 })(AMDLoader || (AMDLoader = {}))
 
-//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode/src/vs/loader.js
+//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode-project/Kvantkode/src/vs/loader.js
