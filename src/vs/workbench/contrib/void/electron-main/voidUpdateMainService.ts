@@ -13,6 +13,10 @@ import { VoidCheckUpdateRespose } from '../common/voidUpdateServiceTypes.js'
 export class VoidMainUpdateService extends Disposable implements IVoidUpdateService {
 	_serviceBrand: undefined
 
+	private _lastUpdateCheck: number = 0
+	private _updateCheckCache: any = null
+	private readonly _RATE_LIMIT_MS = 5 * 60 * 1000 // 5 minutes between checks
+
 	constructor(
 		@IProductService private readonly _productService: IProductService,
 		@IEnvironmentMainService private readonly _envMainService: IEnvironmentMainService,
@@ -104,13 +108,36 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 	}
 
 	async getDownloadUrl(): Promise<string> {
+		const now = Date.now()
+		
+		// Return cached result if within rate limit
+		if (this._updateCheckCache && (now - this._lastUpdateCheck) < this._RATE_LIMIT_MS) {
+			return this._updateCheckCache
+		}
+
 		try {
+			// Add user agent to avoid rate limiting
 			const response = await fetch(
-				'https://api.github.com/repos/YashasBNB/Kvantkode-project/releases/latest'
+				'https://api.github.com/repos/YashasBNB/Kvantkode-project/releases/latest',
+				{
+					headers: {
+						'User-Agent': 'KvantKode-Editor/1.0',
+						'Accept': 'application/vnd.github.v3+json'
+					}
+				}
 			)
+			
+			if (!response.ok) {
+				if (response.status === 429) {
+					// Rate limited, return fallback URL
+					return 'https://github.com/YashasBNB/Kvantkode-project/releases/latest'
+				}
+				throw new Error(`HTTP ${response.status}`)
+			}
+			
 			const data = await response.json()
 			
-			// Find the appropriate asset for the current platform
+			// Find appropriate asset for current platform
 			const asset = data.assets?.find((asset: any) => {
 				if (process.platform === 'darwin') {
 					return asset.name.includes('.dmg') || asset.name.includes('mac')
@@ -122,18 +149,46 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 				return false
 			})
 
-			return asset?.browser_download_url || data.html_url
+			const downloadUrl = asset?.browser_download_url || data.html_url
+			
+			// Cache the result
+			this._updateCheckCache = downloadUrl
+			this._lastUpdateCheck = now
+			
+			return downloadUrl
 		} catch (e) {
 			console.error('Failed to get download URL:', e)
+			// Return fallback URL on error
 			return 'https://github.com/YashasBNB/Kvantkode-project/releases/latest'
 		}
 	}
 
 	private async _manualCheckGHTagIfDisabled(explicit: boolean): Promise<VoidCheckUpdateRespose> {
+		const now = Date.now()
+		
+		// For non-explicit checks, use cache to avoid rate limiting
+		if (!explicit && this._updateCheckCache && (now - this._lastUpdateCheck) < this._RATE_LIMIT_MS) {
+			return { message: null } as const // Silent check, use cached data
+		}
+		
 		try {
 			const response = await fetch(
 				'https://api.github.com/repos/YashasBNB/Kvantkode-project/releases/latest',
+				{
+					headers: {
+						'User-Agent': 'KvantKode-Editor/1.0',
+						'Accept': 'application/vnd.github.v3+json'
+					}
+				}
 			)
+
+			if (!response.ok) {
+				if (response.status === 429 && !explicit) {
+					// Rate limited on silent check, just return null
+					return { message: null } as const
+				}
+				throw new Error(`HTTP ${response.status}`)
+			}
 
 			const data = await response.json()
 			const version = data.tag_name
@@ -171,6 +226,10 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 					message = null
 				}
 			}
+			
+			// Update cache for successful requests
+			this._lastUpdateCheck = now
+			
 			return { message, action } as const
 		} catch (e) {
 			if (explicit) {
