@@ -8,33 +8,77 @@
 	 	height="300"
 	/>
 </div>
+**Kvantkode** is an intelligent algorithmic trading assistant designed to help traders and developers efficiently build, test, and deploy trading strategies.
 
-Void is the open-source Cursor alternative.
+This project combines open-source code assistance with domain-specific logic for financial strategy development, backtesting, and broker integration.
 
-Use AI agents on your codebase, checkpoint and visualize changes, and bring any model or host locally. Void sends messages directly to providers without retaining your data.
+## 🚀 Overview
 
-This repo contains the full sourcecode for Void. If you're new, welcome!
+Kvantkode provides:
 
-- 🧭 [Website](https://kvantkode.com/)
+- A **domain-specific coding assistant** for algorithmic trading workflows  
+- A **strategy development environment** with validation and structure  
+- **Backtesting capabilities** on historical data  
+- **Integration architecture** for broker APIs (e.g., order execution pipelines)
 
-- 👋 [Discord](https://discord.gg/RSNjgaugJs)
+This tool is aimed at algo traders, quantitative developers, and fintech builders who want to streamline strategy creation, testing, and execution.
 
-- 🚙 [Project Board](https://github.com/orgs/voideditor/projects/2)
+---
 
-## Contributing
+## 🛠️ Key Features
 
-1. To get started working on Void, check out our Project Board! You can also see [HOW_TO_CONTRIBUTE](https://github.com/voideditor/void/blob/main/HOW_TO_CONTRIBUTE.md).
+### Strategy Creation
+- Guided coding environment for writing algorithmic strategies
+- Domain-aware suggestions tailored to finance and trading
+- Templates for common strategy patterns (momentum, mean-reversion, etc.)
 
-2. Feel free to attend a casual weekly meeting in our Discord channel!
+### Backtesting Engine
+- Evaluate strategies against historical datasets
+- Performance metrics and trade logs
+- Modular design for extending backtesting logic
 
-## Reference
+### Broker API Integration (Planned / Extensible)
+- Interfaces for connecting to live market brokers
+- Order submission and portfolio tracking
+- Designed for modular broker plugins
 
-Void is a fork of the [vscode](https://github.com/microsoft/vscode) repository. For a guide to the codebase, see [VOID_CODEBASE_GUIDE](https://github.com/voideditor/void/blob/main/VOID_CODEBASE_GUIDE.md).
+### Modular and Extensible
+- Clearly organized code structure
+- Designed for extensions and custom strategy modules
 
-## Note
+---
 
-Work is temporarily paused on the Void IDE (this repo) while we experiment with a few novel AI coding ideas for Void. Stay alerted with new releases in our Discord channel.
+## 📦 Tech Stack
 
-## Support
+| Component | Technology |
+|-----------|------------|
+| Coding Assistant Layer | Python / Open-Source Assistant |
+| Strategy Logic | Python |
+| Backtesting | Python |
+| Broker Integration | API modules |
+| Version Control | Git & GitHub |
 
-You can always reach us in our Discord server or contact us via email: hello@kvantkode.com.
+---
+
+## 🧠 Project Structure
+
+Kvantkode/
+├── core/ # Core utilities and assistant logic
+├── strategies/ # Strategy templates and modules
+├── backtesting/ # Backtesting engine and test suites
+├── integrations/ # Broker API and connector interfaces
+├── examples/ # Example scripts and demos
+├── requirements.txt # Dependencies
+└── README.md # This documentation
+
+yaml
+Copy code
+
+---
+
+## 📥 Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/YashasBNB/Kvantkode-project.git
+   cd Kvantkode-project/Kvantkode
