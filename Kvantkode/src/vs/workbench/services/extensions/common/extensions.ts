@@ -39,7 +39,7 @@ export const nullExtensionDescription = Object.freeze<IExtensionDescription>({
 	version: '0.0.0',
 	publisher: 'vscode',
 	engines: { vscode: '' },
-	extensionLocation: URI.parse('kvantkode:location'),
+	extensionLocation: URI.parse('void:location'),
 	isBuiltin: false,
 	targetPlatform: TargetPlatform.UNDEFINED,
 	isUserBuiltin: false,
