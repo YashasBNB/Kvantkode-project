@@ -428,6 +428,9 @@ export const IconX = ({
 	const [subLoading, setSubLoading] = useState(false)
 	const [subError, setSubError] = useState<string | null>(null)
 	const [subActionLoading, setSubActionLoading] = useState(false)
+	const [pollingPayment, setPollingPayment] = useState(false)
+	const [subscriptionLinks, setSubscriptionLinks] = useState<any>(null)
+	const [showSubscriptionOptions, setShowSubscriptionOptions] = useState(false)
 
 	const refreshSubscription = useCallback(async () => {
 		setSubError(null)
@@ -439,22 +442,166 @@ export const IconX = ({
 				setSubUntil(null)
 				return
 			}
-			const rsp = await fetch(`${BACKEND_URL}/auth/me`, {
+
+			const rsp = await fetch(`${BACKEND_URL}/subscription/status`, {
 				headers: { Authorization: `Bearer ${token}` },
 			})
 			const data = await rsp.json().catch(() => ({}))
+
+			// Handle 402 payment required response
+			if (rsp.status === 402 && data.error === 'payment_required') {
+				// User needs to pay - set status to indicate payment required
+				setSubStatus('none')
+				setSubUntil(null)
+				return
+			}
+
 			if (!rsp.ok) throw new Error(data?.error || data?.message || 'failed_subscription_me')
-			const sub = (data?.user?.subscription ?? {}) as { status?: string; validUntil?: string | null }
-			setSubStatus(sub.status || null)
-			setSubUntil(sub.validUntil || null)
-		} catch (e: any) {
-			setSubError(e?.message || String(e))
-			setSubStatus(null)
+
+			// Check if subscription is expiring soon (within 2 days)
+			const now = new Date()
+			const validUntil = data.validUntil ? new Date(data.validUntil) : null
+			const daysUntilExpiry = validUntil ? Math.ceil((validUntil.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0
+
+			// If subscription is active but expiring within 2 days, show payment options
+			if (data.isActive && daysUntilExpiry <= 2 && daysUntilExpiry > 0) {
+				setSubStatus('expiring_soon')
+				setSubUntil(data.validUntil)
+				// Auto-show subscription options for uninterrupted service (with delay to avoid circular dependency)
+				setTimeout(() => {
+					if (!showSubscriptionOptions) {
+						createSubscriptionLinks()
+					}
+				}, 100)
+				return
+			}
+
+			// Normal active subscription
+			if (data.isActive) {
+				setSubStatus(data.isTrial ? 'trial' : 'active')
+				setSubUntil(data.validUntil)
+				return
+			}
+
+			// No active subscription
+			setSubStatus('none')
 			setSubUntil(null)
+		} catch (e: any) {
+			console.error('Subscription refresh error:', e)
+			setSubError(e?.message || String(e))
 		} finally {
 			setSubLoading(false)
 		}
 	}, [])
+
+	// Payment polling for automatic verification
+	const startPaymentPolling = useCallback((token: string) => {
+		if (pollingPayment) return
+		setPollingPayment(true)
+
+		
+		const pollInterval = setInterval(async () => {
+			try {
+				const rsp = await fetch(`${BACKEND_URL}/subscription/status`, {
+					headers: { Authorization: `Bearer ${token}` },
+				})
+				const data = await rsp.json().catch(() => ({}))
+				if (rsp.ok && data.isActive) {
+					// Payment detected! Stop polling and refresh
+					clearInterval(pollInterval)
+					setPollingPayment(false)
+					await refreshSubscription()
+					
+					// Clear payment container
+					const paymentContainer = document.getElementById('void-payment-container')
+					if (paymentContainer) {
+						paymentContainer.innerHTML = ''
+					}
+				}
+			} catch (e) {
+				console.error('Payment polling error:', e)
+			}
+		}, 3000) // Poll every 3 seconds
+		
+		// Stop polling after 5 minutes max
+		setTimeout(() => {
+			clearInterval(pollInterval)
+			setPollingPayment(false)
+		}, 300000)
+	}, [pollingPayment, refreshSubscription])
+
+	// Create subscription links for post-trial users
+	const createSubscriptionLinks = async () => {
+		setSubActionLoading(true)
+		setSubError(null)
+		try {
+			const token = localStorage.getItem('void_jwt')
+			if (!token) {
+				setSubError('Please log in to continue')
+				return
+			}
+
+			console.log('Creating subscription links for post-trial user...')
+			
+			const linkRsp = await fetch(`${BACKEND_URL}/api/payments/create-subscription-links`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`,
+				},
+			})
+			
+			console.log('Subscription links response status:', linkRsp.status)
+			
+			if (linkRsp.status === 401) {
+				setSubError('Authentication expired. Please log in again.')
+				return
+			}
+			
+			if (linkRsp.status === 403) {
+				setSubError('Access denied. Please check your account.')
+				return
+			}
+			
+			const linkData = await linkRsp.json().catch(() => ({}))
+			console.log('Subscription links response data:', linkData)
+			
+			if (linkRsp.status === 400) {
+				if (linkData.error === 'subscription_already_active') {
+					const daysLeft = linkData.daysLeft || 0
+					const validUntil = linkData.validUntil
+					setSubError(`✅ You already have an active subscription! ${daysLeft} days remaining. Valid until: ${validUntil ? new Date(validUntil).toLocaleDateString() : 'N/A'}`)
+					return
+				}
+			}
+			
+			if (!linkRsp.ok) throw new Error(linkData?.error || linkData?.message || 'subscription_links_failed')
+			
+			setSubscriptionLinks(linkData.subscriptions)
+			setShowSubscriptionOptions(true)
+			setSubError('✅ Choose your subscription plan:')
+		} catch (e: any) {
+			console.error('Subscription links error:', e)
+			setSubError(e?.message || String(e))
+		} finally {
+			setSubActionLoading(false)
+		}
+	}
+
+	// Open subscription payment link
+	const openSubscriptionLink = (plan: 'weekly' | 'monthly') => {
+		const link = subscriptionLinks?.[plan]
+		if (link?.short_url) {
+			window.open(link.short_url, '_blank')
+			setSubError(`💳 ${plan === 'weekly' ? 'Weekly' : 'Monthly'} subscription opened! Complete payment to continue.`)
+			
+			// Start polling for payment completion
+			const token = localStorage.getItem('void_jwt')
+			if (token && !pollingPayment) {
+				startPaymentPolling(token)
+			}
+		}
+	}
 
 	useEffect(() => {
 		refreshSubscription()
@@ -466,26 +613,63 @@ export const IconX = ({
 
 	// Dynamically load Razorpay checkout script if not present
 	const ensureRazorpayLoaded = async () => {
-		if (hasRazorpayOnWindow()) return
-		if (typeof document === 'undefined') throw new Error('razorpay_js_not_loaded')
-		await new Promise<void>((resolve, reject) => {
-			const existing = document.querySelector<HTMLScriptElement>(
-				'script[src="https://checkout.razorpay.com/v1/checkout.js"]',
-			)
-			if (existing) {
-				existing.addEventListener('load', () => resolve())
-				existing.addEventListener('error', () => reject(new Error('razorpay_script_load_failed')))
-				return
+		// Skip dynamic loading entirely due to TrustedScript restrictions
+		// Always use the payment link fallback approach
+		console.log('Skipping Razorpay SDK loading due to security restrictions')
+		return Promise.resolve()
+	}
+
+	const verifyTrialPayment = async () => {
+		setSubActionLoading(true)
+		setSubError(null)
+		try {
+			const token = localStorage.getItem('void_jwt')
+			if (!token) throw new Error('auth_required')
+
+			// Get stored payment link ID
+			const storedPaymentLinkId = localStorage.getItem('void_payment_link_id')
+			if (!storedPaymentLinkId) {
+				throw new Error('No payment link found. Please click "Pay Now" first.')
 			}
-			const script = document.createElement('script')
-			script.src = 'https://checkout.razorpay.com/v1/checkout.js'
-			script.async = true
-			script.onload = () => resolve()
-			script.onerror = () => reject(new Error('razorpay_script_load_failed'))
-			document.head.appendChild(script)
-		})
-		if (!hasRazorpayOnWindow()) {
-			throw new Error('razorpay_js_not_loaded')
+
+			console.log('🔍 Checking payment status for link:', storedPaymentLinkId)
+
+			// Check payment status using backend API
+			const checkRsp = await fetch(`${BACKEND_URL}/api/payments/check-payment-link/${storedPaymentLinkId}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`,
+				},
+			})
+
+			const checkData = await checkRsp.json().catch(() => ({}))
+			console.log('Payment status check response:', checkData)
+
+			if (!checkRsp.ok) {
+				throw new Error(checkData?.error || checkData?.message || 'status_check_failed')
+			}
+
+			if (checkData?.paid) {
+				// Payment is completed, refresh subscription
+				await checkSubscription(token)
+				setSubError('✅ ' + (checkData?.message || 'Payment verified! Trial activated successfully!'))
+				
+				// Clear stored payment link after successful verification
+				try {
+					localStorage.removeItem('void_payment_link')
+					localStorage.removeItem('void_payment_link_id')
+					localStorage.removeItem('void_payment_link_new')
+				} catch {}
+			} else {
+				// Payment not completed yet
+				setSubError('💳 Payment not completed yet. Please complete the payment and try again.')
+			}
+		} catch (e: any) {
+			console.error('Payment status check error:', e)
+			setSubError(e?.message || String(e))
+		} finally {
+			setSubActionLoading(false)
 		}
 	}
 
@@ -494,57 +678,95 @@ export const IconX = ({
 		setSubError(null)
 		try {
 			const token = localStorage.getItem('void_jwt')
-			if (!token) throw new Error('auth_required')
-			await ensureRazorpayLoaded()
+			console.log('Current JWT token:', token?.substring(0, 20) + '...')
+			
+			if (!token) {
+				setSubError('Please log in to start trial')
+				return
+			}
 
-			// Create 1 trial order via backend
-			const orderRsp = await fetch(`${BACKEND_URL}/api/payments/create-order`, {
+			// Check if we have a stored payment link from backend
+			const storedPaymentLink = localStorage.getItem('void_payment_link')
+			const storedPaymentLinkId = localStorage.getItem('void_payment_link_id')
+			const storedIsNew = localStorage.getItem('void_payment_link_new') === 'true'
+
+			if (storedPaymentLink && storedPaymentLinkId) {
+				console.log('Using stored payment link:', storedPaymentLink, 'New:', storedIsNew)
+				
+				// Open the stored payment link
+				window.open(storedPaymentLink, '_blank')
+				setSubError(`💳 ₹1 payment link opened! Complete payment to activate 7-day trial.${storedIsNew ? ' (New link created)' : ' (Existing link)'}`)
+				
+				// Start polling for payment completion
+				if (token && !pollingPayment) {
+					startPaymentPolling(token)
+				}
+				return
+			}
+
+			// Fallback: Create ₹1 payment link for first-time users
+			console.log('No stored payment link found, creating new one...')
+			
+			const linkRsp = await fetch(`${BACKEND_URL}/api/payments/create-trial-link`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 					Authorization: `Bearer ${token}`,
 				},
-				body: JSON.stringify({ planType: 'trial' }),
 			})
-			const orderData = await orderRsp.json().catch(() => ({}))
-			if (!orderRsp.ok) throw new Error(orderData?.error || orderData?.message || 'order_failed')
-			const { keyId, orderId, amount, currency } = orderData as any
-
-			const RazorpayCtor = (window as any).Razorpay
-			const opts: any = {
-				key: keyId,
-				amount,
-				currency,
-				name: 'KvantKode / Void',
-				description: '1 trial (15 days) then  1008 / 28 days',
-				order_id: orderId,
-				handler: async (resp: any) => {
-					try {
-						const confirmRsp = await fetch(`${BACKEND_URL}/api/payments/verify`, {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								Authorization: `Bearer ${token}`,
-							},
-							body: JSON.stringify({
-								razorpay_order_id: resp.razorpay_order_id,
-								razorpay_payment_id: resp.razorpay_payment_id,
-								razorpay_signature: resp.razorpay_signature,
-								planType: 'trial',
-							}),
-						})
-						const cdata = await confirmRsp.json().catch(() => ({}))
-						if (!confirmRsp.ok)
-							throw new Error(cdata?.error || cdata?.message || 'confirm_failed')
-						await refreshSubscription()
-					} catch (e: any) {
-						setSubError(e?.message || String(e))
-					}
-				},
+			
+			console.log('Payment link response status:', linkRsp.status)
+			
+			if (linkRsp.status === 401) {
+				setSubError('Authentication expired. Please log in again.')
+				return
 			}
-			const rzp = new RazorpayCtor(opts)
-			rzp.open()
+			
+			if (linkRsp.status === 403) {
+				setSubError('Access denied. Please check your account.')
+				return
+			}
+			
+			const linkData = await linkRsp.json().catch(() => ({}))
+			console.log('Payment link response data:', linkData)
+			
+			if (linkRsp.status === 400) {
+				if (linkData.error === 'subscription_already_active') {
+					const daysLeft = linkData.daysLeft || 0
+					const validUntil = linkData.validUntil
+					setSubError(`✅ You already have an active subscription! ${daysLeft} days remaining. Valid until: ${validUntil ? new Date(validUntil).toLocaleDateString() : 'N/A'}`)
+					return
+				}
+				if (linkData.error === 'trial_already_used') {
+					setSubError('You have already used your trial. Please choose a subscription plan.')
+					// Show subscription options automatically
+					await createSubscriptionLinks()
+					return
+				}
+			}
+			
+			if (!linkRsp.ok) throw new Error(linkData?.error || linkData?.message || 'payment_link_failed')
+			
+			// Open payment link in new window
+			const { paymentLink } = linkData as any
+			console.log('Opening payment link:', paymentLink.short_url)
+			
+			window.open(paymentLink.short_url, '_blank')
+			setSubError('💳 ₹1 payment link opened! Complete payment to activate 7-day trial.')
+			
+			// Store the new payment link
+			try {
+				localStorage.setItem('void_payment_link', paymentLink.short_url)
+				localStorage.setItem('void_payment_link_id', paymentLink.id || '')
+				localStorage.setItem('void_payment_link_new', 'true')
+			} catch {}
+			
+			// Start polling for payment completion
+			if (token && !pollingPayment) {
+				startPaymentPolling(token)
+			}
 		} catch (e: any) {
+			console.error('Payment link error:', e)
 			setSubError(e?.message || String(e))
 		} finally {
 			setSubActionLoading(false)
@@ -766,19 +988,9 @@ export const IconX = ({
 		<div className="px-4 py-3 border-t border-void-border-2 h-full overflow-y-auto">
 			{/* Subscription card */}
 			<div className="mb-3 rounded border border-void-border-2 bg-void-bg-2 p-2 text-xs flex flex-col gap-1">
-				<div className="flex items-center justify-between gap-2">
-					<div className="flex items-center gap-1 text-void-fg-2">
-						<CreditCard size={14} />
-						<span>Subscription</span>
-					</div>
-					<button
-						type="button"
-						className="px-2 py-1 rounded bg-void-bg-3 border border-void-border-2 text-void-fg-1 hover:bg-void-bg-4 disabled:opacity-60 disabled:cursor-not-allowed"
-						disabled={subLoading || subActionLoading}
-						onClick={startTrial}
-					>
-						{subActionLoading ? 'Processing…' : 'Start / Manage'}
-					</button>
+				<div className="flex items-center gap-1 text-void-fg-2">
+					<CreditCard size={14} />
+					<span>Subscription</span>
 				</div>
 				<div className="flex flex-col gap-0.5 text-void-fg-3">
 					<div>
@@ -788,6 +1000,8 @@ export const IconX = ({
 								? `Trial active${subUntil ? ` until ${new Date(subUntil).toLocaleString()}` : ''}`
 								: subStatus === 'active'
 									? `Subscribed${subUntil ? ` until ${new Date(subUntil).toLocaleString()}` : ''}`
+								: subStatus === 'expiring_soon'
+									? `⚠️ Expires in ${subUntil ? Math.ceil((new Date(subUntil).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0} days${subUntil ? ` (${new Date(subUntil).toLocaleDateString()})` : ''}`
 									: 'No active subscription'}
 					</div>
 					{subError ? (
@@ -795,6 +1009,113 @@ export const IconX = ({
 							{subError}
 						</div>
 					) : null}
+					
+					{/* Payment button for inactive or expiring subscriptions */}
+					{!subLoading && (subStatus !== 'active' && subStatus !== 'trial' || subStatus === 'expiring_soon') && (
+						<div className="flex flex-col gap-2">
+							<div className="text-void-fg-2">
+								{subStatus === 'none' ? 'Start your trial' : 
+								 subStatus === 'expiring_soon' ? '⚠️ Renew now for uninterrupted service!' : 
+								 'Your trial has expired! Choose a plan to continue:'}
+							</div>
+							
+							{subStatus === 'none' ? (
+								<>
+									{/* Payment container for HTML buttons */}
+									<div id="void-payment-container" className="void-mb-2" />
+									
+									{/* Pay Now button for trial */}
+									<button
+										className="bg-white text-black rounded p-2 text-xs disabled:opacity-50"
+										disabled={subActionLoading}
+										onClick={startTrial}
+									>
+										Start 7-Day Trial (₹1)
+									</button>
+								</>
+							) : (
+								<>
+									{/* Post-trial or expiring subscription options */}
+									{!showSubscriptionOptions ? (
+										<button
+											className="bg-white text-black rounded p-2 text-xs disabled:opacity-50"
+											disabled={subActionLoading}
+											onClick={createSubscriptionLinks}
+										>
+											{subActionLoading ? 'Loading Plans…' : 
+											 subStatus === 'expiring_soon' ? 'Renew Subscription' : 'View Subscription Plans'}
+										</button>
+									) : (
+										<div className="flex flex-col gap-2">
+											{/* Subscription comparison */}
+											<div className="border border-void-border-2 rounded p-2 bg-void-bg-2">
+												<div className="text-xs font-medium text-void-fg-1 mb-2">Choose Your Plan:</div>
+												
+												{/* Weekly Plan */}
+												<div className="border border-void-border-2 rounded p-2 mb-2 bg-void-bg-1">
+													<div className="flex justify-between items-center mb-1">
+														<span className="text-xs font-medium text-void-fg-1">Weekly</span>
+														<span className="text-xs font-bold text-white">₹252</span>
+													</div>
+													<div className="text-xs text-void-fg-3 mb-2">7 days access</div>
+													<div className="text-xs text-void-fg-3 mb-2">
+														• AI chat features<br/>
+														• Broker integration<br/>
+														• Priority support
+													</div>
+													<button
+														className="w-full bg-void-bg-3 border border-void-border-2 text-void-fg-1 rounded p-1 text-xs hover:bg-void-bg-4 disabled:opacity-50"
+														disabled={subActionLoading}
+														onClick={() => openSubscriptionLink('weekly')}
+													>
+														Choose Weekly
+													</button>
+												</div>
+												
+												{/* Monthly Plan */}
+												<div className="border border-void-border-2 rounded p-2 bg-void-bg-1">
+													<div className="flex justify-between items-center mb-1">
+														<span className="text-xs font-medium text-void-fg-1">Monthly</span>
+														<span className="text-xs font-bold text-white">₹1,008</span>
+													</div>
+													<div className="text-xs text-void-fg-3 mb-2">28 days access</div>
+													<div className="text-xs text-void-fg-3 mb-2">
+														• AI chat features<br/>
+														• Broker integration<br/>
+														• Priority support<br/>
+														• Save ₹240 vs weekly
+													</div>
+													<button
+														className="w-full bg-white text-black rounded p-1 text-xs hover:bg-gray-100 disabled:opacity-50"
+														disabled={subActionLoading}
+														onClick={() => openSubscriptionLink('monthly')}
+													>
+														Choose Monthly
+													</button>
+												</div>
+											</div>
+										</div>
+									)}
+								</>
+							)}
+							
+							{/* Manual verify section */}
+							{pollingPayment && (
+								<div className="flex flex-col gap-1">
+									<div className="text-xs text-void-fg-3">
+										Waiting for payment completion...
+									</div>
+									<button
+										className="px-2 py-1 rounded border border-void-border-2 bg-void-bg-2 text-xs disabled:opacity-50"
+										onClick={verifyTrialPayment}
+										disabled={subActionLoading}
+									>
+										{subActionLoading ? 'Verifying…' : 'Check Payment Status'}
+									</button>
+								</div>
+							)}
+						</div>
+					)}
 				</div>
 			</div>
 
@@ -1245,8 +1566,7 @@ const AuthPanel = ({
 	const [mode, setMode] = useState<'login' | 'signup'>('login')
 	const [username, setUsername] = useState('')
 	const [email, setEmail] = useState('')
-	const [password, setPassword] = useState('');
-	const [confirmPassword, setConfirmPassword] = useState('');
+	const [password, setPassword] = useState('')
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [showTerms, setShowTerms] = useState(false)
@@ -1366,6 +1686,18 @@ const AuthPanel = ({
 			clearInterval(pollIntervalRef.current)
 			pollIntervalRef.current = null
 		}
+		
+		// Store payment link from backend if available
+		if (user?.paymentLink) {
+			console.log('Payment link from backend:', user.paymentLink, 'New:', user.paymentLinkNew)
+			// Store in localStorage for persistence
+			try {
+				localStorage.setItem('void_payment_link', user.paymentLink)
+				localStorage.setItem('void_payment_link_id', user.paymentLinkId || '')
+				localStorage.setItem('void_payment_link_new', String(user.paymentLinkNew || 'false'))
+			} catch {}
+		}
+		
 		await checkSubscription(token)
 		if (subscription?.isActive) {
 			// Proceed to app
@@ -1435,10 +1767,6 @@ const AuthPanel = ({
 			if (!acceptedTerms) {
 				throw new Error('Please accept the terms & services to continue.')
 			}
-			// Validate password confirmation on signup
-			if (mode === 'signup' && password !== confirmPassword) {
-				throw new Error('Passwords do not match.')
-			}
 			const path = mode === 'login' ? '/auth/login' : '/auth/signup'
 			const body: any =
 				mode === 'login'
@@ -1496,7 +1824,7 @@ const AuthPanel = ({
 							}}
 							disabled={pollingPayment}
 						>
-							{pollingPayment ? 'Waiting for payment…' : 'Pay Now'}
+							Pay Now
 						</button>
 						<div className="text-xs text-void-fg-3">
 							After payment, refresh this page or click below to verify.
@@ -1566,15 +1894,7 @@ const AuthPanel = ({
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 						/>
-						{mode === 'signup' && (
-							<input
-								className="bg-void-bg-2 border border-void-border-2 rounded p-2"
-								placeholder="Confirm Password"
-								type="password"
-								value={confirmPassword}
-								onChange={(e) => setConfirmPassword(e.target.value)}
-							/>
-						)}
+					)
 						{/* Terms & Conditions notice above the submit button */}
 						<label className="text-[11px] text-void-fg-3 leading-snug flex items-start gap-2">
 							<button

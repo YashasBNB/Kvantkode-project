@@ -39,6 +39,7 @@ import {
 } from '../common/prompt/prompts.js'
 import { IVoidSettingsService } from '../common/voidSettingsService.js'
 import { generateUuid } from '../../../../base/common/uuid.js'
+import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js'
 
 // tool use for AI
 type ValidateBuiltinParams = {
@@ -181,6 +182,8 @@ export class ToolsService implements IToolsService {
 	public callTool: CallBuiltinTool
 	public stringOfResult: BuiltinToolResultToString
 
+	private _shouldApproveTerminalCommand: () => boolean
+
 	constructor(
 		@IFileService fileService: IFileService,
 		@IWorkspaceContextService workspaceContextService: IWorkspaceContextService,
@@ -193,8 +196,14 @@ export class ToolsService implements IToolsService {
 		@IDirectoryStrService private readonly directoryStrService: IDirectoryStrService,
 		@IMarkerService private readonly markerService: IMarkerService,
 		@IVoidSettingsService private readonly voidSettingsService: IVoidSettingsService,
+		@IDialogService private readonly dialogService: IDialogService,
 	) {
 		const queryBuilder = instantiationService.createInstance(QueryBuilder)
+
+		// Helper method to check if terminal command needs approval in Agent Mode
+		this._shouldApproveTerminalCommand = () => {
+			return this.voidSettingsService.state.globalSettings.chatMode === 'agent'
+		}
 
 		this.validateParams = {
 			read_file: (params: RawToolParamsObj) => {
@@ -457,8 +466,8 @@ export class ToolsService implements IToolsService {
 				return { result: {} }
 			},
 
-			delete_file_or_folder: async ({ uri, isRecursive }) => {
-				await fileService.del(uri, { recursive: isRecursive })
+			delete_file_or_folder: async ({ uri, isRecursive, isFolder }) => {
+				await fileService.del(uri, { recursive: isFolder ? true : isRecursive })
 				return { result: {} }
 			},
 
@@ -471,7 +480,6 @@ export class ToolsService implements IToolsService {
 				}
 				await editCodeService.callBeforeApplyOrEdit(uri)
 				editCodeService.instantlyRewriteFile({ uri, newContent })
-				// at end, get lint errors
 				const lintErrorsPromise = Promise.resolve().then(async () => {
 					await timeout(2000)
 					const { lintErrors } = this._getLintErrors(uri)
@@ -489,18 +497,29 @@ export class ToolsService implements IToolsService {
 				}
 				await editCodeService.callBeforeApplyOrEdit(uri)
 				editCodeService.instantlyApplySearchReplaceBlocks({ uri, searchReplaceBlocks })
-
-				// at end, get lint errors
 				const lintErrorsPromise = Promise.resolve().then(async () => {
 					await timeout(2000)
 					const { lintErrors } = this._getLintErrors(uri)
 					return { lintErrors }
 				})
-
 				return { result: lintErrorsPromise }
 			},
-			// ---
+
 			run_command: async ({ command, cwd, terminalId }) => {
+				// Require approval for terminal commands in Agent Mode
+				if (this._shouldApproveTerminalCommand()) {
+					const result = await this.dialogService.confirm({
+						type: 'question',
+						message: 'Agent Mode: Execute Terminal Command',
+						detail: `Command: ${command}${cwd ? `\nWorking directory: ${cwd}` : ''}\n\nAllow the AI agent to run this terminal command?`,
+						primaryButton: 'Allow',
+						cancelButton: 'Deny',
+					})
+					if (!result.confirmed) {
+						throw new Error('Terminal command execution was denied by the user.')
+					}
+				}
+
 				const { resPromise, interrupt } = await this.terminalToolService.runCommand(command, {
 					type: 'temporary',
 					cwd,
@@ -509,6 +528,20 @@ export class ToolsService implements IToolsService {
 				return { result: resPromise, interruptTool: interrupt }
 			},
 			run_persistent_command: async ({ command, persistentTerminalId }) => {
+				// Require approval for terminal commands in Agent Mode
+				if (this._shouldApproveTerminalCommand()) {
+					const result = await this.dialogService.confirm({
+						type: 'question',
+						message: 'Agent Mode: Execute Terminal Command',
+						detail: `Command: ${command}\nTerminal: ${persistentTerminalId}\n\nAllow the AI agent to run this terminal command?`,
+						primaryButton: 'Allow',
+						cancelButton: 'Deny',
+					})
+					if (!result.confirmed) {
+						throw new Error('Terminal command execution was denied by the user.')
+					}
+				}
+
 				const { resPromise, interrupt } = await this.terminalToolService.runCommand(command, {
 					type: 'persistent',
 					persistentTerminalId,

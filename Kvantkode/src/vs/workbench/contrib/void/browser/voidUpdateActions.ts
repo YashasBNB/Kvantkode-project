@@ -32,7 +32,7 @@ const notifyUpdate = (
 ): INotificationHandle => {
 	const message =
 		res?.message ||
-		'This is a very old version of KvantKode, please download the latest version! [KvantKode Editor](https://kvantkode.com/download-beta)!'
+		'This is a very old version of KvantKode, please update from git: [KvantKode Git Repository](https://github.com/YashasBNB/Kvantkode-backends.git)!'
 
 	let actions: INotificationActions | undefined
 
@@ -48,7 +48,7 @@ const notifyUpdate = (
 				class: undefined,
 				run: () => {
 					const { window } = dom.getActiveWindow()
-					window.open('https://kvantkode.com/download-beta')
+					window.open('https://github.com/YashasBNB/Kvantkode-backends.git')
 				},
 			})
 		}
@@ -138,7 +138,7 @@ const notifyUpdate = (
 	// })
 }
 const notifyErrChecking = (notifService: INotificationService): INotificationHandle => {
-	const message = `KvantKode Error: There was an error checking for updates. If this persists, please get in touch or reinstall KvantKode [here](https://kvantkode.com/download-beta)!`
+	const message = `KvantKode Error: There was an error checking for updates. If this persists, please get in touch or update from git: [KvantKode Git Repository](https://github.com/YashasBNB/Kvantkode-backends.git)!`
 	const notifController = notifService.notify({
 		severity: Severity.Info,
 		message: message,

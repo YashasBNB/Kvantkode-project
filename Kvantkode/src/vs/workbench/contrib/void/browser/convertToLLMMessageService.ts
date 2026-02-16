@@ -33,6 +33,7 @@ import { URI } from '../../../../base/common/uri.js'
 import { EndOfLinePreference } from '../../../../editor/common/model.js'
 import { ToolName } from '../common/toolsServiceTypes.js'
 import { IMCPService } from '../common/mcpService.js'
+import { IRagCodeContextService } from './ragCodeContextService.js'
 
 export const EMPTY_MESSAGE = '(empty message)'
 
@@ -579,6 +580,7 @@ class ConvertToLLMMessageService extends Disposable implements IConvertToLLMMess
 		@IVoidSettingsService private readonly voidSettingsService: IVoidSettingsService,
 		@IVoidModelService private readonly voidModelService: IVoidModelService,
 		@IMCPService private readonly mcpService: IMCPService,
+		@IRagCodeContextService private readonly ragCodeContextService: IRagCodeContextService,
 	) {
 		super()
 	}
@@ -755,7 +757,7 @@ class ConvertToLLMMessageService extends Disposable implements IConvertToLLMMess
 			chatMode,
 			specialToolFormat,
 		)
-		const systemMessage = disableSystemMessage ? '' : fullSystemMessage
+		let systemMessage = disableSystemMessage ? '' : fullSystemMessage
 
 		const modelSelectionOptions =
 			this.voidSettingsService.state.optionsOfModelSelection['Chat'][modelSelection.providerName]?.[
@@ -776,6 +778,24 @@ class ConvertToLLMMessageService extends Disposable implements IConvertToLLMMess
 			overridesOfModel,
 		})
 		const llmMessages = this._chatMessagesToSimpleMessages(chatMessages)
+
+		// Add RAG context (best-effort) for the latest user query
+		try {
+			const lastUser = [...chatMessages].reverse().find((m) => m.role === 'user') as any
+			const lastQuery = String(lastUser?.content || '').trim()
+			if (lastQuery) {
+				const rag = await this.ragCodeContextService.getContextForQuery({
+					query: lastQuery,
+					maxChars: 12_000,
+					maxChunks: 8,
+				})
+				if (rag && rag.trim()) {
+					systemMessage = systemMessage ? `${systemMessage}\n\n${rag}` : rag
+				}
+			}
+		} catch {
+			// ignore
+		}
 
 		const { messages, separateSystemMessage } = prepareMessages({
 			messages: llmMessages,

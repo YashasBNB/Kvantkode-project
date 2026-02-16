@@ -7,7 +7,7 @@
 /* eslint-disable */
 import Anthropic from '@anthropic-ai/sdk'
 import { Ollama } from 'ollama'
-import OpenAI, { ClientOptions, AzureOpenAI } from 'openai/index.mjs'
+import OpenAI, { ClientOptions, AzureOpenAI } from 'openai'
 import { MistralCore } from '@mistralai/mistralai/core.js'
 import { fimComplete } from '@mistralai/mistralai/funcs/fimComplete.js'
 import {
@@ -270,11 +270,11 @@ const _sendOpenAICompatibleFIM = async ({
 			stop: stopTokens,
 			max_tokens: 300,
 		})
-		.then(async (response) => {
+		.then(async (response: any) => {
 			const fullText = response.choices[0]?.text
 			onFinalMessage({ fullText, fullReasoning: '', anthropicReasoning: null })
 		})
-		.catch((error) => {
+		.catch((error: any) => {
 			if (error instanceof OpenAI.APIError) {
 				if (error.status === 401) {
 					onError({ message: invalidApiKeyMessage(providerName), fullError: error })
@@ -327,14 +327,14 @@ const toOpenAICompatibleTool = (toolInfo: InternalToolInfo) => {
 				// additionalProperties: false,
 			},
 		},
-	} satisfies OpenAI.Chat.Completions.ChatCompletionTool
+	} satisfies any
 }
 
 const openAITools = (chatMode: ChatMode | null, mcpTools: InternalToolInfo[] | undefined) => {
 	const allowedTools = availableTools(chatMode, mcpTools)
 	if (!allowedTools || Object.keys(allowedTools).length === 0) return null
 
-	const openAITools: OpenAI.Chat.Completions.ChatCompletionTool[] = []
+	const openAITools: any[] = []
 	for (const t in allowedTools ?? {}) {
 		openAITools.push(toOpenAICompatibleTool(allowedTools[t]))
 	}
@@ -434,7 +434,7 @@ const _sendOpenAICompatibleChat = async ({
 		// Required to select the model
 		;(openai as AzureOpenAI).deploymentName = modelName
 	}
-	const options: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+	const options: any = {
 		model: modelName,
 		messages: messages as any,
 		stream: true,
@@ -480,7 +480,7 @@ const _sendOpenAICompatibleChat = async ({
 
 	openai.chat.completions
 		.create(options)
-		.then(async (response) => {
+		.then(async (response: any) => {
 			console.log('🌐 Backend: OpenAI-compatible request sent:', {
 				endpoint: (settingsOfProvider as any).endpoint,
 				model: modelName,
@@ -543,7 +543,7 @@ const _sendOpenAICompatibleChat = async ({
 			}
 		})
 		// when error/fail - this catches errors of both .create() and .then(for await)
-		.catch(async (error) => {
+		.catch(async (error: any) => {
 			if (error instanceof OpenAI.APIError && error.status === 401) {
 				onError({ message: invalidApiKeyMessage(providerName), fullError: error })
 			} else if (error instanceof OpenAI.APIError && error.status === 400 && error.message?.includes('streaming_disabled_for_quota')) {
@@ -551,7 +551,6 @@ const _sendOpenAICompatibleChat = async ({
 				try {
 					const nonStreamingOptions = { ...options, stream: false }
 					const response = await openai.chat.completions.create(nonStreamingOptions)
-					_setAborter(() => response.controller?.abort())
 					
 					// Handle non-streaming response
 					const content = response.choices[0]?.message?.content ?? ''
@@ -588,7 +587,7 @@ const _openaiCompatibleList = async ({
 		const openai = await newOpenAICompatibleSDK({ providerName, settingsOfProvider })
 		openai.models
 			.list()
-			.then(async (response) => {
+			.then(async (response: any) => {
 				const models: OpenAIModel[] = []
 				models.push(...response.data)
 				while (response.hasNextPage()) {
@@ -596,7 +595,7 @@ const _openaiCompatibleList = async ({
 				}
 				onSuccess({ models })
 			})
-			.catch((error) => {
+			.catch((error: any) => {
 				onError({ error: error + '' })
 			})
 	} catch (error) {

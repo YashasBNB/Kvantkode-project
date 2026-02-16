@@ -498,13 +498,13 @@ export const defaultGlobalSettings: GlobalSettings = {
 	syncApplyToChat: true,
 	syncSCMToChat: true,
 	enableFastApply: true,
-	chatMode: 'agent',
-	autoApprove: { 'edits': true }, // Enable auto-approval for file editing tools
+	chatMode: 'normal',
+	autoApprove: {},
 	showInlineSuggestions: true,
 	includeToolLintErrors: true,
 	isOnboardingComplete: false,
 	disableSystemMessage: false,
-	autoAcceptLLMChanges: true,
+	autoAcceptLLMChanges: false,
 	autoAllToolsEnabledOnce: false,
 }
 

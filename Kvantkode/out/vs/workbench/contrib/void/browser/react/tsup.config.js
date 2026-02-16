@@ -42,4 +42,4 @@ export default defineConfig({
 	},
 })
 
-//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode/src/vs/workbench/contrib/void/browser/react/tsup.config.js
+//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode-project/Kvantkode/src/vs/workbench/contrib/void/browser/react/tsup.config.js

@@ -185,7 +185,7 @@ export class MCPChannel implements IServerChannel {
 				await client.connect(transport)
 				console.log(`Connected via HTTP to ${serverName}`)
 				const { tools } = await client.listTools()
-				const toolsWithUniqueName = tools.map(({ name, ...rest }) => ({
+				const toolsWithUniqueName = tools.map(({ name, ...rest }: { name: string }) => ({
 					name: this._addUniquePrefix(name),
 					...rest,
 				}))
@@ -199,7 +199,7 @@ export class MCPChannel implements IServerChannel {
 				transport = new SSEClientTransport(server.url)
 				await client.connect(transport)
 				const { tools } = await client.listTools()
-				const toolsWithUniqueName = tools.map(({ name, ...rest }) => ({
+				const toolsWithUniqueName = tools.map(({ name, ...rest }: { name: string }) => ({
 					name: this._addUniquePrefix(name),
 					...rest,
 				}))
@@ -225,7 +225,7 @@ export class MCPChannel implements IServerChannel {
 
 			// Get the tools from the server
 			const { tools } = await client.listTools()
-			const toolsWithUniqueName = tools.map(({ name, ...rest }) => ({
+			const toolsWithUniqueName = tools.map(({ name, ...rest }: { name: string }) => ({
 				name: this._addUniquePrefix(name),
 				...rest,
 			}))

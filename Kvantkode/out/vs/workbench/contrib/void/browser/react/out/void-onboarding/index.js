@@ -24662,4 +24662,4 @@ lucide-react/dist/esm/lucide-react.js:
 
 export { mountVoidOnboarding };
 
-//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode/src/vs/workbench/contrib/void/browser/react/out/void-onboarding/index.js
+//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode-project/Kvantkode/src/vs/workbench/contrib/void/browser/react/out/void-onboarding/index.js

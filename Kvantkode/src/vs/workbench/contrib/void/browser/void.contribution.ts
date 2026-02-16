@@ -20,6 +20,9 @@ import './autocompleteService.js'
 // import './contextGatheringService.js'
 // import './contextUserChangesService.js'
 
+// register RAG code context
+import './ragCodeContextService.js'
+
 // settings pane
 import './voidSettingsPane.js'
 
@@ -37,6 +40,12 @@ import './terminalToolService.js'
 
 // register Thread History
 import './chatThreadService.js'
+
+// planner
+import './plannerService.js'
+
+// rollback
+import './rollbackService.js'
 
 // ping
 import './metricsPollService.js'

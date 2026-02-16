@@ -27622,4 +27622,4 @@ lucide-react/dist/esm/lucide-react.js:
 
 export { mountVoidSettings };
 
-//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode/src/vs/workbench/contrib/void/browser/react/out/void-settings-tsx/index.js
+//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode-project/Kvantkode/src/vs/workbench/contrib/void/browser/react/out/void-settings-tsx/index.js

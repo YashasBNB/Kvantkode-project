@@ -68,6 +68,8 @@ import { IFileService } from '../../../../platform/files/common/files.js'
 import { IMCPService } from '../common/mcpService.js'
 import { RawMCPToolCall } from '../common/mcpServiceTypes.js'
 import { IContinueChatClient } from './continueChatClient.js'
+import { AgentPlan, IPlannerService } from './plannerService.js'
+import { IRollbackService } from './rollbackService.js'
 
 // related to retrying when LLM message has error
 const CHAT_RETRIES = 3
@@ -150,6 +152,7 @@ export type ThreadType = {
 		currCheckpointIdx: number | null // the latest checkpoint we're at (null if not at a particular checkpoint, like if the chat is streaming, or chat just finished and we haven't clicked on a checkpt)
 
 		stagingSelections: StagingSelectionItem[]
+		agentPlan?: AgentPlan
 		focusedMessageIdx: number | undefined // index of the user message that is being edited (undefined if none)
 
 		linksOfMessageIdx: {
@@ -236,6 +239,20 @@ export type ThreadStreamState = {
 				toolInfo?: undefined
 				interrupt: 'not_needed' | Promise<() => void> // calling this should have no effect on state - would be too confusing. it just cancels the tool
 		  }
+		| {
+				isRunning: 'idle-has-changes'
+				error?: undefined
+				llmInfo?: undefined
+				toolInfo?: undefined
+				interrupt: 'not_needed' | Promise<() => void>
+		  }
+		| {
+				isRunning: 'idle-no-changes'
+				error?: undefined
+				llmInfo?: undefined
+				toolInfo?: undefined
+				interrupt: 'not_needed' | Promise<() => void>
+		  }
 }
 
 const newThreadObject = () => {
@@ -248,6 +265,7 @@ const newThreadObject = () => {
 		state: {
 			currCheckpointIdx: null,
 			stagingSelections: [],
+			agentPlan: undefined,
 			focusedMessageIdx: undefined,
 			linksOfMessageIdx: {},
 		},
@@ -386,6 +404,8 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		@IMCPService private readonly _mcpService: IMCPService,
 		@ICommandService private readonly _commandService: ICommandService,
 		@IContinueChatClient private readonly _continueChatClient: IContinueChatClient,
+		@IPlannerService private readonly _plannerService: IPlannerService,
+		@IRollbackService private readonly _rollbackService: IRollbackService,
 	) {
 		super()
 		this.state = { allThreads: {}, currentThreadId: null as unknown as string } // default state
@@ -983,6 +1003,25 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 			rawParams: rawParamsForLog,
 			mcpServerName,
 		})
+
+		// Record rollback information for successful file edits
+		if (isBuiltInTool && (toolName === 'edit_file' || toolName === 'rewrite_file')) {
+			const uri = (toolParams as BuiltinToolCallParams['edit_file'] | BuiltinToolCallParams['rewrite_file']).uri
+			if (uri) {
+				// Find the message index where this tool result was added
+				const thread = this.state.allThreads[threadId]
+				const messageIdx = thread?.messages.length ? thread.messages.length - 1 : 0
+
+				this._rollbackService.recordChange({
+					threadId,
+					messageIdx,
+					toolName,
+					toolId,
+					uri,
+					changeType: toolName === 'edit_file' ? 'file_edit' : 'file_rewrite',
+				})
+			}
+		}
 
 		// Auto-open edited file in editor for edit_file / rewrite_file
 		try {
@@ -1715,6 +1754,16 @@ We only need to do it for files that were edited since `from`, ie files between 
 		// add user's message to chat history
 		const instructions = userMessage
 		const currSelns: StagingSelectionItem[] = _chatSelections ?? thread.state.stagingSelections
+
+		// Planner is Agent Mode only
+		if (this._settingsService.state.globalSettings.chatMode === 'agent') {
+			try {
+				const agentPlan = this._plannerService.buildPlanFromUserMessage(instructions)
+				this._setThreadState(threadId, { agentPlan }, true)
+			} catch {
+				// ignore planner errors
+			}
+		}
 
 		const userMessageContent = await chat_userMessageContent(instructions, currSelns, {
 			directoryStrService: this._directoryStringService,

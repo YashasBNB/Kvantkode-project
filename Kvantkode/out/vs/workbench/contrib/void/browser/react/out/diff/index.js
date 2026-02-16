@@ -552,4 +552,4 @@ arrayDiff.join = arrayDiff.removeEmpty = function(value) {
 
 export { diffLines };
 
-//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode/src/vs/workbench/contrib/void/browser/react/out/diff/index.js
+//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode-project/Kvantkode/src/vs/workbench/contrib/void/browser/react/out/diff/index.js

@@ -25814,4 +25814,4 @@ lucide-react/dist/esm/lucide-react.js:
 
 export { mountCtrlK };
 
-//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode/src/vs/workbench/contrib/void/browser/react/out/quick-edit-tsx/index.js
+//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode-project/Kvantkode/src/vs/workbench/contrib/void/browser/react/out/quick-edit-tsx/index.js

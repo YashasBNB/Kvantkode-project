@@ -504,4 +504,4 @@ async function getWorkerClientForId(clientId) {
 	})
 }
 
-//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode/src/vs/workbench/contrib/webview/browser/pre/service-worker.js
+//# sourceURL=file:///Users/yashasnaidu/Kvantcode/Kvantkode-project/Kvantkode/src/vs/workbench/contrib/webview/browser/pre/service-worker.js
